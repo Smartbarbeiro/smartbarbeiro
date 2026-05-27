@@ -1,8 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import BarbershopSignUpButton from '@/Components/BarbershopSignUpButton.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
@@ -41,9 +41,19 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    requiresPayment: {
+        type: Boolean,
+        default: false,
+    },
+    hasSignedUp: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const isAuthenticated = computed(() => !!usePage().props.auth.user);
+
+const flashStatus = computed(() => usePage().props.flash?.status);
 
 const showPaywall = computed(
     () =>
@@ -97,31 +107,14 @@ const showPaywall = computed(
                         </p>
 
                         <div class="mt-8 flex flex-col items-center gap-3">
-                            <Link
-                                v-if="!isAuthenticated"
-                                :href="route('login')"
-                                class="rounded-md bg-gray-800 px-6 py-2 text-sm font-medium text-white hover:bg-gray-700"
-                            >
-                                Log in to subscribe
-                            </Link>
-                            <Link
-                                v-else-if="mercadopagoConfigured"
-                                :href="
-                                    route('profile.subscribe', {
-                                        username: profile.username,
-                                    })
-                                "
-                                method="post"
-                                as="button"
-                                class="inline-flex"
-                            >
-                                <PrimaryButton>
-                                    Subscribe with Mercado Pago
-                                </PrimaryButton>
-                            </Link>
-                            <p v-else class="text-sm text-amber-700">
-                                Payments are not configured on this server.
-                            </p>
+                            <BarbershopSignUpButton
+                                :profile="profile"
+                                :is-owner="isOwner"
+                                :is-authenticated="isAuthenticated"
+                                :has-signed-up="hasSignedUp"
+                                :requires-payment="requiresPayment"
+                                :mercadopago-configured="mercadopagoConfigured"
+                            />
 
                             <p class="text-xs text-gray-500">
                                 Share link:
@@ -151,6 +144,23 @@ const showPaywall = computed(
                         <p class="mt-4 text-sm text-gray-500">
                             Member since {{ profile.member_since }}
                         </p>
+
+                        <div
+                            v-if="flashStatus === 'barbershop-signup-success'"
+                            class="mt-4 rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+                        >
+                            You are signed up at this barbershop.
+                        </div>
+
+                        <BarbershopSignUpButton
+                            class="mt-6"
+                            :profile="profile"
+                            :is-owner="isOwner"
+                            :is-authenticated="isAuthenticated"
+                            :has-signed-up="hasSignedUp"
+                            :requires-payment="requiresPayment"
+                            :mercadopago-configured="mercadopagoConfigured"
+                        />
 
                         <div
                             v-if="hasActiveSubscription && activeSubscription"
@@ -211,18 +221,6 @@ const showPaywall = computed(
                                 class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >
                                 Dashboard
-                            </Link>
-                        </div>
-
-                        <div
-                            v-else-if="!isAuthenticated"
-                            class="mt-8"
-                        >
-                            <Link
-                                :href="route('login')"
-                                class="text-sm text-indigo-600 underline hover:text-indigo-500"
-                            >
-                                Log in
                             </Link>
                         </div>
                     </div>

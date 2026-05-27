@@ -18,7 +18,15 @@ const props = defineProps({
     },
     profileUrl: {
         type: String,
-        required: true,
+        default: null,
+    },
+    isBarbershop: {
+        type: Boolean,
+        default: true,
+    },
+    barbershopMemberships: {
+        type: Array,
+        default: () => [],
     },
 });
 
@@ -36,6 +44,10 @@ const photoPreview = ref(user.profile_photo_url);
 const photoInput = ref(null);
 
 const qrProfileUrl = computed(() => {
+    if (!props.isBarbershop || !props.profileUrl) {
+        return null;
+    }
+
     const username = form.username || user.username;
 
     try {
@@ -76,7 +88,7 @@ const submit = () => {
         ...data,
         _method: 'patch',
     })).post(route('profile.update'), {
-        forceFormData: true,
+        forceFormData: props.isBarbershop,
         preserveScroll: true,
         onSuccess: () => {
             form.profile_photo = null;
@@ -95,29 +107,66 @@ const submit = () => {
             </h2>
 
             <p class="mt-1 text-sm text-gray-600">
-                Update your account's profile information, public username, and
-                email address.
+                <template v-if="isBarbershop">
+                    Update your account's profile information, public username, and
+                    email address.
+                </template>
+                <template v-else>
+                    Update your account name and email address.
+                </template>
             </p>
 
-            <p class="mt-3 text-sm text-gray-600">
-                Public profile:
-                <Link
-                    :href="route('profile.public', { username: user.username })"
-                    class="font-medium text-indigo-600 underline hover:text-indigo-500"
-                >
-                    {{ profileUrl }}
-                </Link>
-            </p>
+            <template v-if="isBarbershop && profileUrl">
+                <p class="mt-3 text-sm text-gray-600">
+                    Public profile:
+                    <Link
+                        :href="route('profile.public', { username: user.username })"
+                        class="font-medium text-indigo-600 underline hover:text-indigo-500"
+                    >
+                        {{ profileUrl }}
+                    </Link>
+                </p>
 
-            <ProfileQrCode
-                class="mt-4 max-w-md"
-                :url="qrProfileUrl"
-                :filename="`${form.username || user.username}-profile`"
-            />
+                <ProfileQrCode
+                    v-if="qrProfileUrl"
+                    class="mt-4 max-w-md"
+                    :url="qrProfileUrl"
+                    :filename="`${form.username || user.username}-profile`"
+                />
+            </template>
+
+            <div
+                v-else-if="barbershopMemberships.length > 0"
+                class="mt-3"
+            >
+                <p class="text-sm font-medium text-gray-700">
+                    Your barbershops
+                </p>
+                <ul class="mt-2 space-y-1">
+                    <li
+                        v-for="membership in barbershopMemberships"
+                        :key="membership.id"
+                        class="text-sm text-gray-600"
+                    >
+                        <Link
+                            v-if="membership.barbershop.username"
+                            :href="
+                                route('profile.public', {
+                                    username: membership.barbershop.username,
+                                })
+                            "
+                            class="text-indigo-600 underline hover:text-indigo-500"
+                        >
+                            {{ membership.barbershop.name }}
+                        </Link>
+                        <span v-else>{{ membership.barbershop.name }}</span>
+                    </li>
+                </ul>
+            </div>
         </header>
 
         <form @submit.prevent="submit" class="mt-6 space-y-6">
-            <div>
+            <div v-if="isBarbershop">
                 <InputLabel value="Profile photo" />
 
                 <div class="mt-3 flex flex-wrap items-center gap-4">
@@ -167,7 +216,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
-            <div>
+            <div v-if="isBarbershop">
                 <InputLabel for="username" value="Username" />
 
                 <TextInput

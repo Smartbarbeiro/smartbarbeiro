@@ -46,7 +46,7 @@ class ProfileSubscriptionTest extends TestCase
     public function test_subscriber_can_view_paid_profile(): void
     {
         $creator = User::factory()->create();
-        $subscriber = User::factory()->create();
+        $subscriber = User::factory()->customer()->create();
 
         ProfileSubscriptionPlan::create([
             'user_id' => $creator->id,
@@ -113,7 +113,7 @@ class ProfileSubscriptionTest extends TestCase
     public function test_subscriber_can_cancel_subscription(): void
     {
         $creator = User::factory()->create();
-        $subscriber = User::factory()->create();
+        $subscriber = User::factory()->customer()->create();
 
         $subscription = ProfileSubscription::create([
             'creator_user_id' => $creator->id,
@@ -139,8 +139,8 @@ class ProfileSubscriptionTest extends TestCase
     public function test_subscriber_cannot_cancel_another_users_subscription(): void
     {
         $creator = User::factory()->create();
-        $subscriber = User::factory()->create();
-        $other = User::factory()->create();
+        $subscriber = User::factory()->customer()->create();
+        $other = User::factory()->customer()->create();
 
         $subscription = ProfileSubscription::create([
             'creator_user_id' => $creator->id,
@@ -158,7 +158,7 @@ class ProfileSubscriptionTest extends TestCase
     public function test_cancelled_subscription_revokes_profile_access(): void
     {
         $creator = User::factory()->create();
-        $subscriber = User::factory()->create();
+        $subscriber = User::factory()->customer()->create();
 
         ProfileSubscriptionPlan::create([
             'user_id' => $creator->id,
@@ -186,7 +186,7 @@ class ProfileSubscriptionTest extends TestCase
     public function test_subscriptions_index_lists_user_subscriptions(): void
     {
         $creator = User::factory()->create(['name' => 'Creator User']);
-        $subscriber = User::factory()->create();
+        $subscriber = User::factory()->customer()->create();
 
         ProfileSubscription::create([
             'creator_user_id' => $creator->id,

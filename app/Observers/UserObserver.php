@@ -10,6 +10,10 @@ class UserObserver
 {
     public function created(User $user): void
     {
+        if (! $user->isBarbershop()) {
+            return;
+        }
+
         File::ensureDirectoryExists($user->storagePath());
         File::put($user->storagePath().'/.gitkeep', '');
     }

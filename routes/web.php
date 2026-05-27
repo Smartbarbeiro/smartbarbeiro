@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileSubscribeController;
@@ -20,6 +21,8 @@ Route::get('/barbearias/{username}', [PublicProfileController::class, 'show'])
 Route::middleware('auth')->group(function () {
     Route::post('/barbearias/{username}/subscribe', [ProfileSubscribeController::class, 'store'])
         ->name('profile.subscribe');
+    Route::post('/barbearias/{username}/signup', [BarbershopMembershipController::class, 'store'])
+        ->name('barbershop.signup');
     Route::get('/barbearias/{username}/subscription/return', [ProfileSubscribeController::class, 'return'])
         ->name('profile.subscribe.return');
 });
@@ -34,20 +37,40 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    $user = auth()->user();
+    $user = auth()->user()->load([
+        'subscriptionPlan',
+        'barbershopSignups.barbershop:id,name,username',
+    ]);
 
-    return Inertia::render('Dashboard', [
+    $props = [
+        'isBarbershop' => $user->isBarbershop(),
         'profileUrl' => $user->profileUrl(),
         'subscribeUrl' => $user->subscribeUrl(),
-        'storagePath' => 'storage/app/users/'.$user->id,
-        'subscriptionPlan' => $user->subscriptionPlan ? [
-            'is_enabled' => $user->subscriptionPlan->is_enabled,
-            'formatted_price' => $user->subscriptionPlan->formattedPrice(),
-        ] : null,
-        'activeSubscribersCount' => $user->subscribers()
-            ->whereIn('status', \App\Models\ProfileSubscription::activeStatuses())
-            ->count(),
-    ]);
+        'barbershopMemberships' => $user->barbershopSignups->map(fn ($membership) => [
+            'id' => $membership->id,
+            'barbershop' => [
+                'name' => $membership->barbershop->name,
+                'username' => $membership->barbershop->username,
+                'profile_url' => $membership->barbershop->profileUrl(),
+            ],
+        ]),
+    ];
+
+    if ($user->isBarbershop()) {
+        $props = [
+            ...$props,
+            'storagePath' => 'storage/app/users/'.$user->id,
+            'subscriptionPlan' => $user->subscriptionPlan ? [
+                'is_enabled' => $user->subscriptionPlan->is_enabled,
+                'formatted_price' => $user->subscriptionPlan->formattedPrice(),
+            ] : null,
+            'activeSubscribersCount' => $user->subscribers()
+                ->whereIn('status', \App\Models\ProfileSubscription::activeStatuses())
+                ->count(),
+        ];
+    }
+
+    return Inertia::render('Dashboard', $props);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

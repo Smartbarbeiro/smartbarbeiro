@@ -6,12 +6,24 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
+const props = defineProps({
+    redirect: {
+        type: String,
+        default: null,
+    },
+    isCustomerSignup: {
+        type: Boolean,
+        default: false,
+    },
+});
+
 const form = useForm({
     name: '',
     username: '',
     email: '',
     password: '',
     password_confirmation: '',
+    redirect: props.redirect,
 });
 
 const submit = () => {
@@ -26,6 +38,11 @@ const submit = () => {
         <Head title="Register" />
 
         <form @submit.prevent="submit">
+            <div v-if="isCustomerSignup" class="mb-4 rounded-md bg-indigo-50 p-4 text-sm text-indigo-800">
+                Create your account to sign up at this barbershop. You will not
+                get a public profile page.
+            </div>
+
             <div>
                 <InputLabel for="name" value="Name" />
 
@@ -42,7 +59,7 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
-            <div class="mt-4">
+            <div v-if="!isCustomerSignup" class="mt-4">
                 <InputLabel for="username" value="Username (optional)" />
 
                 <TextInput
@@ -54,7 +71,7 @@ const submit = () => {
                 />
 
                 <p class="mt-1 text-xs text-gray-500">
-                    Leave blank to generate from your name. Your profile will be
+                    Leave blank to generate from your name. Your barbershop page will be
                     at /barbearias/your-username
                 </p>
 
@@ -114,7 +131,7 @@ const submit = () => {
 
             <div class="mt-4 flex items-center justify-end">
                 <Link
-                    :href="route('login')"
+                    :href="route('login', isCustomerSignup ? { redirect } : {})"
                     class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                 >
                     Already registered?

@@ -14,13 +14,17 @@ defineProps({
     status: {
         type: String,
     },
+    isBarbershop: {
+        type: Boolean,
+        default: true,
+    },
     profileUrl: {
         type: String,
-        required: true,
+        default: null,
     },
     subscribeUrl: {
         type: String,
-        required: true,
+        default: null,
     },
     mercadopagoConfigured: {
         type: Boolean,
@@ -35,6 +39,10 @@ defineProps({
         default: 0,
     },
     subscribers: {
+        type: Array,
+        default: () => [],
+    },
+    barbershopMemberships: {
         type: Array,
         default: () => [],
     },
@@ -62,11 +70,14 @@ defineProps({
                         :must-verify-email="mustVerifyEmail"
                         :status="status"
                         :profile-url="profileUrl"
+                        :is-barbershop="isBarbershop"
+                        :barbershop-memberships="barbershopMemberships"
                         class="max-w-xl"
                     />
                 </div>
 
                 <div
+                    v-if="isBarbershop"
                     class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
                 >
                     <ManageSubscriptionPlanForm
@@ -79,7 +90,7 @@ defineProps({
                 </div>
 
                 <div
-                    v-if="subscribers.length > 0 || subscriptionPlan?.is_enabled"
+                    v-if="isBarbershop && (subscribers.length > 0 || subscriptionPlan?.is_enabled)"
                     class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
                 >
                     <SubscribersList

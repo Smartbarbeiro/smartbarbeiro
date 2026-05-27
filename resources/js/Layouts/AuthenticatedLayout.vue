@@ -40,7 +40,7 @@ const showingNavigationDropdown = ref(false);
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    v-if="$page.props.auth.user?.username"
+                                    v-if="$page.props.auth.user?.is_barbershop && $page.props.auth.user?.username"
                                     :href="
                                         route('profile.public', {
                                             username: $page.props.auth.user.username,
@@ -176,7 +176,7 @@ const showingNavigationDropdown = ref(false);
                             Dashboard
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            v-if="$page.props.auth.user?.username"
+                            v-if="$page.props.auth.user?.is_barbershop && $page.props.auth.user?.username"
                             :href="
                                 route('profile.public', {
                                     username: $page.props.auth.user.username,

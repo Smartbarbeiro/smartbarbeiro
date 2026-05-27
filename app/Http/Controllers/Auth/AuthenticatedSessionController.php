@@ -13,14 +13,17 @@ use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
+    use RedirectsAfterAuth;
+
     /**
      * Display the login view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'redirect' => $request->query('redirect'),
         ]);
     }
 
@@ -33,7 +36,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended($this->redirectAfterAuth($request));
     }
 
     /**

@@ -14,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'username', 'email', 'password', 'profile_photo_path', 'is_admin'])]
+#[Fillable(['name', 'username', 'email', 'password', 'profile_photo_path', 'is_admin', 'is_barbershop'])]
 #[Hidden(['password', 'remember_token', 'profile_photo_path'])]
 class User extends Authenticatable
 {
@@ -40,7 +40,18 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'is_barbershop' => 'boolean',
         ];
+    }
+
+    public function isBarbershop(): bool
+    {
+        return (bool) $this->is_barbershop;
+    }
+
+    public function hasPublicProfile(): bool
+    {
+        return $this->isBarbershop() && filled($this->username);
     }
 
     public function isAdmin(): bool
@@ -64,8 +75,12 @@ class User extends Authenticatable
         return Attribute::get(fn (): bool => $this->isAdmin());
     }
 
-    public function profileUrl(): string
+    public function profileUrl(): ?string
     {
+        if (! $this->hasPublicProfile()) {
+            return null;
+        }
+
         return url('/barbearias/'.$this->username);
     }
 
@@ -89,7 +104,17 @@ class User extends Authenticatable
         return $this->hasMany(ProfileSubscription::class, 'subscriber_user_id');
     }
 
-    public function subscribeUrl(): string
+    public function barbershopMembers(): HasMany
+    {
+        return $this->hasMany(BarbershopMembership::class, 'barbershop_user_id');
+    }
+
+    public function barbershopSignups(): HasMany
+    {
+        return $this->hasMany(BarbershopMembership::class, 'member_user_id');
+    }
+
+    public function subscribeUrl(): ?string
     {
         return $this->profileUrl();
     }

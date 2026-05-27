@@ -16,16 +16,8 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'username' => [
-                'required',
-                'string',
-                'min:3',
-                'max:30',
-                'alpha_dash',
-                Rule::unique(User::class)->ignore($this->user()->id),
-            ],
             'email' => [
                 'required',
                 'string',
@@ -34,8 +26,21 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'profile_photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-            'remove_profile_photo' => ['sometimes', 'boolean'],
         ];
+
+        if ($this->user()->isBarbershop()) {
+            $rules['username'] = [
+                'required',
+                'string',
+                'min:3',
+                'max:30',
+                'alpha_dash',
+                Rule::unique(User::class)->ignore($this->user()->id),
+            ];
+            $rules['profile_photo'] = ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'];
+            $rules['remove_profile_photo'] = ['sometimes', 'boolean'];
+        }
+
+        return $rules;
     }
 }

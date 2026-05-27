@@ -20,7 +20,10 @@ class ProfileSubscribeController extends Controller
         Request $request,
         MercadoPagoService $mercadoPago,
     ): RedirectResponse {
-        $creator = User::where('username', $username)->firstOrFail();
+        $creator = User::query()
+            ->where('username', $username)
+            ->where('is_barbershop', true)
+            ->firstOrFail();
         $subscriber = $request->user();
 
         if ($subscriber->id === $creator->id) {
@@ -104,7 +107,10 @@ class ProfileSubscribeController extends Controller
         Request $request,
         ProfileSubscriptionSyncService $syncService,
     ): Response {
-        $creator = User::where('username', $username)->firstOrFail();
+        $creator = User::query()
+            ->where('username', $username)
+            ->where('is_barbershop', true)
+            ->firstOrFail();
         $subscriber = $request->user();
 
         $subscription = ProfileSubscription::query()
