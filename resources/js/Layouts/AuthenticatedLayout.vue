@@ -20,7 +20,7 @@ const navItems = computed(() => {
             href: route('subscriptions.index'),
             active: route().current('subscriptions.index'),
             icon: 'credit-card',
-            label: 'Assinaturas',
+            label: user.value?.is_barbershop ? 'Clientes' : 'Assinaturas',
         },
         {
             href: route('profile.edit'),
@@ -102,7 +102,11 @@ const navItems = computed(() => {
                                 </li>
                                 <li>
                                     <Link :href="route('subscriptions.index')" class="dropdown-item">
-                                        <i class="bi bi-credit-card me-2"></i>Minhas assinaturas
+                                        <i class="bi bi-credit-card me-2"></i>{{
+                                            user?.is_barbershop
+                                                ? 'Clientes'
+                                                : 'Minhas assinaturas'
+                                        }}
                                     </Link>
                                 </li>
                                 <li><hr class="dropdown-divider" /></li>

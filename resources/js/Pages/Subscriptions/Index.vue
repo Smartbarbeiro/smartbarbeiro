@@ -1,7 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineProps({
     subscriptions: {
@@ -14,6 +15,11 @@ defineProps({
     },
 });
 
+const page = usePage();
+const pageTitle = computed(() =>
+    page.props.auth.user?.is_barbershop ? 'Clientes' : 'Minhas assinaturas',
+);
+
 const statusClass = (status) => {
     if (status === 'authorized') return 'badge bg-success';
     if (status === 'cancelled') return 'badge bg-secondary';
@@ -24,10 +30,10 @@ const statusClass = (status) => {
 
 <template>
     <AuthenticatedLayout>
-        <Head title="Minhas assinaturas" />
+        <Head :title="pageTitle" />
 
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Minhas assinaturas</h1>
+            <h1 class="h4 mb-0 fw-semibold">{{ pageTitle }}</h1>
         </template>
 
         <div class="d-flex flex-column gap-4">
