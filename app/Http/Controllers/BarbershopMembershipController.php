@@ -15,6 +15,7 @@ class BarbershopMembershipController extends Controller
         $barbershop = User::with('subscriptionPlan')
             ->where('username', $username)
             ->where('is_barbershop', true)
+            ->where('is_frozen', false)
             ->firstOrFail();
 
         $member = $request->user();
@@ -27,7 +28,7 @@ class BarbershopMembershipController extends Controller
             return redirect()
                 ->route('profile.public', $barbershop->username)
                 ->withErrors([
-                    'signup' => 'This barbershop requires a paid subscription to sign up.',
+                    'signup' => __('messages.barbershop_paid_signup_required'),
                 ]);
         }
 

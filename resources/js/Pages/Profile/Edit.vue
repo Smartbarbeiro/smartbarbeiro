@@ -50,66 +50,46 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Profile" />
+    <Head title="Perfil" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Profile
-            </h2>
+            <h1 class="h4 mb-0 fw-semibold">Perfil</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <UpdateProfileInformationForm
-                        :must-verify-email="mustVerifyEmail"
-                        :status="status"
-                        :profile-url="profileUrl"
-                        :is-barbershop="isBarbershop"
-                        :barbershop-memberships="barbershopMemberships"
-                        class="max-w-xl"
-                    />
-                </div>
+        <div class="d-flex flex-column gap-4">
+            <div class="app-card p-4">
+                <UpdateProfileInformationForm
+                    :must-verify-email="mustVerifyEmail"
+                    :status="status"
+                    :profile-url="profileUrl"
+                    :is-barbershop="isBarbershop"
+                    :barbershop-memberships="barbershopMemberships"
+                />
+            </div>
 
-                <div
-                    v-if="isBarbershop"
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <ManageSubscriptionPlanForm
-                        :subscription-plan="subscriptionPlan"
-                        :subscribe-url="subscribeUrl"
-                        :mercadopago-configured="mercadopagoConfigured"
-                        :active-subscribers-count="activeSubscribersCount"
-                        class="max-w-xl"
-                    />
-                </div>
+            <div v-if="isBarbershop" class="app-card p-4">
+                <ManageSubscriptionPlanForm
+                    :subscription-plan="subscriptionPlan"
+                    :subscribe-url="subscribeUrl"
+                    :mercadopago-configured="mercadopagoConfigured"
+                    :active-subscribers-count="activeSubscribersCount"
+                />
+            </div>
 
-                <div
-                    v-if="isBarbershop && (subscribers.length > 0 || subscriptionPlan?.is_enabled)"
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <SubscribersList
-                        :subscribers="subscribers"
-                        class="max-w-4xl"
-                    />
-                </div>
+            <div
+                v-if="isBarbershop && (subscribers.length > 0 || subscriptionPlan?.is_enabled)"
+                class="app-card p-4"
+            >
+                <SubscribersList :subscribers="subscribers" />
+            </div>
 
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <UpdatePasswordForm class="max-w-xl" />
-                </div>
+            <div class="app-card p-4">
+                <UpdatePasswordForm />
+            </div>
 
-                <div
-                    class="bg-white p-4 shadow sm:rounded-lg sm:p-8"
-                >
-                    <DeleteUserForm class="max-w-xl" />
-                </div>
+            <div class="app-card p-4 app-form-panel">
+                <DeleteUserForm />
             </div>
         </div>
     </AuthenticatedLayout>

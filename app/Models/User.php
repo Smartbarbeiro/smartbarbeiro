@@ -14,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'username', 'email', 'password', 'profile_photo_path', 'is_admin', 'is_barbershop'])]
+#[Fillable(['name', 'username', 'email', 'password', 'profile_photo_path', 'is_admin', 'is_barbershop', 'is_frozen'])]
 #[Hidden(['password', 'remember_token', 'profile_photo_path'])]
 class User extends Authenticatable
 {
@@ -41,7 +41,13 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'is_barbershop' => 'boolean',
+            'is_frozen' => 'boolean',
         ];
+    }
+
+    public function isFrozen(): bool
+    {
+        return (bool) $this->is_frozen;
     }
 
     public function isBarbershop(): bool
@@ -51,7 +57,7 @@ class User extends Authenticatable
 
     public function hasPublicProfile(): bool
     {
-        return $this->isBarbershop() && filled($this->username);
+        return $this->isBarbershop() && filled($this->username) && ! $this->isFrozen();
     }
 
     public function isAdmin(): bool

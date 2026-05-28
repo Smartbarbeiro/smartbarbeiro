@@ -36,114 +36,95 @@ defineProps({
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Painel" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2
-                class="text-xl font-semibold leading-tight text-gray-800"
-            >
-                Dashboard
-            </h2>
+            <h1 class="h4 mb-0 fw-semibold">Painel</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
+        <div class="app-card p-4">
+            <p class="mb-0">Você está conectado!</p>
+
+            <div v-if="isBarbershop && profileUrl" class="mt-4">
+                <p class="small fw-medium text-secondary mb-1">
+                    Seu perfil público
+                </p>
+                <Link
+                    :href="
+                        route('profile.public', {
+                            username: $page.props.auth.user.username,
+                        })
+                    "
+                    class="link-primary"
                 >
-                    <div class="space-y-4 p-6 text-gray-900">
-                        <p>You're logged in!</p>
+                    {{ profileUrl }}
+                </Link>
 
-                        <div v-if="isBarbershop && profileUrl">
-                            <p class="text-sm font-medium text-gray-700">
-                                Your public profile
-                            </p>
-                            <Link
-                                :href="
-                                    route('profile.public', {
-                                        username: $page.props.auth.user.username,
-                                    })
-                                "
-                                class="text-indigo-600 underline hover:text-indigo-500"
-                            >
-                                {{ profileUrl }}
-                            </Link>
+                <ProfileQrCode
+                    class="mt-3"
+                    style="max-width: 28rem"
+                    :url="profileUrl"
+                    :filename="`${$page.props.auth.user.username}-profile`"
+                />
+            </div>
 
-                            <ProfileQrCode
-                                class="mt-4 max-w-md"
-                                :url="profileUrl"
-                                :filename="`${$page.props.auth.user.username}-profile`"
-                            />
-                        </div>
+            <div v-if="isBarbershop && subscriptionPlan?.is_enabled" class="mt-4">
+                <p class="small fw-medium text-secondary mb-1">
+                    Perfil pago ({{ subscriptionPlan.formatted_price }}/mês)
+                </p>
+                <p class="small text-secondary mb-1">
+                    Compartilhe este link para assinantes:
+                </p>
+                <p class="font-monospace small text-break link-primary mb-1">
+                    {{ subscribeUrl }}
+                </p>
+                <p class="small text-secondary mb-2">
+                    Assinantes ativos: {{ activeSubscribersCount }}
+                </p>
+                <Link :href="route('profile.edit')" class="link-primary small">
+                    Gerenciar plano de assinatura
+                </Link>
+            </div>
 
-                        <div v-if="isBarbershop && subscriptionPlan?.is_enabled">
-                            <p class="text-sm font-medium text-gray-700">
-                                Paid profile ({{ subscriptionPlan.formatted_price }}/mo)
-                            </p>
-                            <p class="text-sm text-gray-600">
-                                Share this link for subscribers:
-                            </p>
-                            <p class="break-all font-mono text-sm text-indigo-600">
-                                {{ subscribeUrl }}
-                            </p>
-                            <p class="mt-1 text-sm text-gray-500">
-                                Active subscribers: {{ activeSubscribersCount }}
-                            </p>
-                            <Link
-                                :href="route('profile.edit')"
-                                class="mt-2 inline-block text-sm text-indigo-600 underline"
-                            >
-                                Manage subscription plan
-                            </Link>
-                        </div>
+            <div v-if="isBarbershop && storagePath" class="mt-4">
+                <p class="small fw-medium text-secondary mb-1">
+                    Sua pasta de armazenamento
+                </p>
+                <p class="font-monospace small text-secondary mb-0">
+                    {{ storagePath }}
+                </p>
+            </div>
 
-                        <div v-if="isBarbershop && storagePath">
-                            <p class="text-sm font-medium text-gray-700">
-                                Your storage folder
-                            </p>
-                            <p class="font-mono text-sm text-gray-600">
-                                {{ storagePath }}
-                            </p>
-                        </div>
-
-                        <div v-if="!isBarbershop">
-                            <p class="text-sm font-medium text-gray-700">
-                                Your barbershops
-                            </p>
-                            <p
-                                v-if="barbershopMemberships.length === 0"
-                                class="text-sm text-gray-600"
-                            >
-                                You are not signed up at any barbershop yet.
-                            </p>
-                            <ul
-                                v-else
-                                class="mt-2 space-y-2"
-                            >
-                                <li
-                                    v-for="membership in barbershopMemberships"
-                                    :key="membership.id"
-                                >
-                                    <Link
-                                        v-if="membership.barbershop.username"
-                                        :href="
-                                            route('profile.public', {
-                                                username: membership.barbershop.username,
-                                            })
-                                        "
-                                        class="text-indigo-600 underline hover:text-indigo-500"
-                                    >
-                                        {{ membership.barbershop.name }}
-                                    </Link>
-                                    <span v-else>
-                                        {{ membership.barbershop.name }}
-                                    </span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <div v-if="!isBarbershop" class="mt-4">
+                <p class="small fw-medium text-secondary mb-2">
+                    Suas barbearias
+                </p>
+                <p
+                    v-if="barbershopMemberships.length === 0"
+                    class="small text-secondary mb-0"
+                >
+                    Você ainda não está cadastrado em nenhuma barbearia.
+                </p>
+                <ul v-else class="list-unstyled mb-0 d-flex flex-column gap-2">
+                    <li
+                        v-for="membership in barbershopMemberships"
+                        :key="membership.id"
+                    >
+                        <Link
+                            v-if="membership.barbershop.username"
+                            :href="
+                                route('profile.public', {
+                                    username: membership.barbershop.username,
+                                })
+                            "
+                            class="link-primary"
+                        >
+                            {{ membership.barbershop.name }}
+                        </Link>
+                        <span v-else>{{ membership.barbershop.name }}</span>
+                    </li>
+                </ul>
             </div>
         </div>
     </AuthenticatedLayout>

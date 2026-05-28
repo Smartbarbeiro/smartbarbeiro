@@ -36,26 +36,23 @@ const updatePassword = () => {
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Update Password
-            </h2>
+            <h2 class="h5 fw-semibold mb-1">Atualizar senha</h2>
 
-            <p class="mt-1 text-sm text-gray-600">
-                Ensure your account is using a long, random password to stay
-                secure.
+            <p class="text-secondary small mb-0">
+                Use uma senha longa e aleatória para manter sua conta segura.
             </p>
         </header>
 
-        <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
-            <div>
-                <InputLabel for="current_password" value="Current Password" />
+        <form @submit.prevent="updatePassword" class="mt-4">
+            <div class="mb-3">
+                <InputLabel for="current_password" value="Senha atual" />
 
                 <TextInput
                     id="current_password"
                     ref="currentPasswordInput"
                     v-model="form.current_password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     autocomplete="current-password"
                 />
 
@@ -65,32 +62,32 @@ const updatePassword = () => {
                 />
             </div>
 
-            <div>
-                <InputLabel for="password" value="New Password" />
+            <div class="mb-3">
+                <InputLabel for="password" value="Nova senha" />
 
                 <TextInput
                     id="password"
                     ref="passwordInput"
                     v-model="form.password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     autocomplete="new-password"
                 />
 
                 <InputError :message="form.errors.password" class="mt-2" />
             </div>
 
-            <div>
+            <div class="mb-3">
                 <InputLabel
                     for="password_confirmation"
-                    value="Confirm Password"
+                    value="Confirmar senha"
                 />
 
                 <TextInput
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     autocomplete="new-password"
                 />
 
@@ -100,22 +97,15 @@ const updatePassword = () => {
                 />
             </div>
 
-            <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+            <div class="d-flex align-items-center gap-3">
+                <PrimaryButton :disabled="form.processing">Salvar</PrimaryButton>
 
-                <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
+                <p
+                    v-if="form.recentlySuccessful"
+                    class="text-secondary small mb-0"
                 >
-                    <p
-                        v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
-                    >
-                        Saved.
-                    </p>
-                </Transition>
+                    Salvo.
+                </p>
             </div>
         </form>
     </section>

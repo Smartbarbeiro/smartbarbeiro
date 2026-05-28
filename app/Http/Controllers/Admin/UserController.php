@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\ProfileSubscription;
 use App\Models\User;
 use App\Services\DeleteUserAccountService;
 use Illuminate\Http\RedirectResponse;
@@ -23,8 +24,14 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $search = $request->string('search')->trim()->toString();
+        $activeStatuses = ProfileSubscription::activeStatuses();
 
         $users = User::query()
+            ->withCount([
+                'subscribers',
+                'subscribers as active_subscribers_count' => fn ($query) => $query->whereIn('status', $activeStatuses),
+                'barbershopMembers',
+            ])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
@@ -41,10 +48,16 @@ class UserController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
                 'is_admin' => $user->isAdmin(),
+                'is_barbershop' => $user->isBarbershop(),
+                'is_frozen' => $user->isFrozen(),
                 'profile_photo_url' => $user->profile_photo_url,
                 'profile_url' => $user->profileUrl(),
-                'created_at' => $user->created_at->format('M j, Y'),
-                'can_delete' => $request->user()->id !== $user->id,
+                'created_at' => $user->created_at->translatedFormat('j M Y'),
+                'subscribers_count' => $user->subscribers_count,
+                'active_subscribers_count' => $user->active_subscribers_count,
+                'barbershop_members_count' => $user->barbershop_members_count,
+                'can_delete' => $request->user()->can('delete', $user),
+                'can_freeze' => $request->user()->can('freeze', $user),
             ]);
 
         return Inertia::render('Admin/Users/Index', [
@@ -59,6 +72,15 @@ class UserController extends Controller
     {
         $this->authorize('view', $user);
 
+        $user->load([
+            'subscriptionPlan',
+            'subscribers' => fn ($query) => $query
+                ->with('subscriber:id,name,email,username')
+                ->latest()
+                ->limit(100),
+            'barbershopMembers.member:id,name,email,username',
+        ]);
+
         return Inertia::render('Admin/Users/Edit', [
             'managedUser' => [
                 'id' => $user->id,
@@ -66,15 +88,39 @@ class UserController extends Controller
                 'username' => $user->username,
                 'email' => $user->email,
                 'is_admin' => $user->isAdmin(),
+                'is_barbershop' => $user->isBarbershop(),
+                'is_frozen' => $user->isFrozen(),
                 'profile_photo_url' => $user->profile_photo_url,
                 'profile_url' => $user->profileUrl(),
                 'storage_path' => 'storage/app/users/'.$user->id,
-                'created_at' => $user->created_at->format('M j, Y g:i A'),
+                'created_at' => $user->created_at->translatedFormat('j M Y H:i'),
                 'subscribers_count' => $user->subscribers()->count(),
+                'active_subscribers_count' => $user->subscribers()
+                    ->whereIn('status', ProfileSubscription::activeStatuses())
+                    ->count(),
                 'subscriptions_count' => $user->profileSubscriptions()->count(),
+                'barbershop_members_count' => $user->barbershopMembers()->count(),
                 'has_subscription_plan' => $user->subscriptionPlan()->exists(),
+                'subscribers' => $user->subscribers->map(fn ($subscription) => [
+                    ...$subscription->toSummaryArray(),
+                    'subscriber' => [
+                        'name' => $subscription->subscriber->name,
+                        'email' => $subscription->subscriber->email,
+                        'username' => $subscription->subscriber->username,
+                    ],
+                ]),
+                'barbershop_members' => $user->barbershopMembers->map(fn ($membership) => [
+                    'id' => $membership->id,
+                    'member' => [
+                        'name' => $membership->member->name,
+                        'email' => $membership->member->email,
+                        'username' => $membership->member->username,
+                    ],
+                    'joined_at' => $membership->created_at->translatedFormat('j M Y'),
+                ]),
             ],
             'canDelete' => request()->user()->can('delete', $user),
+            'canFreeze' => request()->user()->can('freeze', $user),
         ]);
     }
 
@@ -82,10 +128,20 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $user->fill($request->safe()->only(['name', 'username', 'email']));
+        $fields = ['name', 'email'];
+
+        if ($user->isBarbershop()) {
+            $fields[] = 'username';
+        }
+
+        $user->fill($request->safe()->only($fields));
 
         if ($request->user()->id !== $user->id) {
             $user->is_admin = $request->boolean('is_admin');
+
+            if ($request->user()->can('freeze', $user)) {
+                $user->is_frozen = $request->boolean('is_frozen');
+            }
         }
 
         if ($request->filled('password')) {
@@ -100,6 +156,18 @@ class UserController extends Controller
 
         return Redirect::route('admin.users.edit', $user)
             ->with('status', 'user-updated');
+    }
+
+    public function toggleFreeze(Request $request, User $user): RedirectResponse
+    {
+        $this->authorize('freeze', $user);
+
+        $user->update([
+            'is_frozen' => ! $user->isFrozen(),
+        ]);
+
+        return Redirect::back()
+            ->with('status', $user->isFrozen() ? 'user-frozen' : 'user-unfrozen');
     }
 
     public function destroy(Request $request, User $user): RedirectResponse

@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'not_frozen' => \App\Http\Middleware\EnsureUserIsNotFrozen::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

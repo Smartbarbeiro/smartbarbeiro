@@ -17,7 +17,7 @@ const props = defineProps({
     },
     buttonLabel: {
         type: String,
-        default: 'Cancel subscription',
+        default: 'Cancelar assinatura',
     },
     compact: {
         type: Boolean,
@@ -50,7 +50,7 @@ const cancelSubscription = () => {
         <button
             v-if="compact"
             type="button"
-            class="text-sm font-medium text-red-600 underline hover:text-red-500"
+            class="btn btn-link link-danger btn-sm p-0"
             @click="openModal"
         >
             {{ buttonLabel }}
@@ -58,28 +58,27 @@ const cancelSubscription = () => {
         <DangerButton v-else @click="openModal">{{ buttonLabel }}</DangerButton>
 
         <Modal :show="confirming" @close="closeModal">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">
-                    Cancel subscription?
-                </h2>
+            <div class="p-4">
+                <h2 class="h5 fw-semibold">Cancelar assinatura?</h2>
 
-                <p class="mt-2 text-sm text-gray-600">
-                    You will lose access to {{ creatorName }}'s profile when the
-                    current billing period ends. Mercado Pago will stop future
-                    monthly charges.
+                <p class="text-secondary small mt-2 mb-0">
+                    Você perderá o acesso ao perfil de {{ creatorName }} quando o
+                    período de cobrança atual terminar. O Mercado Pago deixará de
+                    fazer cobranças mensais futuras.
                 </p>
 
                 <InputError class="mt-3" :message="form.errors.cancel" />
 
-                <div class="mt-6 flex justify-end gap-3">
-                    <SecondaryButton @click="closeModal">Keep subscription</SecondaryButton>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <SecondaryButton @click="closeModal">
+                        Manter assinatura
+                    </SecondaryButton>
 
                     <DangerButton
-                        :class="{ 'opacity-25': form.processing }"
                         :disabled="form.processing"
                         @click="cancelSubscription"
                     >
-                        Confirm cancellation
+                        Confirmar cancelamento
                     </DangerButton>
                 </div>
             </div>

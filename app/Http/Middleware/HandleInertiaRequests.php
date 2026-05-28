@@ -36,7 +36,21 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
+                'statusMessage' => function () use ($request) {
+                    $status = $request->session()->get('status');
+
+                    if (! is_string($status) || $status === '') {
+                        return null;
+                    }
+
+                    $translationKey = "messages.status.{$status}";
+
+                    return __($translationKey) !== $translationKey
+                        ? __($translationKey)
+                        : null;
+                },
             ],
+            'locale' => app()->getLocale(),
         ];
     }
 }

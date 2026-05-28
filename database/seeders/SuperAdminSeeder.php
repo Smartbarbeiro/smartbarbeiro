@@ -50,6 +50,7 @@ class SuperAdminSeeder extends Seeder
                 'username' => $username,
                 'password' => $password,
                 'is_admin' => true,
+                'is_barbershop' => true,
                 'email_verified_at' => now(),
             ],
         );

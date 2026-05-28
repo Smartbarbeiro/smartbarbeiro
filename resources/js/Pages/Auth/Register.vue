@@ -35,21 +35,25 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Register" />
+        <Head title="Cadastrar" />
 
         <form @submit.prevent="submit">
-            <div v-if="isCustomerSignup" class="mb-4 rounded-md bg-indigo-50 p-4 text-sm text-indigo-800">
-                Create your account to sign up at this barbershop. You will not
-                get a public profile page.
+            <div
+                v-if="isCustomerSignup"
+                class="alert alert-info mb-3"
+                role="alert"
+            >
+                Crie sua conta para se cadastrar nesta barbearia. Você não terá
+                uma página de perfil público.
             </div>
 
-            <div>
-                <InputLabel for="name" value="Name" />
+            <div class="mb-3">
+                <InputLabel for="name" value="Nome" />
 
                 <TextInput
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.name"
                     required
                     autofocus
@@ -59,32 +63,32 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
-            <div v-if="!isCustomerSignup" class="mt-4">
-                <InputLabel for="username" value="Username (optional)" />
+            <div v-if="!isCustomerSignup" class="mb-3">
+                <InputLabel for="username" value="Nome de usuário (opcional)" />
 
                 <TextInput
                     id="username"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.username"
                     autocomplete="username"
                 />
 
-                <p class="mt-1 text-xs text-gray-500">
-                    Leave blank to generate from your name. Your barbershop page will be
-                    at /barbearias/your-username
+                <p class="form-text">
+                    Deixe em branco para gerar a partir do seu nome. A página da sua barbearia ficará em
+                    /barbearias/seu-usuario
                 </p>
 
                 <InputError class="mt-2" :message="form.errors.username" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="email" value="Email" />
+            <div class="mb-3">
+                <InputLabel for="email" value="E-mail" />
 
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.email"
                     required
                     autocomplete="username"
@@ -93,13 +97,13 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+            <div class="mb-3">
+                <InputLabel for="password" value="Senha" />
 
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.password"
                     required
                     autocomplete="new-password"
@@ -108,16 +112,16 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4">
+            <div class="mb-3">
                 <InputLabel
                     for="password_confirmation"
-                    value="Confirm Password"
+                    value="Confirmar senha"
                 />
 
                 <TextInput
                     id="password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.password_confirmation"
                     required
                     autocomplete="new-password"
@@ -129,20 +133,16 @@ const submit = () => {
                 />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
+            <div class="d-flex align-items-center justify-content-end gap-3">
                 <Link
                     :href="route('login', isCustomerSignup ? { redirect } : {})"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    class="btn btn-link link-secondary p-0"
                 >
-                    Already registered?
+                    Já está cadastrado?
                 </Link>
 
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Register
+                <PrimaryButton :disabled="form.processing">
+                    Cadastrar
                 </PrimaryButton>
             </div>
         </form>

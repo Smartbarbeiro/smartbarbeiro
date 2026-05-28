@@ -29,6 +29,7 @@ const searchForm = useForm({
 
 const userToDelete = ref(null);
 const deleteForm = useForm({});
+const freezeForm = useForm({});
 
 const submitSearch = () => {
     searchForm.get(route('admin.users.index'), {
@@ -56,189 +57,256 @@ const deleteUser = () => {
         onSuccess: () => closeDeleteModal(),
     });
 };
+
+const toggleFreeze = (user) => {
+    freezeForm.patch(route('admin.users.freeze', user.id), {
+        preserveScroll: true,
+    });
+};
+
+const statusLabel = (user) => {
+    if (user.is_frozen) {
+        return 'Congelado';
+    }
+
+    if (user.is_barbershop) {
+        return 'Barbearia';
+    }
+
+    return 'Cliente';
+};
+
+const statusClass = (user) => {
+    if (user.is_frozen) {
+        return 'badge bg-danger';
+    }
+
+    if (user.is_barbershop) {
+        return 'badge bg-primary';
+    }
+
+    return 'badge bg-secondary';
+};
 </script>
 
 <template>
-    <Head title="User control panel" />
+    <Head title="Painel de controle" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                User control panel
-            </h2>
+            <h1 class="h4 mb-0 fw-semibold">Painel de controle</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                <div
-                    v-if="flashStatus === 'user-deleted'"
-                    class="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+        <div class="d-flex flex-column gap-4">
+            <div
+                v-if="flashStatus === 'user-deleted'"
+                class="alert alert-success mb-0"
+                role="alert"
+            >
+                Usuário excluído. O perfil, assinaturas e armazenamento foram
+                removidos.
+            </div>
+            <div
+                v-else-if="flashStatus === 'user-frozen'"
+                class="alert alert-warning mb-0"
+                role="alert"
+            >
+                Conta congelada. O usuário não pode entrar nem exibir perfil público.
+            </div>
+            <div
+                v-else-if="flashStatus === 'user-unfrozen'"
+                class="alert alert-success mb-0"
+                role="alert"
+            >
+                Conta descongelada.
+            </div>
+
+            <div class="app-card p-4">
+                <form
+                    @submit.prevent="submitSearch"
+                    class="row g-3 align-items-end"
                 >
-                    User deleted. Their profile, subscriptions, and storage were
-                    removed.
-                </div>
-
-                <div class="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                    <form
-                        @submit.prevent="submitSearch"
-                        class="flex flex-wrap items-end gap-4"
-                    >
-                        <div class="min-w-[16rem] flex-1">
-                            <InputLabel for="search" value="Search users" />
-                            <TextInput
-                                id="search"
-                                v-model="searchForm.search"
-                                type="search"
-                                class="mt-1 block w-full"
-                                placeholder="Name, username, or email"
-                            />
-                        </div>
-                        <PrimaryButton :disabled="searchForm.processing">
-                            Search
-                        </PrimaryButton>
-                    </form>
-                </div>
-
-                <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
-                >
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        class="px-4 py-3 text-left font-medium text-gray-600"
-                                    >
-                                        User
-                                    </th>
-                                    <th
-                                        class="px-4 py-3 text-left font-medium text-gray-600"
-                                    >
-                                        Email
-                                    </th>
-                                    <th
-                                        class="px-4 py-3 text-left font-medium text-gray-600"
-                                    >
-                                        Joined
-                                    </th>
-                                    <th
-                                        class="px-4 py-3 text-right font-medium text-gray-600"
-                                    >
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <tr
-                                    v-for="user in users.data"
-                                    :key="user.id"
-                                >
-                                    <td class="px-4 py-3">
-                                        <div class="flex items-center gap-3">
-                                            <ProfileAvatar
-                                                :name="user.name"
-                                                :photo-url="user.profile_photo_url"
-                                                size="sm"
-                                            />
-                                            <div>
-                                                <p class="font-medium text-gray-900">
-                                                    {{ user.name }}
-                                                    <span
-                                                        v-if="user.is_admin"
-                                                        class="ms-1 rounded bg-indigo-100 px-1.5 py-0.5 text-xs font-medium text-indigo-700"
-                                                    >
-                                                        Admin
-                                                    </span>
-                                                </p>
-                                                <p class="text-gray-500">
-                                                    @{{ user.username }}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-700">
-                                        {{ user.email }}
-                                    </td>
-                                    <td class="px-4 py-3 text-gray-500">
-                                        {{ user.created_at }}
-                                    </td>
-                                    <td class="px-4 py-3">
-                                        <div
-                                            class="flex justify-end gap-2"
-                                        >
-                                            <Link
-                                                :href="
-                                                    route('admin.users.edit', user.id)
-                                                "
-                                                class="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Edit
-                                            </Link>
-                                            <button
-                                                v-if="user.can_delete"
-                                                type="button"
-                                                class="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
-                                                @click="confirmDelete(user)"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div
-                        v-if="users.data.length === 0"
-                        class="p-8 text-center text-sm text-gray-500"
-                    >
-                        No users found.
-                    </div>
-
-                    <div
-                        v-if="users.links?.length > 3"
-                        class="flex flex-wrap gap-1 border-t border-gray-200 px-4 py-3"
-                    >
-                        <Link
-                            v-for="(link, index) in users.links"
-                            :key="index"
-                            :href="link.url ?? '#'"
-                            class="rounded px-3 py-1 text-sm"
-                            :class="
-                                link.active
-                                    ? 'bg-indigo-600 text-white'
-                                    : link.url
-                                      ? 'text-gray-700 hover:bg-gray-100'
-                                      : 'cursor-not-allowed text-gray-400'
-                            "
-                            v-html="link.label"
+                    <div class="col-md flex-grow-1">
+                        <InputLabel for="search" value="Buscar usuários" />
+                        <TextInput
+                            id="search"
+                            v-model="searchForm.search"
+                            type="search"
+                            class="mt-1 w-100"
+                            placeholder="Nome, usuário ou e-mail"
                         />
                     </div>
+                    <div class="col-md-auto">
+                        <PrimaryButton :disabled="searchForm.processing">
+                            Buscar
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </div>
+
+            <div class="app-card p-0 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-dark-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Usuário</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Assinantes</th>
+                                <th scope="col">Membros</th>
+                                <th scope="col">Cadastrado em</th>
+                                <th scope="col" class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="user in users.data"
+                                :key="user.id"
+                            >
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <ProfileAvatar
+                                            :name="user.name"
+                                            :photo-url="user.profile_photo_url"
+                                            size="sm"
+                                        />
+                                        <div>
+                                            <p class="fw-medium mb-0">
+                                                {{ user.name }}
+                                                <span
+                                                    v-if="user.is_admin"
+                                                    class="badge bg-primary ms-1"
+                                                >
+                                                    Admin
+                                                </span>
+                                            </p>
+                                            <p class="text-secondary small mb-0">
+                                                {{ user.email }}
+                                            </p>
+                                            <p
+                                                v-if="user.username"
+                                                class="text-secondary mb-0"
+                                                style="font-size: 0.75rem"
+                                            >
+                                                /barbearias/{{ user.username }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge"
+                                        :class="statusClass(user)"
+                                    >
+                                        {{ statusLabel(user) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-medium">{{
+                                        user.active_subscribers_count
+                                    }}</span>
+                                    <span class="text-secondary">
+                                        ativos /
+                                        {{ user.subscribers_count }} total
+                                    </span>
+                                </td>
+                                <td>{{ user.barbershop_members_count }}</td>
+                                <td class="text-secondary">
+                                    {{ user.created_at }}
+                                </td>
+                                <td>
+                                    <div
+                                        class="d-flex flex-wrap justify-content-end gap-2"
+                                    >
+                                        <Link
+                                            :href="
+                                                route('admin.users.edit', user.id)
+                                            "
+                                            class="btn btn-outline-secondary btn-sm"
+                                        >
+                                            Editar
+                                        </Link>
+                                        <button
+                                            v-if="user.can_freeze"
+                                            type="button"
+                                            class="btn btn-sm"
+                                            :class="
+                                                user.is_frozen
+                                                    ? 'btn-outline-success'
+                                                    : 'btn-outline-warning'
+                                            "
+                                            :disabled="freezeForm.processing"
+                                            @click="toggleFreeze(user)"
+                                        >
+                                            {{
+                                                user.is_frozen
+                                                    ? 'Descongelar'
+                                                    : 'Congelar'
+                                            }}
+                                        </button>
+                                        <button
+                                            v-if="user.can_delete"
+                                            type="button"
+                                            class="btn btn-outline-danger btn-sm"
+                                            @click="confirmDelete(user)"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div
+                    v-if="users.data.length === 0"
+                    class="p-4 text-center text-secondary small"
+                >
+                    Nenhum usuário encontrado.
+                </div>
+
+                <div
+                    v-if="users.links?.length > 3"
+                    class="d-flex flex-wrap gap-1 border-top border-secondary-subtle p-3"
+                >
+                    <Link
+                        v-for="(link, index) in users.links"
+                        :key="index"
+                        :href="link.url ?? '#'"
+                        class="btn btn-sm"
+                        :class="
+                            link.active
+                                ? 'btn-primary'
+                                : link.url
+                                  ? 'btn-outline-secondary'
+                                  : 'btn-outline-secondary disabled'
+                        "
+                        v-html="link.label"
+                    />
                 </div>
             </div>
         </div>
 
         <Modal :show="!!userToDelete" @close="closeDeleteModal">
-            <div class="p-6">
-                <h2 class="text-lg font-medium text-gray-900">
-                    Delete {{ userToDelete?.name }}?
+            <div class="p-4">
+                <h2 class="h5 fw-semibold">
+                    Excluir {{ userToDelete?.name }}?
                 </h2>
-                <p class="mt-2 text-sm text-gray-600">
-                    This permanently removes their account, public profile,
-                    subscription plan, Mercado Pago subscription records, profile
-                    photo, and private storage folder.
+                <p class="text-secondary small mt-2 mb-0">
+                    Isso remove permanentemente a conta, perfil público, plano de
+                    assinatura, registros de assinatura do Mercado Pago, foto de
+                    perfil e pasta de armazenamento privada.
                 </p>
 
-                <div class="mt-6 flex justify-end gap-3">
+                <div class="d-flex justify-content-end gap-2 mt-4">
                     <SecondaryButton @click="closeDeleteModal">
-                        Cancel
+                        Cancelar
                     </SecondaryButton>
                     <DangerButton
                         :disabled="deleteForm.processing"
                         @click="deleteUser"
                     >
-                        Delete user
+                        Excluir usuário
                     </DangerButton>
                 </div>
             </div>

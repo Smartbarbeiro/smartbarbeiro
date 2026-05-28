@@ -1,256 +1,171 @@
 <script setup>
-import { ref } from 'vue';
+import SidebarNavLink from '@/Components/SidebarNavLink.vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import ProfileAvatar from '@/Components/ProfileAvatar.vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-const showingNavigationDropdown = ref(false);
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+
+const navItems = computed(() => {
+    const items = [
+        {
+            href: route('dashboard'),
+            active: route().current('dashboard'),
+            icon: 'speedometer2',
+            label: 'Painel',
+        },
+        {
+            href: route('subscriptions.index'),
+            active: route().current('subscriptions.index'),
+            icon: 'credit-card',
+            label: 'Assinaturas',
+        },
+        {
+            href: route('profile.edit'),
+            active: route().current('profile.edit'),
+            icon: 'person-gear',
+            label: 'Perfil',
+        },
+    ];
+
+    if (user.value?.is_barbershop && user.value?.username) {
+        items.splice(1, 0, {
+            href: route('profile.public', { username: user.value.username }),
+            active: route().current('profile.public'),
+            icon: 'shop',
+            label: 'Barbearia',
+        });
+    }
+
+    if (user.value?.is_administrator) {
+        items.splice(user.value?.is_barbershop && user.value?.username ? 2 : 1, 0, {
+            href: route('admin.users.index'),
+            active: route().current('admin.*'),
+            icon: 'shield-lock',
+            label: 'Admin',
+        });
+    }
+
+    return items;
+});
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100">
-            <nav
-                class="border-b border-gray-100 bg-white"
-            >
-                <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
-                                </Link>
-                            </div>
-
-                            <!-- Navigation Links -->
-                            <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
-                            >
-                                <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
-                                >
-                                    Dashboard
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user?.is_barbershop && $page.props.auth.user?.username"
-                                    :href="
-                                        route('profile.public', {
-                                            username: $page.props.auth.user.username,
-                                        })
-                                    "
-                                    :active="route().current('profile.public')"
-                                >
-                                    My Page
-                                </NavLink>
-                                <NavLink
-                                    :href="route('subscriptions.index')"
-                                    :active="route().current('subscriptions.index')"
-                                >
-                                    Subscriptions
-                                </NavLink>
-                                <NavLink
-                                    v-if="$page.props.auth.user?.is_administrator"
-                                    :href="route('admin.users.index')"
-                                    :active="route().current('admin.*')"
-                                >
-                                    Users
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
-                                <Dropdown align="right" width="48">
-                                    <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {{ $page.props.auth.user.name }}
-
-                                                <svg
-                                                    class="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </template>
-
-                                    <template #content>
-                                        <DropdownLink
-                                            :href="route('profile.edit')"
-                                        >
-                                            Profile
-                                        </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('subscriptions.index')"
-                                        >
-                                            My subscriptions
-                                        </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </DropdownLink>
-                                    </template>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
-                            <button
-                                @click="
-                                    showingNavigationDropdown =
-                                        !showingNavigationDropdown
-                                "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    class="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex':
-                                                !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex':
-                                                showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Responsive Navigation Menu -->
-                <div
-                    :class="{
-                        block: showingNavigationDropdown,
-                        hidden: !showingNavigationDropdown,
-                    }"
-                    class="sm:hidden"
-                >
-                    <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            v-if="$page.props.auth.user?.is_barbershop && $page.props.auth.user?.username"
-                            :href="
-                                route('profile.public', {
-                                    username: $page.props.auth.user.username,
-                                })
-                            "
-                            :active="route().current('profile.public')"
-                        >
-                            My Page
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('subscriptions.index')"
-                            :active="route().current('subscriptions.index')"
-                        >
-                            Subscriptions
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            v-if="$page.props.auth.user?.is_administrator"
-                            :href="route('admin.users.index')"
-                            :active="route().current('admin.*')"
-                        >
-                            Users
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <!-- Responsive Settings Options -->
-                    <div
-                        class="border-t border-gray-200 pb-1 pt-4"
-                    >
-                        <div class="px-4">
-                            <div
-                                class="text-base font-medium text-gray-800"
-                            >
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
-                            </div>
-                        </div>
-
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('subscriptions.index')"
-                            >
-                                My subscriptions
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('logout')"
-                                method="post"
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
+    <div class="app-shell">
+        <aside class="icon-sidebar d-none d-lg-flex">
+            <nav class="sidebar-nav sidebar-nav-top">
+                <SidebarNavLink
+                    v-for="item in navItems"
+                    :key="item.href"
+                    v-bind="item"
+                />
             </nav>
+        </aside>
 
-            <!-- Page Heading -->
-            <header
-                class="bg-white shadow"
-                v-if="$slots.header"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
+        <div class="app-main">
+            <header class="app-topbar">
+                <div class="d-flex align-items-center w-100 gap-3 gap-lg-4">
+                    <Link
+                        :href="route('dashboard')"
+                        class="app-topbar-logo shrink-0"
+                        title="Smart Barbeiro"
+                    >
+                        <ApplicationLogo size="md" />
+                    </Link>
+
+                    <div class="app-topbar-heading d-flex align-items-center gap-3 min-w-0">
+                        <div class="dropdown shrink-0">
+                            <button
+                                class="app-topbar-avatar-btn border-0 bg-transparent p-0"
+                                type="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                :aria-label="`Conta de ${user?.name ?? 'usuário'}`"
+                            >
+                                <ProfileAvatar
+                                    :name="user?.name ?? 'Usuário'"
+                                    :photo-url="user?.profile_photo_url"
+                                    size="md"
+                                />
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark">
+                                <li class="px-3 py-2 border-bottom border-secondary-subtle">
+                                    <div class="fw-semibold">{{ user?.name }}</div>
+                                    <div class="small text-secondary">{{ user?.email }}</div>
+                                </li>
+                                <li>
+                                    <Link :href="route('profile.edit')" class="dropdown-item">
+                                        <i class="bi bi-person me-2"></i>Perfil
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link :href="route('subscriptions.index')" class="dropdown-item">
+                                        <i class="bi bi-credit-card me-2"></i>Minhas assinaturas
+                                    </Link>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <Link
+                                        :href="route('logout')"
+                                        method="post"
+                                        as="button"
+                                        class="dropdown-item"
+                                    >
+                                        <i class="bi bi-box-arrow-right me-2"></i>Sair
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div v-if="$slots.header" class="app-topbar-title min-w-0">
+                            <slot name="header" />
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <!-- Page Content -->
-            <main>
+            <main class="app-content">
                 <slot />
             </main>
         </div>
+
+        <nav class="mobile-bottom-nav d-lg-none" aria-label="Menu principal">
+            <SidebarNavLink
+                v-for="item in navItems"
+                :key="`mobile-${item.href}`"
+                v-bind="item"
+                variant="bottom"
+            />
+
+            <div class="dropdown dropup mobile-bottom-account">
+                <button
+                    class="mobile-bottom-link border-0 bg-transparent"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    aria-label="Menu da conta"
+                >
+                    <ProfileAvatar
+                        :name="user?.name ?? 'Usuário'"
+                        :photo-url="user?.profile_photo_url"
+                        size="sm"
+                    />
+                    <span class="mobile-bottom-label">Conta</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark mb-2">
+                    <li class="px-3 py-2 border-bottom border-secondary-subtle">
+                        <div class="fw-semibold">{{ user?.name }}</div>
+                        <div class="small text-secondary">{{ user?.email }}</div>
+                    </li>
+                    <li>
+                        <Link :href="route('logout')" method="post" as="button" class="dropdown-item">
+                            <i class="bi bi-box-arrow-right me-2"></i>Sair
+                        </Link>
+                    </li>
+                </ul>
+            </div>
+        </nav>
     </div>
 </template>

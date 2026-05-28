@@ -23,6 +23,7 @@ class ProfileSubscribeController extends Controller
         $creator = User::query()
             ->where('username', $username)
             ->where('is_barbershop', true)
+            ->where('is_frozen', false)
             ->firstOrFail();
         $subscriber = $request->user();
 
@@ -35,12 +36,12 @@ class ProfileSubscribeController extends Controller
         if (! $plan?->is_enabled) {
             return redirect()
                 ->route('profile.public', $creator->username)
-                ->withErrors(['subscribe' => 'This profile does not require a subscription.']);
+                ->withErrors(['subscribe' => __('messages.profile_no_subscription_required')]);
         }
 
         if (! $mercadoPago->isConfigured()) {
             return back()->withErrors([
-                'subscribe' => 'Payments are not configured on this server yet.',
+                'subscribe' => __('messages.payments_not_configured'),
             ]);
         }
 
@@ -95,7 +96,7 @@ class ProfileSubscribeController extends Controller
 
         if (! $preapproval->init_point) {
             return back()->withErrors([
-                'subscribe' => 'Mercado Pago did not return a checkout URL. Try again later.',
+                'subscribe' => __('messages.mercadopago_no_checkout_url'),
             ]);
         }
 
@@ -110,6 +111,7 @@ class ProfileSubscribeController extends Controller
         $creator = User::query()
             ->where('username', $username)
             ->where('is_barbershop', true)
+            ->where('is_frozen', false)
             ->firstOrFail();
         $subscriber = $request->user();
 

@@ -1,3 +1,3 @@
-/**
- * Application bootstrap (axios, Echo, etc.) can be added here.
- */
+import * as bootstrap from 'bootstrap';
+
+window.bootstrap = bootstrap;

@@ -20,6 +20,7 @@ class PublicProfileController extends Controller
         $user = User::with('subscriptionPlan')
             ->where('username', $username)
             ->where('is_barbershop', true)
+            ->where('is_frozen', false)
             ->firstOrFail();
 
         $viewer = auth()->user();
@@ -54,7 +55,7 @@ class PublicProfileController extends Controller
                 'username' => $user->username,
                 'profile_url' => $user->profileUrl(),
                 'profile_photo_url' => $user->profile_photo_url,
-                'member_since' => $user->created_at->format('F Y'),
+                'member_since' => $user->created_at->translatedFormat('F Y'),
             ],
             'isOwner' => $viewer?->id === $user->id,
             'canView' => $canView,

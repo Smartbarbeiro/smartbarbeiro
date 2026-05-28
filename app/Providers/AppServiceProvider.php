@@ -29,5 +29,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, AdminUserPolicy::class);
 
         Vite::prefetch(concurrency: 3);
+
+        \Illuminate\Support\Facades\Date::setLocale(config('app.locale'));
     }
 }

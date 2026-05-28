@@ -65,165 +65,163 @@ const showPaywall = computed(
 
 <template>
     <component :is="isAuthenticated ? AuthenticatedLayout : GuestLayout">
-        <Head :title="profile.name" />
+        <Head :title="isOwner && isAuthenticated ? 'Barbearia' : profile.name" />
 
         <template v-if="isAuthenticated" #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                {{ profile.name }}
-            </h2>
+            <h1 class="h4 mb-0 fw-semibold">
+                {{ isOwner ? 'Barbearia' : profile.name }}
+            </h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-3xl sm:px-6 lg:px-8">
-                <div
-                    v-if="showPaywall"
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
+        <div
+            :class="
+                isAuthenticated
+                    ? 'app-card p-4 mx-auto'
+                    : ''
+            "
+            :style="isAuthenticated ? { maxWidth: '48rem' } : undefined"
+        >
+            <div v-if="showPaywall" class="text-center">
+                <ProfileAvatar
+                    class="mx-auto d-block"
+                    :name="profile.name"
+                    :photo-url="profile.profile_photo_url"
+                    size="xl"
+                />
+                <p class="small text-uppercase text-secondary mt-3 mb-0">
+                    Apenas assinantes
+                </p>
+                <h1 class="h3 fw-bold mt-2 mb-1">
+                    {{ subscriptionPlan.title }}
+                </h1>
+                <p class="text-secondary mb-0">@{{ profile.username }}</p>
+                <p class="display-6 fw-semibold text-primary mt-2 mb-0">
+                    {{ subscriptionPlan.formatted_price }}
+                    <span class="fs-6 fw-normal text-secondary">/ mês</span>
+                </p>
+                <p
+                    v-if="subscriptionPlan.description"
+                    class="text-secondary mx-auto mt-3 mb-0"
+                    style="max-width: 28rem"
                 >
-                    <div class="p-8 text-center">
-                        <ProfileAvatar
-                            class="mx-auto"
-                            :name="profile.name"
-                            :photo-url="profile.profile_photo_url"
-                            size="xl"
+                    {{ subscriptionPlan.description }}
+                </p>
+
+                <div class="d-flex flex-column align-items-center gap-3 mt-4">
+                    <BarbershopSignUpButton
+                        :profile="profile"
+                        :is-owner="isOwner"
+                        :is-authenticated="isAuthenticated"
+                        :has-signed-up="hasSignedUp"
+                        :requires-payment="requiresPayment"
+                        :mercadopago-configured="mercadopagoConfigured"
+                    />
+
+                    <p class="small text-secondary mb-0">
+                        Link para compartilhar:
+                        <span class="font-monospace">{{ subscribeUrl }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <div v-else>
+                <ProfileAvatar
+                    :name="profile.name"
+                    :photo-url="profile.profile_photo_url"
+                    size="xl"
+                />
+                <p class="small text-uppercase text-secondary mt-3 mb-0">
+                    Perfil público
+                </p>
+                <h1 class="display-6 fw-bold mt-2 mb-1">
+                    {{ profile.name }}
+                </h1>
+                <p class="text-secondary mb-0">@{{ profile.username }}</p>
+                <p class="small text-secondary mt-3 mb-0">
+                    Membro desde {{ profile.member_since }}
+                </p>
+
+                <div
+                    v-if="flashStatus === 'barbershop-signup-success'"
+                    class="alert alert-success mt-3 mb-0"
+                    role="alert"
+                >
+                    Você está cadastrado nesta barbearia.
+                </div>
+
+                <BarbershopSignUpButton
+                    class="mt-4"
+                    :profile="profile"
+                    :is-owner="isOwner"
+                    :is-authenticated="isAuthenticated"
+                    :has-signed-up="hasSignedUp"
+                    :requires-payment="requiresPayment"
+                    :mercadopago-configured="mercadopagoConfigured"
+                />
+
+                <div
+                    v-if="hasActiveSubscription && activeSubscription"
+                    class="alert alert-success mt-3 mb-0"
+                    role="alert"
+                >
+                    <p class="fw-medium mb-2 mb-sm-0">
+                        Você tem uma assinatura ativa.
+                    </p>
+                    <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                        <CancelSubscriptionButton
+                            v-if="activeSubscription.is_cancellable"
+                            :subscription-id="activeSubscription.id"
+                            :creator-name="profile.name"
+                            compact
                         />
-                        <p class="mt-4 text-sm uppercase tracking-wide text-gray-500">
-                            Subscribers only
-                        </p>
-                        <h1 class="mt-2 text-2xl font-bold text-gray-900">
-                            {{ subscriptionPlan.title }}
-                        </h1>
-                        <p class="mt-1 text-gray-600">@{{ profile.username }}</p>
-                        <p class="mt-2 text-3xl font-semibold text-indigo-600">
-                            {{ subscriptionPlan.formatted_price }}
-                            <span class="text-base font-normal text-gray-500"
-                                >/ month</span
-                            >
-                        </p>
-                        <p
-                            v-if="subscriptionPlan.description"
-                            class="mx-auto mt-4 max-w-md text-gray-600"
+                        <Link
+                            :href="route('subscriptions.index')"
+                            class="link-secondary small"
                         >
-                            {{ subscriptionPlan.description }}
-                        </p>
-
-                        <div class="mt-8 flex flex-col items-center gap-3">
-                            <BarbershopSignUpButton
-                                :profile="profile"
-                                :is-owner="isOwner"
-                                :is-authenticated="isAuthenticated"
-                                :has-signed-up="hasSignedUp"
-                                :requires-payment="requiresPayment"
-                                :mercadopago-configured="mercadopagoConfigured"
-                            />
-
-                            <p class="text-xs text-gray-500">
-                                Share link:
-                                <span class="font-mono">{{ subscribeUrl }}</span>
-                            </p>
-                        </div>
+                            Gerenciar todas as assinaturas
+                        </Link>
                     </div>
                 </div>
 
                 <div
-                    v-else
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
+                    v-if="isOwner && subscriptionPlan?.is_enabled"
+                    class="alert alert-info mt-3 mb-0"
+                    role="alert"
                 >
-                    <div class="p-8">
-                        <ProfileAvatar
-                            :name="profile.name"
-                            :photo-url="profile.profile_photo_url"
-                            size="xl"
-                        />
-                        <p class="mt-4 text-sm uppercase tracking-wide text-gray-500">
-                            Public profile
-                        </p>
-                        <h1 class="mt-2 text-3xl font-bold text-gray-900">
-                            {{ profile.name }}
-                        </h1>
-                        <p class="mt-1 text-gray-600">@{{ profile.username }}</p>
-                        <p class="mt-4 text-sm text-gray-500">
-                            Member since {{ profile.member_since }}
-                        </p>
+                    Acesso pago ativado ({{ subscriptionPlan.formatted_price }}/mês).
+                    Compartilhe seu link de assinatura:
+                    <span class="font-monospace small text-break d-block mt-1">{{
+                        subscribeUrl
+                    }}</span>
+                </div>
 
-                        <div
-                            v-if="flashStatus === 'barbershop-signup-success'"
-                            class="mt-4 rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800"
-                        >
-                            You are signed up at this barbershop.
-                        </div>
+                <p class="small text-secondary mt-4 mb-0">
+                    Link do perfil:
+                    <span class="font-monospace text-body">{{
+                        profile.profile_url
+                    }}</span>
+                </p>
 
-                        <BarbershopSignUpButton
-                            class="mt-6"
-                            :profile="profile"
-                            :is-owner="isOwner"
-                            :is-authenticated="isAuthenticated"
-                            :has-signed-up="hasSignedUp"
-                            :requires-payment="requiresPayment"
-                            :mercadopago-configured="mercadopagoConfigured"
-                        />
+                <ProfileQrCode
+                    class="mt-3"
+                    style="max-width: 28rem"
+                    :url="profile.profile_url"
+                    :filename="`${profile.username}-profile`"
+                />
 
-                        <div
-                            v-if="hasActiveSubscription && activeSubscription"
-                            class="mt-4 rounded-md border border-green-200 bg-green-50 p-4"
-                        >
-                            <p class="text-sm font-medium text-green-800">
-                                You have an active subscription.
-                            </p>
-                            <div class="mt-3 flex flex-wrap items-center gap-4">
-                                <CancelSubscriptionButton
-                                    v-if="activeSubscription.is_cancellable"
-                                    :subscription-id="activeSubscription.id"
-                                    :creator-name="profile.name"
-                                    compact
-                                />
-                                <Link
-                                    :href="route('subscriptions.index')"
-                                    class="text-sm text-gray-600 underline"
-                                >
-                                    Manage all subscriptions
-                                </Link>
-                            </div>
-                        </div>
-
-                        <p
-                            v-if="isOwner && subscriptionPlan?.is_enabled"
-                            class="mt-4 rounded-md border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-900"
-                        >
-                            Paid access is on ({{ subscriptionPlan.formatted_price }}/mo).
-                            Share your subscribe link:
-                            <span class="break-all font-mono text-xs">{{
-                                subscribeUrl
-                            }}</span>
-                        </p>
-
-                        <p class="mt-6 text-sm text-gray-600">
-                            Profile link:
-                            <span class="font-mono text-gray-800">{{
-                                profile.profile_url
-                            }}</span>
-                        </p>
-
-                        <ProfileQrCode
-                            class="mt-4 max-w-md"
-                            :url="profile.profile_url"
-                            :filename="`${profile.username}-profile`"
-                        />
-
-                        <div v-if="isOwner" class="mt-8 flex flex-wrap gap-4">
-                            <Link
-                                :href="route('profile.edit')"
-                                class="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
-                            >
-                                Edit profile
-                            </Link>
-                            <Link
-                                :href="route('dashboard')"
-                                class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                Dashboard
-                            </Link>
-                        </div>
-                    </div>
+                <div v-if="isOwner" class="d-flex flex-wrap gap-2 mt-4">
+                    <Link
+                        :href="route('profile.edit')"
+                        class="btn btn-primary btn-sm"
+                    >
+                        Editar perfil
+                    </Link>
+                    <Link
+                        :href="route('dashboard')"
+                        class="btn btn-outline-secondary btn-sm"
+                    >
+                        Painel
+                    </Link>
                 </div>
             </div>
         </div>

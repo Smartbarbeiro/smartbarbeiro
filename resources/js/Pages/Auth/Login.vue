@@ -36,20 +36,20 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Log in" />
+        <Head title="Entrar" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
+        <div v-if="status" class="alert alert-success mb-3" role="alert">
             {{ status }}
         </div>
 
         <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
+            <div class="mb-3">
+                <InputLabel for="email" value="E-mail" />
 
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.email"
                     required
                     autofocus
@@ -59,13 +59,13 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+            <div class="mb-3">
+                <InputLabel for="password" value="Senha" />
 
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
@@ -74,30 +74,22 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
-                    >
-                </label>
+            <div class="form-check mb-3">
+                <Checkbox name="remember" v-model:checked="form.remember" />
+                <label class="form-check-label">Lembrar de mim</label>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
+            <div class="d-flex align-items-center justify-content-end gap-3">
                 <Link
                     v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    class="btn btn-link link-secondary p-0"
                 >
-                    Forgot your password?
+                    Esqueceu sua senha?
                 </Link>
 
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Log in
+                <PrimaryButton :disabled="form.processing">
+                    Entrar
                 </PrimaryButton>
             </div>
         </form>

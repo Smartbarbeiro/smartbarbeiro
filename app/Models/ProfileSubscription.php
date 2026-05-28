@@ -71,10 +71,10 @@ class ProfileSubscription extends Model
     public function statusLabel(): string
     {
         return match ($this->status) {
-            self::STATUS_AUTHORIZED => 'Active',
-            self::STATUS_PENDING => 'Pending payment',
-            self::STATUS_PAUSED => 'Paused',
-            self::STATUS_CANCELLED => 'Cancelled',
+            self::STATUS_AUTHORIZED => __('messages.subscription_status.authorized'),
+            self::STATUS_PENDING => __('messages.subscription_status.pending'),
+            self::STATUS_PAUSED => __('messages.subscription_status.paused'),
+            self::STATUS_CANCELLED => __('messages.subscription_status.cancelled'),
             default => ucfirst($this->status),
         };
     }

@@ -15,105 +15,102 @@ defineProps({
 });
 
 const statusClass = (status) => {
-    if (status === 'authorized') return 'bg-green-100 text-green-800';
-    if (status === 'cancelled') return 'bg-gray-100 text-gray-700';
-    if (status === 'pending') return 'bg-amber-100 text-amber-800';
-    return 'bg-gray-100 text-gray-700';
+    if (status === 'authorized') return 'badge bg-success';
+    if (status === 'cancelled') return 'badge bg-secondary';
+    if (status === 'pending') return 'badge bg-secondary';
+    return 'badge bg-secondary';
 };
 </script>
 
 <template>
     <AuthenticatedLayout>
-        <Head title="My subscriptions" />
+        <Head title="Minhas assinaturas" />
 
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                My subscriptions
-            </h2>
+            <h1 class="h4 mb-0 fw-semibold">Minhas assinaturas</h1>
         </template>
 
-        <div class="py-12">
-            <div class="mx-auto max-w-4xl space-y-4 sm:px-6 lg:px-8">
-                <p
-                    v-if="$page.props.flash?.status === 'subscription-cancelled'"
-                    class="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800"
-                >
-                    Subscription cancelled. You will lose access after the
-                    current period unless you subscribe again.
-                </p>
+        <div class="d-flex flex-column gap-4">
+            <div
+                v-if="$page.props.flash?.status === 'subscription-cancelled'"
+                class="alert alert-success mb-0"
+                role="alert"
+            >
+                Assinatura cancelada. Você perderá o acesso após o período atual,
+                a menos que assine novamente.
+            </div>
 
+            <div
+                v-if="subscriptions.length === 0"
+                class="app-card p-4 text-center"
+            >
+                <p class="text-secondary mb-0">Você ainda não tem assinaturas.</p>
+            </div>
+
+            <div
+                v-for="subscription in subscriptions"
+                :key="subscription.id"
+                class="app-card p-4"
+            >
                 <div
-                    v-if="subscriptions.length === 0"
-                    class="rounded-lg bg-white p-8 text-center shadow"
+                    class="d-flex flex-column flex-sm-row align-items-sm-start justify-content-sm-between gap-3"
                 >
-                    <p class="text-gray-600">You have no subscriptions yet.</p>
-                </div>
+                    <div>
+                        <h3 class="h5 fw-semibold mb-1">
+                            {{ subscription.creator.name }}
+                        </h3>
+                        <p class="text-secondary small mb-2">
+                            @{{ subscription.creator.username }}
+                        </p>
+                        <span
+                            class="badge"
+                            :class="statusClass(subscription.status)"
+                        >
+                            {{ subscription.status_label }}
+                        </span>
+                        <p
+                            v-if="subscription.next_payment_date"
+                            class="small text-secondary mt-2 mb-0"
+                        >
+                            Próximo pagamento:
+                            {{
+                                new Date(
+                                    subscription.next_payment_date,
+                                ).toLocaleDateString('pt-BR')
+                            }}
+                        </p>
+                        <p
+                            v-if="subscription.cancelled_at"
+                            class="small text-secondary mb-0"
+                        >
+                            Cancelada em
+                            {{
+                                new Date(
+                                    subscription.cancelled_at,
+                                ).toLocaleDateString('pt-BR')
+                            }}
+                        </p>
+                    </div>
 
-                <div
-                    v-for="subscription in subscriptions"
-                    :key="subscription.id"
-                    class="rounded-lg bg-white p-6 shadow"
-                >
-                    <div
-                        class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
-                    >
-                        <div>
-                            <h3 class="text-lg font-semibold text-gray-900">
-                                {{ subscription.creator.name }}
-                            </h3>
-                            <p class="text-sm text-gray-500">
-                                @{{ subscription.creator.username }}
-                            </p>
-                            <span
-                                class="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
-                                :class="statusClass(subscription.status)"
-                            >
-                                {{ subscription.status_label }}
-                            </span>
-                            <p
-                                v-if="subscription.next_payment_date"
-                                class="mt-2 text-sm text-gray-600"
-                            >
-                                Next payment:
-                                {{
-                                    new Date(
-                                        subscription.next_payment_date,
-                                    ).toLocaleDateString()
-                                }}
-                            </p>
-                            <p
-                                v-if="subscription.cancelled_at"
-                                class="mt-1 text-sm text-gray-500"
-                            >
-                                Cancelled on
-                                {{
-                                    new Date(
-                                        subscription.cancelled_at,
-                                    ).toLocaleDateString()
-                                }}
-                            </p>
-                        </div>
+                    <div class="d-flex flex-column gap-2 align-items-sm-end">
+                        <Link
+                            v-if="subscription.is_active"
+                            :href="
+                                route('profile.public', {
+                                    username: subscription.creator.username,
+                                })
+                            "
+                            class="link-primary small"
+                        >
+                            Ver perfil
+                        </Link>
 
-                        <div class="flex flex-col gap-2 sm:items-end">
-                            <Link
-                                v-if="subscription.is_active"
-                                :href="
-                                    route('profile.public', {
-                                        username: subscription.creator.username,
-                                    })
-                                "
-                                class="text-sm text-indigo-600 underline"
-                            >
-                                View profile
-                            </Link>
-
-                            <CancelSubscriptionButton
-                                v-if="subscription.is_cancellable"
-                                :subscription-id="subscription.id"
-                                :creator-name="subscription.creator.name"
-                                compact
-                            />
-                        </div>
+                        <CancelSubscriptionButton
+                            v-if="subscription.is_cancellable"
+                            :subscription-id="subscription.id"
+                            :creator-name="subscription.creator.name"
+                            compact
+                        />
                     </div>
                 </div>
             </div>

@@ -18,7 +18,7 @@ Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class)
 Route::get('/barbearias/{username}', [PublicProfileController::class, 'show'])
     ->name('profile.public');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'not_frozen'])->group(function () {
     Route::post('/barbearias/{username}/subscribe', [ProfileSubscribeController::class, 'store'])
         ->name('profile.subscribe');
     Route::post('/barbearias/{username}/signup', [BarbershopMembershipController::class, 'store'])
@@ -71,9 +71,9 @@ Route::get('/dashboard', function () {
     }
 
     return Inertia::render('Dashboard', $props);
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'not_frozen'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'not_frozen'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -93,6 +93,7 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::get('/', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
         Route::patch('/{user}', [AdminUserController::class, 'update'])->name('users.update');
+        Route::patch('/{user}/freeze', [AdminUserController::class, 'toggleFreeze'])->name('users.freeze');
         Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     });
 

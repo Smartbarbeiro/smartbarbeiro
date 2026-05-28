@@ -17,7 +17,7 @@ class ProfileSubscriptionPlanController extends Controller
     ): RedirectResponse {
         if (! $mercadoPago->isConfigured()) {
             return back()->withErrors([
-                'mercadopago' => 'Configure MERCADOPAGO_ACCESS_TOKEN in your .env file to enable paid profiles.',
+                'mercadopago' => __('messages.mercadopago_configure_token'),
             ]);
         }
 

@@ -25,4 +25,9 @@ class AdminUserPolicy
     {
         return $user->isAdmin() && $user->id !== $model->id;
     }
+
+    public function freeze(User $user, User $model): bool
+    {
+        return $user->isAdmin() && $user->id !== $model->id;
+    }
 }

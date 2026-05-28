@@ -26,18 +26,75 @@ class UserManagementTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_can_list_users(): void
+    public function test_admin_can_list_users_with_subscriber_counts(): void
     {
         $admin = User::factory()->admin()->create();
-        User::factory()->count(2)->create();
+        $barbershop = User::factory()->create();
+        $customer = User::factory()->customer()->create();
 
         $this->actingAs($admin)
             ->get(route('admin.users.index'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Users/Index')
-                ->has('users.data', 3));
+                ->has('users.data', 3)
+                ->where('users.data.0.subscribers_count', fn ($count) => is_int($count))
+                ->where('users.data.0.barbershop_members_count', fn ($count) => is_int($count)));
     }
+
+    public function test_admin_can_freeze_and_unfreeze_user(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $user = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.freeze', $user))
+            ->assertRedirect()
+            ->assertSessionHas('status', 'user-frozen');
+
+        $this->assertTrue($user->fresh()->isFrozen());
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.freeze', $user))
+            ->assertSessionHas('status', 'user-unfrozen');
+
+        $this->assertFalse($user->fresh()->isFrozen());
+    }
+
+    public function test_frozen_user_cannot_log_in(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'frozen@example.com',
+            'is_frozen' => true,
+        ]);
+
+        $this->post(route('login'), [
+            'email' => 'frozen@example.com',
+            'password' => 'password',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+    }
+
+    public function test_frozen_barbershop_public_profile_is_hidden(): void
+    {
+        $barbershop = User::factory()->create([
+            'is_frozen' => true,
+        ]);
+
+        $this->get(route('profile.public', $barbershop->username))
+            ->assertNotFound();
+    }
+
+    public function test_admin_cannot_freeze_themselves(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.freeze', $admin))
+            ->assertForbidden();
+    }
+
 
     public function test_admin_can_update_user(): void
     {

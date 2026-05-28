@@ -10,7 +10,7 @@ const props = defineProps({
     },
     label: {
         type: String,
-        default: 'Profile QR code',
+        default: 'QR code do perfil',
     },
     filename: {
         type: String,
@@ -40,7 +40,7 @@ const generate = async () => {
         });
     } catch (e) {
         dataUrl.value = '';
-        error.value = 'Could not generate QR code.';
+        error.value = 'Não foi possível gerar o QR code.';
     }
 };
 
@@ -61,43 +61,41 @@ watch(() => props.url, generate);
 </script>
 
 <template>
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <p class="text-sm font-medium text-gray-900">{{ label }}</p>
-        <p class="mt-1 break-all font-mono text-xs text-gray-500">
+    <div class="app-card p-3">
+        <p class="small fw-medium mb-1">{{ label }}</p>
+        <p class="font-monospace small text-secondary text-break mb-0">
             {{ url }}
         </p>
 
-        <div class="mt-4 flex flex-wrap items-start gap-4">
-            <div
-                class="rounded-md border border-white bg-white p-2 shadow-sm"
-            >
+        <div class="d-flex flex-wrap align-items-start gap-3 mt-3">
+            <div class="border border-secondary-subtle rounded p-2 bg-white">
                 <img
                     v-if="dataUrl"
                     :src="dataUrl"
-                    :alt="`${label} for ${url}`"
-                    class="block"
+                    :alt="`${label} para ${url}`"
+                    class="d-block"
                     :width="size"
                     :height="size"
                 />
                 <div
                     v-else
-                    class="flex items-center justify-center bg-gray-100 text-xs text-gray-500"
+                    class="d-flex align-items-center justify-content-center bg-light text-secondary small"
                     :style="{ width: `${size}px`, height: `${size}px` }"
                 >
-                    {{ error || 'Generating…' }}
+                    {{ error || 'Gerando…' }}
                 </div>
             </div>
 
-            <div class="flex flex-col gap-2">
+            <div class="d-flex flex-column gap-2">
                 <SecondaryButton
                     type="button"
                     :disabled="!dataUrl"
                     @click="download"
                 >
-                    Download PNG
+                    Baixar PNG
                 </SecondaryButton>
-                <p class="max-w-xs text-xs text-gray-500">
-                    Scan to open this profile on a phone.
+                <p class="small text-secondary mb-0" style="max-width: 16rem">
+                    Escaneie para abrir este perfil no celular.
                 </p>
             </div>
         </div>

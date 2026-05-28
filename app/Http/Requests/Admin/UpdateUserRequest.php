@@ -23,16 +23,8 @@ class UpdateUserRequest extends FormRequest
         /** @var User $target */
         $target = $this->route('user');
 
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
-            'username' => [
-                'required',
-                'string',
-                'min:3',
-                'max:30',
-                'alpha_dash',
-                Rule::unique(User::class)->ignore($target->id),
-            ],
             'email' => [
                 'required',
                 'string',
@@ -43,6 +35,20 @@ class UpdateUserRequest extends FormRequest
             ],
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'is_admin' => ['sometimes', 'boolean'],
+            'is_frozen' => ['sometimes', 'boolean'],
         ];
+
+        if ($target->isBarbershop()) {
+            $rules['username'] = [
+                'required',
+                'string',
+                'min:3',
+                'max:30',
+                'alpha_dash',
+                Rule::unique(User::class)->ignore($target->id),
+            ];
+        }
+
+        return $rules;
     }
 }

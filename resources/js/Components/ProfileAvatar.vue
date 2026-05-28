@@ -18,10 +18,10 @@ const props = defineProps({
 });
 
 const sizeClasses = {
-    sm: 'h-10 w-10 text-sm',
-    md: 'h-16 w-16 text-lg',
-    lg: 'h-24 w-24 text-2xl',
-    xl: 'h-32 w-32 text-3xl',
+    sm: 'avatar-sm',
+    md: 'avatar-md',
+    lg: 'avatar-lg',
+    xl: 'avatar-xl',
 };
 
 const initials = computed(() => {
@@ -43,20 +43,15 @@ const initials = computed(() => {
 
 <template>
     <div
-        class="shrink-0 overflow-hidden rounded-full bg-indigo-100"
-        :class="sizeClasses[size]"
+        class="avatar-circle"
+        :class="[sizeClasses[size], { 'avatar-has-photo': photoUrl }]"
     >
         <img
             v-if="photoUrl"
             :src="photoUrl"
             :alt="`${name} profile photo`"
-            class="h-full w-full object-cover"
+            class="w-100 h-100 object-fit-cover"
         />
-        <div
-            v-else
-            class="flex h-full w-full items-center justify-center font-semibold text-indigo-700"
-        >
-            {{ initials }}
-        </div>
+        <span v-else>{{ initials }}</span>
     </div>
 </template>

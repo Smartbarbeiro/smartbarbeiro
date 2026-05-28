@@ -47,18 +47,22 @@ const loginUrl = computed(() =>
     <div v-if="!isOwner">
         <div
             v-if="hasSignedUp"
-            class="rounded-md border border-green-200 bg-green-50 p-4 text-sm text-green-800"
+            class="alert alert-success mb-0"
+            role="alert"
         >
-            You are signed up at this barbershop.
+            Você está cadastrado nesta barbearia.
         </div>
 
-        <div v-else class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <div
+            v-else
+            class="d-flex flex-column align-items-start gap-3 flex-sm-row align-items-sm-center"
+        >
             <Link
                 v-if="!isAuthenticated"
                 :href="registerUrl"
-                class="inline-flex"
+                class="text-decoration-none"
             >
-                <PrimaryButton>Sign up at this barbershop</PrimaryButton>
+                <PrimaryButton type="button">Cadastrar-se nesta barbearia</PrimaryButton>
             </Link>
 
             <template v-else-if="requiresPayment">
@@ -71,13 +75,13 @@ const loginUrl = computed(() =>
                     "
                     method="post"
                     as="button"
-                    class="inline-flex"
+                    class="text-decoration-none"
                 >
-                    <PrimaryButton>Sign up at this barbershop</PrimaryButton>
+                    <PrimaryButton type="button">Cadastrar-se nesta barbearia</PrimaryButton>
                 </Link>
-                <p v-else class="text-sm text-amber-700">
-                    Paid sign-up is unavailable because payments are not
-                    configured.
+                <p v-else class="small text-warning mb-0">
+                    Cadastro pago indisponível porque os pagamentos não estão
+                    configurados.
                 </p>
             </template>
 
@@ -90,17 +94,17 @@ const loginUrl = computed(() =>
                 "
                 method="post"
                 as="button"
-                class="inline-flex"
+                class="text-decoration-none"
             >
-                <PrimaryButton>Sign up at this barbershop</PrimaryButton>
+                <PrimaryButton type="button">Cadastrar-se nesta barbearia</PrimaryButton>
             </Link>
 
             <Link
                 v-if="!isAuthenticated"
                 :href="loginUrl"
-                class="text-sm text-gray-600 underline hover:text-gray-900"
+                class="link-secondary small"
             >
-                Already have an account? Log in
+                Já tem uma conta? Entrar
             </Link>
         </div>
     </div>

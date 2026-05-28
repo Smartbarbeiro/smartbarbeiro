@@ -62,4 +62,11 @@ class UserFactory extends Factory
             'is_barbershop' => true,
         ]);
     }
+
+    public function frozen(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_frozen' => true,
+        ]);
+    }
 }

@@ -17,7 +17,7 @@ class ProfileSubscriptionCancellationService
     public function cancel(ProfileSubscription $subscription, User $cancelledBy): ProfileSubscription
     {
         if (! $subscription->isCancellable()) {
-            throw new \InvalidArgumentException('This subscription cannot be cancelled.');
+            throw new \InvalidArgumentException(__('messages.subscription_cannot_be_cancelled'));
         }
 
         if ($subscription->mercadopago_preapproval_id && $this->mercadoPago->isConfigured()) {

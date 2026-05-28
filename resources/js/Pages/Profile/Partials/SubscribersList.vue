@@ -7,84 +7,68 @@ defineProps({
 });
 
 const statusClass = (status) => {
-    if (status === 'authorized') return 'bg-green-100 text-green-800';
-    if (status === 'cancelled') return 'bg-gray-100 text-gray-700';
-    if (status === 'pending') return 'bg-amber-100 text-amber-800';
-    return 'bg-gray-100 text-gray-700';
+    if (status === 'authorized') return 'badge bg-success';
+    if (status === 'cancelled') return 'badge bg-secondary';
+    if (status === 'pending') return 'badge bg-secondary';
+    return 'badge bg-secondary';
 };
 </script>
 
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">Subscribers</h2>
-            <p class="mt-1 text-sm text-gray-600">
-                People who subscribed to your paid profile (latest 50).
+            <h2 class="h5 fw-semibold mb-1">Assinantes</h2>
+            <p class="text-secondary small mb-0">
+                Pessoas que assinaram seu perfil pago (últimos 50).
             </p>
         </header>
 
         <div
             v-if="subscribers.length === 0"
-            class="mt-4 rounded-md border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500"
+            class="border border-secondary-subtle border-dashed rounded p-4 text-center text-secondary small mt-3"
         >
-            No subscribers yet.
+            Nenhum assinante ainda.
         </div>
 
-        <div v-else class="mt-4 overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 text-sm">
-                <thead class="bg-gray-50">
+        <div v-else class="table-responsive mt-3">
+            <table class="table table-dark table-hover table-dark-custom mb-0">
+                <thead>
                     <tr>
-                        <th
-                            class="px-4 py-2 text-left font-medium text-gray-600"
-                        >
-                            Subscriber
-                        </th>
-                        <th
-                            class="px-4 py-2 text-left font-medium text-gray-600"
-                        >
-                            Status
-                        </th>
-                        <th
-                            class="px-4 py-2 text-left font-medium text-gray-600"
-                        >
-                            Since
-                        </th>
-                        <th
-                            class="px-4 py-2 text-left font-medium text-gray-600"
-                        >
-                            Cancelled
-                        </th>
+                        <th scope="col">Assinante</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Desde</th>
+                        <th scope="col">Cancelada</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 bg-white">
+                <tbody>
                     <tr v-for="row in subscribers" :key="row.id">
-                        <td class="px-4 py-3">
-                            <p class="font-medium text-gray-900">
+                        <td>
+                            <p class="fw-medium mb-0">
                                 {{ row.subscriber.name }}
                             </p>
-                            <p class="text-gray-500">
+                            <p class="text-secondary small mb-0">
                                 {{ row.subscriber.email }}
                             </p>
                         </td>
-                        <td class="px-4 py-3">
+                        <td>
                             <span
-                                class="inline-block rounded-full px-2 py-0.5 text-xs font-medium"
+                                class="badge"
                                 :class="statusClass(row.status)"
                             >
                                 {{ row.status_label }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-gray-600">
+                        <td class="text-secondary">
                             {{
-                                new Date(row.created_at).toLocaleDateString()
+                                new Date(row.created_at).toLocaleDateString('pt-BR')
                             }}
                         </td>
-                        <td class="px-4 py-3 text-gray-600">
+                        <td class="text-secondary">
                             {{
                                 row.cancelled_at
                                     ? new Date(
                                           row.cancelled_at,
-                                      ).toLocaleDateString()
+                                      ).toLocaleDateString('pt-BR')
                                     : '—'
                             }}
                         </td>

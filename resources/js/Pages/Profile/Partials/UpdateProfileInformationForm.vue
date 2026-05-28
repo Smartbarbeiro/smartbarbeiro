@@ -102,26 +102,24 @@ const submit = () => {
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Profile Information
-            </h2>
+            <h2 class="h5 fw-semibold mb-1">Informações do perfil</h2>
 
-            <p class="mt-1 text-sm text-gray-600">
+            <p class="text-secondary small mb-0">
                 <template v-if="isBarbershop">
-                    Update your account's profile information, public username, and
-                    email address.
+                    Atualize as informações do perfil, nome de usuário público e
+                    endereço de e-mail da sua conta.
                 </template>
                 <template v-else>
-                    Update your account name and email address.
+                    Atualize seu nome e endereço de e-mail.
                 </template>
             </p>
 
             <template v-if="isBarbershop && profileUrl">
-                <p class="mt-3 text-sm text-gray-600">
-                    Public profile:
+                <p class="text-secondary small mt-3 mb-0">
+                    Perfil público:
                     <Link
                         :href="route('profile.public', { username: user.username })"
-                        class="font-medium text-indigo-600 underline hover:text-indigo-500"
+                        class="link-primary fw-medium"
                     >
                         {{ profileUrl }}
                     </Link>
@@ -129,7 +127,8 @@ const submit = () => {
 
                 <ProfileQrCode
                     v-if="qrProfileUrl"
-                    class="mt-4 max-w-md"
+                    class="mt-3"
+                    style="max-width: 28rem"
                     :url="qrProfileUrl"
                     :filename="`${form.username || user.username}-profile`"
                 />
@@ -139,14 +138,12 @@ const submit = () => {
                 v-else-if="barbershopMemberships.length > 0"
                 class="mt-3"
             >
-                <p class="text-sm font-medium text-gray-700">
-                    Your barbershops
-                </p>
-                <ul class="mt-2 space-y-1">
+                <p class="small fw-medium mb-2">Suas barbearias</p>
+                <ul class="list-unstyled mb-0">
                     <li
                         v-for="membership in barbershopMemberships"
                         :key="membership.id"
-                        class="text-sm text-gray-600"
+                        class="small text-secondary mb-1"
                     >
                         <Link
                             v-if="membership.barbershop.username"
@@ -155,7 +152,7 @@ const submit = () => {
                                     username: membership.barbershop.username,
                                 })
                             "
-                            class="text-indigo-600 underline hover:text-indigo-500"
+                            class="link-primary"
                         >
                             {{ membership.barbershop.name }}
                         </Link>
@@ -165,34 +162,35 @@ const submit = () => {
             </div>
         </header>
 
-        <form @submit.prevent="submit" class="mt-6 space-y-6">
-            <div v-if="isBarbershop">
-                <InputLabel value="Profile photo" />
+        <form @submit.prevent="submit" class="mt-4">
+            <div v-if="isBarbershop" class="mb-4">
+                <InputLabel value="Foto de perfil" />
 
-                <div class="mt-3 flex flex-wrap items-center gap-4">
+                <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
                     <ProfileAvatar
                         :name="form.name || user.name"
                         :photo-url="photoPreview"
                         size="lg"
                     />
 
-                    <div class="flex flex-col gap-2">
+                    <div class="d-flex flex-column gap-2">
                         <input
                             ref="photoInput"
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
-                            class="block w-full max-w-xs text-sm text-gray-600 file:me-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100"
+                            class="form-control form-control-sm"
+                            style="max-width: 20rem"
                             @change="onPhotoChange"
                         />
-                        <p class="text-xs text-gray-500">
-                            JPG, PNG or WebP. Max 2 MB.
+                        <p class="form-text mb-0">
+                            JPG, PNG ou WebP. Máx. 2 MB.
                         </p>
                         <SecondaryButton
                             v-if="photoPreview"
                             type="button"
                             @click="removePhoto"
                         >
-                            Remove photo
+                            Remover foto
                         </SecondaryButton>
                     </div>
                 </div>
@@ -200,13 +198,13 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.profile_photo" />
             </div>
 
-            <div>
-                <InputLabel for="name" value="Name" />
+            <div class="mb-3">
+                <InputLabel for="name" value="Nome" />
 
                 <TextInput
                     id="name"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.name"
                     required
                     autofocus
@@ -216,32 +214,32 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
 
-            <div v-if="isBarbershop">
-                <InputLabel for="username" value="Username" />
+            <div v-if="isBarbershop" class="mb-3">
+                <InputLabel for="username" value="Nome de usuário" />
 
                 <TextInput
                     id="username"
                     type="text"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.username"
                     required
                     autocomplete="username"
                 />
 
-                <p class="mt-1 text-xs text-gray-500">
-                    Used in your public link: /barbearias/{{ form.username || 'username' }}
+                <p class="form-text">
+                    Usado no seu link público: /barbearias/{{ form.username || 'username' }}
                 </p>
 
                 <InputError class="mt-2" :message="form.errors.username" />
             </div>
 
-            <div>
-                <InputLabel for="email" value="Email" />
+            <div class="mb-3">
+                <InputLabel for="email" value="E-mail" />
 
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.email"
                     required
                     autocomplete="username"
@@ -250,43 +248,37 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="mt-2 text-sm text-gray-800">
-                    Your email address is unverified.
+            <div v-if="mustVerifyEmail && user.email_verified_at === null" class="mb-3">
+                <p class="small mb-2">
+                    Seu endereço de e-mail não foi verificado.
                     <Link
                         :href="route('verification.send')"
                         method="post"
                         as="button"
-                        class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        class="btn btn-link link-primary p-0 align-baseline"
                     >
-                        Click here to re-send the verification email.
+                        Clique aqui para reenviar o e-mail de verificação.
                     </Link>
                 </p>
 
                 <div
                     v-show="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
+                    class="alert alert-success py-2 small mb-0"
+                    role="alert"
                 >
-                    A new verification link has been sent to your email address.
+                    Um novo link de verificação foi enviado para seu endereço de e-mail.
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+            <div class="d-flex align-items-center gap-3">
+                <PrimaryButton :disabled="form.processing">Salvar</PrimaryButton>
 
-                <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
+                <p
+                    v-if="form.recentlySuccessful"
+                    class="text-secondary small mb-0"
                 >
-                    <p
-                        v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
-                    >
-                        Saved.
-                    </p>
-                </Transition>
+                    Salvo.
+                </p>
             </div>
         </form>
     </section>

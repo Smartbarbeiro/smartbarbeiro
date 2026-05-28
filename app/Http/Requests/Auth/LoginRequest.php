@@ -50,6 +50,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (Auth::user()?->isFrozen()) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => __('auth.frozen'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

@@ -23,29 +23,25 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Forgot Password" />
+        <Head title="Esqueceu a senha" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email
-            address and we will email you a password reset link that will allow
-            you to choose a new one.
-        </div>
+        <p class="text-secondary small mb-3">
+            Esqueceu sua senha? Sem problemas. Informe seu endereço de e-mail
+            e enviaremos um link para redefinir sua senha.
+        </p>
 
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600"
-        >
+        <div v-if="status" class="alert alert-success mb-3" role="alert">
             {{ status }}
         </div>
 
         <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
+            <div class="mb-3">
+                <InputLabel for="email" value="E-mail" />
 
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 w-100"
                     v-model="form.email"
                     required
                     autofocus
@@ -55,12 +51,9 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Email Password Reset Link
+            <div class="d-flex justify-content-end">
+                <PrimaryButton :disabled="form.processing">
+                    Enviar link de redefinição de senha
                 </PrimaryButton>
             </div>
         </form>
