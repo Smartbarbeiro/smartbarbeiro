@@ -24,7 +24,12 @@ class UserObserver
             Storage::disk('public')->delete($user->profile_photo_path);
         }
 
+        if ($user->background_photo_path) {
+            Storage::disk('public')->delete($user->background_photo_path);
+        }
+
         Storage::disk('public')->deleteDirectory('profile-photos/'.$user->id);
+        Storage::disk('public')->deleteDirectory('background-photos/'.$user->id);
 
         if (File::isDirectory($user->storagePath())) {
             File::deleteDirectory($user->storagePath());

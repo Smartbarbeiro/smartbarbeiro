@@ -402,7 +402,15 @@ a:hover {
     color: var(--app-text-muted);
     text-decoration: none;
     transition: background-color 0.15s ease, color 0.15s ease;
-    font-size: 1.15rem;
+}
+
+.sidebar-link .bi {
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 1.625rem;
+    display: inline-flex;
+    justify-content: center;
 }
 
 .sidebar-link-label {
@@ -698,4 +706,62 @@ li {
     width: 1.5rem;
     height: 1.5rem;
     font-size: 0.625rem;
+}
+
+.barbershop-background-preview {
+    width: 100%;
+    max-width: 28rem;
+    aspect-ratio: 16 / 9;
+    border-radius: 0.875rem;
+    border: 1px solid var(--app-border);
+    background-size: cover;
+    background-position: center;
+    filter: grayscale(100%);
+}
+
+@media (min-width: 992px) {
+    .barbershop-profile-shell--has-bg {
+        position: relative;
+        isolation: isolate;
+        min-height: 100%;
+    }
+
+    .barbershop-profile-shell--has-bg::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-image: var(--barbershop-bg-image);
+        background-size: cover;
+        background-position: center;
+        filter: grayscale(100%);
+        opacity: 0.22;
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .barbershop-profile-shell--has-bg.barbershop-profile-shell--authenticated::before {
+        left: var(--sidebar-width);
+    }
+
+    .barbershop-profile-shell--has-bg .barbershop-profile-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    .guest-shell:has(.barbershop-profile-shell--has-bg)::before {
+        opacity: 0;
+    }
+
+    .barbershop-profile-shell--has-bg .guest-profile-content {
+        width: 100%;
+        max-width: 48rem;
+        margin-inline: auto;
+        background: #ffffff;
+        border: 1px solid var(--app-border);
+        border-radius: 1rem;
+        padding: 2rem;
+    }
 }

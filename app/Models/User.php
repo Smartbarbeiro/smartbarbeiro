@@ -14,8 +14,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 
-#[Fillable(['name', 'username', 'email', 'password', 'profile_photo_path', 'is_admin', 'is_barbershop', 'is_frozen'])]
-#[Hidden(['password', 'remember_token', 'profile_photo_path'])]
+#[Fillable(['name', 'username', 'email', 'password', 'profile_photo_path', 'background_photo_path', 'is_admin', 'is_barbershop', 'is_frozen'])]
+#[Hidden(['password', 'remember_token', 'profile_photo_path', 'background_photo_path'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -26,6 +26,7 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+        'background_photo_url',
         'is_administrator',
     ];
 
@@ -148,5 +149,30 @@ class User extends Authenticatable
         Storage::disk('public')->delete($this->profile_photo_path);
 
         $this->forceFill(['profile_photo_path' => null])->save();
+    }
+
+    /**
+     * @return Attribute<?string, never>
+     */
+    protected function backgroundPhotoUrl(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            if (! $this->background_photo_path) {
+                return null;
+            }
+
+            return Storage::disk('public')->url($this->background_photo_path);
+        });
+    }
+
+    public function deleteBackgroundPhoto(): void
+    {
+        if (! $this->background_photo_path) {
+            return;
+        }
+
+        Storage::disk('public')->delete($this->background_photo_path);
+
+        $this->forceFill(['background_photo_path' => null])->save();
     }
 }

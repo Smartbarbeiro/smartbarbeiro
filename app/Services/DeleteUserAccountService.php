@@ -11,6 +11,7 @@ class DeleteUserAccountService
     {
         DB::transaction(function () use ($user): void {
             $user->deleteProfilePhoto();
+            $user->deleteBackgroundPhoto();
             $user->delete();
         });
     }

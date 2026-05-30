@@ -39,6 +39,8 @@ class ProfileUpdateRequest extends FormRequest
             ];
             $rules['profile_photo'] = ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'];
             $rules['remove_profile_photo'] = ['sometimes', 'boolean'];
+            $rules['background_photo'] = ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:4096'];
+            $rules['remove_background_photo'] = ['sometimes', 'boolean'];
         }
 
         return $rules;

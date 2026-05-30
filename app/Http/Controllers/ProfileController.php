@@ -112,6 +112,19 @@ class ProfileController extends Controller
                     'public',
                 );
             }
+
+            if ($request->boolean('remove_background_photo')) {
+                $user->deleteBackgroundPhoto();
+            } elseif ($request->hasFile('background_photo')) {
+                if ($user->background_photo_path) {
+                    Storage::disk('public')->delete($user->background_photo_path);
+                }
+
+                $user->background_photo_path = $request->file('background_photo')->store(
+                    'background-photos/'.$user->id,
+                    'public',
+                );
+            }
         }
 
         $user->save();

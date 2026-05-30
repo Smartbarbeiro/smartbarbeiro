@@ -55,6 +55,7 @@ class PublicProfileController extends Controller
                 'username' => $user->username,
                 'profile_url' => $user->profileUrl(),
                 'profile_photo_url' => $user->profile_photo_url,
+                'background_photo_url' => $user->background_photo_url,
                 'member_since' => $user->created_at->translatedFormat('F Y'),
             ],
             'isOwner' => $viewer?->id === $user->id,

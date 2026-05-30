@@ -38,10 +38,14 @@ const form = useForm({
     email: user.email,
     profile_photo: null,
     remove_profile_photo: false,
+    background_photo: null,
+    remove_background_photo: false,
 });
 
 const photoPreview = ref(user.profile_photo_url);
+const backgroundPreview = ref(user.background_photo_url);
 const photoInput = ref(null);
+const backgroundInput = ref(null);
 
 const qrProfileUrl = computed(() => {
     if (!props.isBarbershop || !props.profileUrl) {
@@ -83,6 +87,28 @@ const removePhoto = () => {
     }
 };
 
+const onBackgroundChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+        return;
+    }
+
+    form.background_photo = file;
+    form.remove_background_photo = false;
+    backgroundPreview.value = URL.createObjectURL(file);
+};
+
+const removeBackground = () => {
+    form.background_photo = null;
+    form.remove_background_photo = true;
+    backgroundPreview.value = null;
+
+    if (backgroundInput.value) {
+        backgroundInput.value.value = '';
+    }
+};
+
 const submit = () => {
     form.transform((data) => ({
         ...data,
@@ -93,7 +119,10 @@ const submit = () => {
         onSuccess: () => {
             form.profile_photo = null;
             form.remove_profile_photo = false;
+            form.background_photo = null;
+            form.remove_background_photo = false;
             photoPreview.value = usePage().props.auth.user.profile_photo_url;
+            backgroundPreview.value = usePage().props.auth.user.background_photo_url;
         },
     });
 };
@@ -196,6 +225,42 @@ const submit = () => {
                 </div>
 
                 <InputError class="mt-2" :message="form.errors.profile_photo" />
+            </div>
+
+            <div class="mb-4">
+                <InputLabel value="Imagem de fundo (telas grandes)" />
+
+                <div class="mt-2">
+                    <div
+                        v-if="backgroundPreview"
+                        class="barbershop-background-preview mb-3"
+                        :style="{ backgroundImage: `url('${backgroundPreview}')` }"
+                    ></div>
+
+                    <div class="d-flex flex-column gap-2">
+                        <input
+                            ref="backgroundInput"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            class="form-control form-control-sm"
+                            style="max-width: 20rem"
+                            @change="onBackgroundChange"
+                        />
+                        <p class="form-text mb-0">
+                            Exibida em telas grandes na página pública da barbearia.
+                            JPG, PNG ou WebP. Máx. 4 MB.
+                        </p>
+                        <SecondaryButton
+                            v-if="backgroundPreview"
+                            type="button"
+                            @click="removeBackground"
+                        >
+                            Remover imagem de fundo
+                        </SecondaryButton>
+                    </div>
+                </div>
+
+                <InputError class="mt-2" :message="form.errors.background_photo" />
             </div>
 
             <div class="mb-3">

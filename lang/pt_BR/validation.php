@@ -205,6 +205,7 @@ return [
         'description' => 'descrição',
         'monthly_amount' => 'valor mensal',
         'profile_photo' => 'foto de perfil',
+        'background_photo' => 'imagem de fundo',
         'is_admin' => 'administrador',
         'is_frozen' => 'conta congelada',
     ],

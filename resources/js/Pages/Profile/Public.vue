@@ -61,6 +61,14 @@ const showPaywall = computed(
         !props.canView &&
         !props.isOwner,
 );
+
+const profileBackgroundStyle = computed(() =>
+    props.profile.background_photo_url
+        ? {
+              '--barbershop-bg-image': `url("${props.profile.background_photo_url}")`,
+          }
+        : {},
+);
 </script>
 
 <template>
@@ -74,13 +82,21 @@ const showPaywall = computed(
         </template>
 
         <div
-            :class="
-                isAuthenticated
-                    ? 'app-card p-4 mx-auto'
-                    : ''
-            "
-            :style="isAuthenticated ? { maxWidth: '48rem' } : undefined"
+            class="barbershop-profile-shell"
+            :class="{
+                'barbershop-profile-shell--has-bg': !!profile.background_photo_url,
+                'barbershop-profile-shell--authenticated': isAuthenticated,
+            }"
+            :style="profileBackgroundStyle"
         >
+            <div
+                :class="
+                    isAuthenticated
+                        ? 'app-card p-4 mx-auto barbershop-profile-content'
+                        : 'barbershop-profile-content guest-profile-content'
+                "
+                :style="isAuthenticated ? { maxWidth: '48rem' } : undefined"
+            >
             <div v-if="showPaywall" class="text-center">
                 <ProfileAvatar
                     class="mx-auto d-block"
@@ -224,6 +240,7 @@ const showPaywall = computed(
                     </Link>
                 </div>
             </div>
+        </div>
         </div>
     </component>
 </template>
