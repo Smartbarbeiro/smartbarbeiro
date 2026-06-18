@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\AdminBroadcastMessageRecipient;
 use App\Models\User;
 use App\Observers\UserObserver;
+use App\Policies\AdminBroadcastMessageRecipientPolicy;
 use App\Policies\AdminUserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
         User::observe(UserObserver::class);
 
         Gate::policy(User::class, AdminUserPolicy::class);
+        Gate::policy(AdminBroadcastMessageRecipient::class, AdminBroadcastMessageRecipientPolicy::class);
 
         Vite::prefetch(concurrency: 3);
 

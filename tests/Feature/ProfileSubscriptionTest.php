@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\BarbershopServicePackage;
 use App\Models\ProfileSubscription;
 use App\Models\ProfileSubscriptionPlan;
 use App\Models\User;
@@ -36,11 +37,17 @@ class ProfileSubscriptionTest extends TestCase
             'currency_id' => 'BRL',
         ]);
 
+        $creator->servicePackages()
+            ->where('type', BarbershopServicePackage::TYPE_CUT)
+            ->update(['monthly_price' => 89.9, 'is_enabled' => true]);
+
         $this->get(route('profile.public', $creator->username))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('canView', false)
-                ->where('subscriptionPlan.is_enabled', true));
+                ->where('subscriptionPlan.is_enabled', true)
+                ->has('servicePlans.packages', 1)
+                ->where('servicePlans.packages.0.formatted_price', 'R$ 89,90'));
     }
 
     public function test_subscriber_can_view_paid_profile(): void
@@ -71,7 +78,39 @@ class ProfileSubscriptionTest extends TestCase
         $this->actingAs($subscriber)
             ->get(route('profile.public', $creator->username))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->where('canView', true));
+            ->assertInertia(fn ($page) => $page
+                ->where('canView', true)
+                ->where('activeSubscription.is_active', true));
+    }
+
+    public function test_pending_subscriber_sees_subscription_for_payment_update(): void
+    {
+        $creator = User::factory()->create();
+        $subscriber = User::factory()->customer()->create();
+
+        ProfileSubscriptionPlan::create([
+            'user_id' => $creator->id,
+            'is_enabled' => true,
+            'title' => 'VIP access',
+            'monthly_amount' => 19.90,
+            'currency_id' => 'BRL',
+        ]);
+
+        ProfileSubscription::create([
+            'creator_user_id' => $creator->id,
+            'subscriber_user_id' => $subscriber->id,
+            'payer_email' => $subscriber->email,
+            'external_reference' => 'test-ref-pending',
+            'status' => ProfileSubscription::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($subscriber)
+            ->get(route('profile.public', $creator->username))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('canView', false)
+                ->where('activeSubscription.status', ProfileSubscription::STATUS_PENDING)
+                ->where('activeSubscription.is_active', false));
     }
 
     public function test_owner_can_update_subscription_plan_without_mercadopago_token(): void

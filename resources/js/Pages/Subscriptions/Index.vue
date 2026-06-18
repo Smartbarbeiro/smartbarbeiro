@@ -68,6 +68,15 @@ const statusClass = (status) => {
                         <p class="text-secondary small mb-2">
                             @{{ subscription.creator.username }}
                         </p>
+                        <p
+                            v-if="subscription.kind === 'service_plan'"
+                            class="small mb-2"
+                        >
+                            Plano: {{ subscription.package_label }}
+                            <span class="text-secondary">
+                                ({{ subscription.formatted_total }}/mês)
+                            </span>
+                        </p>
                         <span
                             class="badge"
                             :class="statusClass(subscription.status)"
@@ -115,6 +124,11 @@ const statusClass = (status) => {
                             v-if="subscription.is_cancellable"
                             :subscription-id="subscription.id"
                             :creator-name="subscription.creator.name"
+                            :destroy-route="
+                                subscription.kind === 'service_plan'
+                                    ? route('service-plan-subscriptions.destroy', subscription.id)
+                                    : route('subscriptions.destroy', subscription.id)
+                            "
                             compact
                         />
                     </div>

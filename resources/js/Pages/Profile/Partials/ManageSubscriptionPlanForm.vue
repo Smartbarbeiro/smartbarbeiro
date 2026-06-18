@@ -10,17 +10,9 @@ const props = defineProps({
         type: Object,
         default: null,
     },
-    subscribeUrl: {
-        type: String,
-        required: true,
-    },
     mercadopagoConfigured: {
         type: Boolean,
         default: false,
-    },
-    activeSubscribersCount: {
-        type: Number,
-        default: 0,
     },
 });
 
@@ -38,49 +30,17 @@ const submit = () => {
         preserveScroll: true,
     });
 };
-
-const copySubscribeLink = async () => {
-    await navigator.clipboard.writeText(props.subscribeUrl);
-};
 </script>
 
 <template>
     <section>
         <header>
-            <h2 class="h5 fw-semibold mb-1">Acesso pago ao perfil</h2>
+            <h2 class="h5 fw-semibold mb-1">Plano de assinatura</h2>
             <p class="text-secondary small mb-0">
-                Cobre uma mensalidade via Mercado Pago para que apenas assinantes
-                possam ver seu perfil público.
+                Defina se clientes precisam pagar uma mensalidade para acessar
+                seu perfil público e configure título, descrição e preço.
             </p>
         </header>
-
-        <div
-            v-if="!mercadopagoConfigured"
-            class="alert alert-warning mt-3 mb-0"
-            role="alert"
-        >
-            Adicione <code>MERCADOPAGO_ACCESS_TOKEN</code>
-            ao seu arquivo <code>.env</code> para habilitar pagamentos.
-        </div>
-
-        <div
-            v-else-if="form.is_enabled"
-            class="alert alert-info mt-3 mb-0"
-            role="alert"
-        >
-            <p class="fw-medium mb-1">Compartilhe o link do seu perfil (assinantes pagam aqui)</p>
-            <p class="font-monospace small text-break mb-2">{{ subscribeUrl }}</p>
-            <button
-                type="button"
-                class="btn btn-link link-primary p-0"
-                @click="copySubscribeLink"
-            >
-                Copiar link
-            </button>
-            <p class="mb-0 mt-2">
-                Assinantes ativos: {{ activeSubscribersCount }}
-            </p>
-        </div>
 
         <form @submit.prevent="submit" class="mt-4">
             <div class="form-check mb-3">

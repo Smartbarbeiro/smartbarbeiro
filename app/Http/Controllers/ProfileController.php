@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\AcrylicQrOrderService;
+use App\Services\BarbershopServicePlanService;
 use App\Services\DeleteUserAccountService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +24,7 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): Response
+    public function edit(Request $request, BarbershopServicePlanService $servicePlanService, AcrylicQrOrderService $acrylicQrOrderService): Response
     {
         $user = $request->user()->load([
             'subscriptionPlan',
@@ -50,6 +52,7 @@ class ProfileController extends Controller
 
             $props = [
                 ...$props,
+                'acrylicQrOrder' => $acrylicQrOrderService->activeOrderPayloadFor($user),
                 'mercadopagoConfigured' => app(\App\Services\MercadoPagoService::class)->isConfigured(),
                 'subscriptionPlan' => $plan ? [
                     'is_enabled' => $plan->is_enabled,
@@ -57,6 +60,7 @@ class ProfileController extends Controller
                     'description' => $plan->description,
                     'monthly_amount' => (float) $plan->monthly_amount,
                     'formatted_price' => $plan->formattedPrice(),
+                    'payment_synced' => filled($plan->mercadopago_preapproval_plan_id),
                 ] : null,
                 'activeSubscribersCount' => $user->subscribers()
                     ->whereIn('status', \App\Models\ProfileSubscription::activeStatuses())
@@ -74,6 +78,10 @@ class ProfileController extends Controller
                             'username' => $subscription->subscriber->username,
                         ],
                     ]),
+                'servicePlans' => [
+                    'packages' => $servicePlanService->packagesPayload($user),
+                    'addons' => $servicePlanService->addonsPayload($user),
+                ],
             ];
         }
 
@@ -109,19 +117,6 @@ class ProfileController extends Controller
 
                 $user->profile_photo_path = $request->file('profile_photo')->store(
                     'profile-photos/'.$user->id,
-                    'public',
-                );
-            }
-
-            if ($request->boolean('remove_background_photo')) {
-                $user->deleteBackgroundPhoto();
-            } elseif ($request->hasFile('background_photo')) {
-                if ($user->background_photo_path) {
-                    Storage::disk('public')->delete($user->background_photo_path);
-                }
-
-                $user->background_photo_path = $request->file('background_photo')->store(
-                    'background-photos/'.$user->id,
                     'public',
                 );
             }

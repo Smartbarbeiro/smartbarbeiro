@@ -83,6 +83,7 @@ class ProfileSubscription extends Model
     {
         return [
             'id' => $this->id,
+            'kind' => 'profile',
             'status' => $this->status,
             'status_label' => $this->statusLabel(),
             'is_active' => $this->isActive(),

@@ -39,6 +39,10 @@ const initials = computed(() => {
         parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
     ).toUpperCase();
 });
+
+const isDefaultBarbershopPhoto = computed(() =>
+    props.photoUrl?.includes('/images/icone-barbearia.png') ?? false,
+);
 </script>
 
 <template>
@@ -51,6 +55,7 @@ const initials = computed(() => {
             :src="photoUrl"
             :alt="`${name} profile photo`"
             class="w-100 h-100 object-fit-cover"
+            :class="{ 'avatar-default-barbershop': isDefaultBarbershopPhoto }"
         />
         <span v-else>{{ initials }}</span>
     </div>

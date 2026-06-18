@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\AdminBroadcastMessageService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -29,10 +30,15 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user()?->append('is_administrator'),
+                'user' => $user ? array_merge(
+                    $user->append('is_administrator')->toArray(),
+                    ['is_barbershop' => $user->isBarbershop()],
+                ) : null,
             ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
@@ -51,6 +57,9 @@ class HandleInertiaRequests extends Middleware
                 },
             ],
             'locale' => app()->getLocale(),
+            'platformMessages' => fn () => $user && ! $user->isAdmin()
+                ? app(AdminBroadcastMessageService::class)->pendingPopupsFor($user)
+                : [],
         ];
     }
 }

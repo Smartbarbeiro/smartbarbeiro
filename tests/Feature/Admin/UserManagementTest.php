@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Models\BarbershopMembership;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -37,9 +38,12 @@ class UserManagementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Admin/Users/Index')
-                ->has('users.data', 3)
-                ->where('users.data.0.subscribers_count', fn ($count) => is_int($count))
-                ->where('users.data.0.barbershop_members_count', fn ($count) => is_int($count)));
+                ->where('barbershopAccountsCount', 1)
+                ->has('admins', 1)
+                ->has('barbershops.data', 1)
+                ->where('barbershops.data.0.subscribers_count', fn ($count) => is_int($count))
+                ->where('barbershops.data.0.barbershop_members_count', fn ($count) => is_int($count))
+                ->has('unassignedClients.data', 1));
     }
 
     public function test_admin_can_freeze_and_unfreeze_user(): void
@@ -149,6 +153,56 @@ class UserManagementTest extends TestCase
         $this->assertFalse(File::isDirectory($user->storagePath()));
     }
 
+    public function test_admin_account_is_not_barbershop_and_has_no_public_profile(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'username' => 'legacy-admin',
+            'is_barbershop' => true,
+        ]);
+
+        $this->assertFalse($admin->isBarbershop());
+        $this->assertFalse($admin->hasPublicProfile());
+        $this->assertNull($admin->profileUrl());
+    }
+
+    public function test_promoting_user_to_admin_clears_barbershop_account(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $barbershop = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $barbershop), [
+                'name' => $barbershop->name,
+                'username' => $barbershop->username,
+                'email' => $barbershop->email,
+                'is_admin' => true,
+            ])
+            ->assertRedirect(route('admin.users.edit', $barbershop));
+
+        $barbershop->refresh();
+
+        $this->assertTrue($barbershop->isAdmin());
+        $this->assertFalse($barbershop->is_barbershop);
+        $this->assertNull($barbershop->username);
+        $this->assertFalse($barbershop->hasPublicProfile());
+    }
+
+    public function test_admin_dashboard_shows_barbershop_accounts_count(): void
+    {
+        $admin = User::factory()->admin()->create();
+        User::factory()->create();
+        User::factory()->create();
+        User::factory()->customer()->create();
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->where('isAdmin', true)
+                ->where('barbershopAccountsCount', 2));
+    }
+
     public function test_owner_email_from_config_is_treated_as_admin(): void
     {
         config(['admin.owner_emails' => ['owner@example.com']]);
@@ -160,5 +214,42 @@ class UserManagementTest extends TestCase
         $this->actingAs($owner)
             ->get(route('admin.users.index'))
             ->assertOk();
+    }
+
+    public function test_barbershop_lists_registered_clients(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $barbershop = User::factory()->create();
+        $customer = User::factory()->customer()->create(['name' => 'Cliente VIP']);
+
+        BarbershopMembership::create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $customer->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('barbershops.data', 1)
+                ->where('barbershops.data.0.members.0.name', 'Cliente VIP')
+                ->has('unassignedClients.data', 0));
+    }
+
+    public function test_owner_email_appears_in_administrators_section(): void
+    {
+        config(['admin.owner_emails' => ['owner@example.com']]);
+
+        $owner = User::factory()->create(['email' => 'owner@example.com']);
+        User::factory()->create();
+
+        $this->actingAs($owner)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->has('admins', 1)
+                ->where('admins.0.email', 'owner@example.com')
+                ->has('barbershops.data', 1)
+                ->has('unassignedClients.data', 0));
     }
 }

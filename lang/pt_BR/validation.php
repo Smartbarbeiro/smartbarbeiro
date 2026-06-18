@@ -197,7 +197,7 @@ return [
 
     'attributes' => [
         'name' => 'nome',
-        'username' => 'nome de usuário',
+        'username' => 'nome da barbearia',
         'email' => 'e-mail',
         'password' => 'senha',
         'password_confirmation' => 'confirmação de senha',
@@ -206,6 +206,7 @@ return [
         'monthly_amount' => 'valor mensal',
         'profile_photo' => 'foto de perfil',
         'background_photo' => 'imagem de fundo',
+        'preferred_haircut_day' => 'dia preferido para o corte',
         'is_admin' => 'administrador',
         'is_frozen' => 'conta congelada',
     ],

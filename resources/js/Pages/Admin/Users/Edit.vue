@@ -178,7 +178,7 @@ const qrProfileUrl = computed(() => {
                     </div>
 
                     <div v-if="managedUser.is_barbershop" class="mb-3">
-                        <InputLabel for="username" value="Nome de usuário" />
+                        <InputLabel for="username" value="Nome da Barbearia" />
                         <TextInput
                             id="username"
                             v-model="form.username"
@@ -249,6 +249,10 @@ const qrProfileUrl = computed(() => {
                             class="form-check-label"
                         />
                     </div>
+                    <p class="form-text mb-0">
+                        Administradores não possuem perfil público nem conta de
+                        barbearia.
+                    </p>
                     <InputError class="mt-2 mb-3" :message="form.errors.is_admin" />
 
                     <div v-if="canFreeze" class="form-check mb-3">

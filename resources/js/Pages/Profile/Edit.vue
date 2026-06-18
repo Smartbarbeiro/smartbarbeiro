@@ -1,11 +1,12 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BarbershopPaymentStatusCard from './Partials/BarbershopPaymentStatusCard.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
-import ManageSubscriptionPlanForm from './Partials/ManageSubscriptionPlanForm.vue';
+import ManageServicePlansForm from './Partials/ManageServicePlansForm.vue';
 import SubscribersList from './Partials/SubscribersList.vue';
-import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import { Head } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 
 defineProps({
     mustVerifyEmail: {
@@ -46,6 +47,22 @@ defineProps({
         type: Array,
         default: () => [],
     },
+    servicePlans: {
+        type: Object,
+        default: null,
+    },
+    acrylicQrOrder: {
+        type: Object,
+        default: null,
+    },
+});
+
+onMounted(() => {
+    if (window.location.hash === '#planos-de-servico') {
+        document
+            .getElementById('planos-de-servico')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 });
 </script>
 
@@ -57,19 +74,24 @@ defineProps({
             <h1 class="h4 mb-0 fw-semibold">Perfil</h1>
         </template>
 
-        <div class="d-flex flex-column gap-4">
-            <div class="app-card p-4">
+        <div class="d-flex flex-column gap-4 profile-edit-stack">
+            <div class="app-card p-4 app-card-profile-info">
                 <UpdateProfileInformationForm
                     :must-verify-email="mustVerifyEmail"
                     :status="status"
                     :profile-url="profileUrl"
                     :is-barbershop="isBarbershop"
                     :barbershop-memberships="barbershopMemberships"
+                    :acrylic-qr-order="acrylicQrOrder"
                 />
             </div>
 
+            <div v-if="isBarbershop && servicePlans" class="app-card p-4">
+                <ManageServicePlansForm :service-plans="servicePlans" />
+            </div>
+
             <div v-if="isBarbershop" class="app-card p-4">
-                <ManageSubscriptionPlanForm
+                <BarbershopPaymentStatusCard
                     :subscription-plan="subscriptionPlan"
                     :subscribe-url="subscribeUrl"
                     :mercadopago-configured="mercadopagoConfigured"
@@ -82,10 +104,6 @@ defineProps({
                 class="app-card p-4"
             >
                 <SubscribersList :subscribers="subscribers" />
-            </div>
-
-            <div class="app-card p-4">
-                <UpdatePasswordForm />
             </div>
 
             <div class="app-card p-4 app-form-panel">

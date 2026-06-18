@@ -1,14 +1,23 @@
 <?php
 
+use App\Http\Controllers\AcrylicQrOrderController;
+use App\Http\Controllers\Admin\AcrylicQrOrderController as AdminAcrylicQrOrderController;
+use App\Http\Controllers\Admin\AdminBroadcastMessageController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BarbershopMembershipController;
+use App\Http\Controllers\BarbershopPreferredHaircutDayController;
+use App\Http\Controllers\BarbershopServicePlanController;
+use App\Http\Controllers\ServicePlanSubscribeController;
+use App\Http\Controllers\ServicePlanSubscriptionController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileSubscribeController;
 use App\Http\Controllers\ProfileSubscriptionController;
 use App\Http\Controllers\ProfileSubscriptionPlanController;
+use App\Http\Controllers\PlatformMessageController;
 use App\Http\Controllers\PublicProfileController;
-use Illuminate\Foundation\Application;
+use App\Models\User;
+use App\Services\BarbershopScheduleForecastService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -18,25 +27,32 @@ Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class)
 Route::get('/barbearias/{username}', [PublicProfileController::class, 'show'])
     ->name('profile.public');
 
+Route::post('/barbearias/{username}/service-plans/subscribe-register', [ServicePlanSubscribeController::class, 'registerAndStore'])
+    ->name('service-plan.subscribe.register');
+
 Route::middleware(['auth', 'not_frozen'])->group(function () {
     Route::post('/barbearias/{username}/subscribe', [ProfileSubscribeController::class, 'store'])
         ->name('profile.subscribe');
     Route::post('/barbearias/{username}/signup', [BarbershopMembershipController::class, 'store'])
         ->name('barbershop.signup');
+    Route::patch('/barbearias/{username}/preferred-haircut-day', [BarbershopPreferredHaircutDayController::class, 'update'])
+        ->name('barbershop.preferred-haircut-day.update');
     Route::get('/barbearias/{username}/subscription/return', [ProfileSubscribeController::class, 'return'])
         ->name('profile.subscribe.return');
+    Route::post('/barbearias/{username}/service-plans/subscribe', [ServicePlanSubscribeController::class, 'store'])
+        ->name('service-plan.subscribe');
+    Route::get('/barbearias/{username}/service-plans/return', [ServicePlanSubscribeController::class, 'return'])
+        ->name('service-plan.subscribe.return');
 });
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
     ]);
-});
+})->name('home');
 
-Route::get('/dashboard', function () {
+Route::get('/dashboard', function (BarbershopScheduleForecastService $scheduleForecast) {
     $user = auth()->user()->load([
         'subscriptionPlan',
         'barbershopSignups.barbershop:id,name,username',
@@ -44,6 +60,7 @@ Route::get('/dashboard', function () {
 
     $props = [
         'isBarbershop' => $user->isBarbershop(),
+        'isAdmin' => $user->isAdmin(),
         'profileUrl' => $user->profileUrl(),
         'subscribeUrl' => $user->subscribeUrl(),
         'barbershopMemberships' => $user->barbershopSignups->map(fn ($membership) => [
@@ -56,9 +73,16 @@ Route::get('/dashboard', function () {
         ]),
     ];
 
+    if ($user->isAdmin()) {
+        $props['barbershopAccountsCount'] = User::countBarbershopAccounts();
+    }
+
     if ($user->isBarbershop()) {
         $props = [
             ...$props,
+            'schedule' => $scheduleForecast->dashboardPayload($user),
+            'acrylicQrOrder' => app(\App\Services\AcrylicQrOrderService::class)
+                ->activeOrderPayloadFor($user),
             'storagePath' => 'storage/app/users/'.$user->id,
             'subscriptionPlan' => $user->subscriptionPlan ? [
                 'is_enabled' => $user->subscriptionPlan->is_enabled,
@@ -79,17 +103,38 @@ Route::middleware(['auth', 'not_frozen'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::put('/profile/subscription-plan', [ProfileSubscriptionPlanController::class, 'update'])
         ->name('profile.subscription-plan.update');
+    Route::put('/profile/service-plans', [BarbershopServicePlanController::class, 'update'])
+        ->name('profile.service-plans.update');
+    Route::post('/profile/acrylic-qr-orders', [AcrylicQrOrderController::class, 'store'])
+        ->name('profile.acrylic-qr-orders.store');
 
     Route::get('/subscriptions', [ProfileSubscriptionController::class, 'index'])
         ->name('subscriptions.index');
     Route::delete('/subscriptions/{subscription}', [ProfileSubscriptionController::class, 'destroy'])
         ->name('subscriptions.destroy');
+    Route::delete('/service-plan-subscriptions/{servicePlanSubscription}', [ServicePlanSubscriptionController::class, 'destroy'])
+        ->name('service-plan-subscriptions.destroy');
+
+    Route::patch('/platform-messages/{recipient}/dismiss', [PlatformMessageController::class, 'dismiss'])
+        ->name('platform-messages.dismiss');
+    // Route::get('/messages', [BarbershopMessageController::class, 'inbox'])->name('messages.inbox');
+    // Route::get('/messages/compose', [BarbershopMessageController::class, 'compose'])->name('messages.compose');
+    // Route::post('/messages', [BarbershopMessageController::class, 'store'])->name('messages.store');
+    // Route::get('/messages/{message}', [BarbershopMessageController::class, 'show'])->name('messages.show');
 });
 
 Route::middleware(['auth', 'verified', 'admin'])
     ->prefix('paineldecontrole')
     ->name('admin.')
     ->group(function () {
+        Route::get('/pedidos-qrcode', [AdminAcrylicQrOrderController::class, 'index'])
+            ->name('acrylic-qr-orders.index');
+        Route::patch('/pedidos-qrcode/{acrylicQrOrder}', [AdminAcrylicQrOrderController::class, 'update'])
+            ->name('acrylic-qr-orders.update');
+        Route::get('/mensagens', [AdminBroadcastMessageController::class, 'index'])
+            ->name('messages.index');
+        Route::post('/mensagens', [AdminBroadcastMessageController::class, 'store'])
+            ->name('messages.store');
         Route::get('/', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
         Route::patch('/{user}', [AdminUserController::class, 'update'])->name('users.update');

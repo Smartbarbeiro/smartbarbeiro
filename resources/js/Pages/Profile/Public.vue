@@ -1,12 +1,13 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import BarbershopSignUpButton from '@/Components/BarbershopSignUpButton.vue';
+import BarbershopPublicLayout from '@/Layouts/BarbershopPublicLayout.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
+import PlanBuilder from '@/Components/PlanBuilder.vue';
+import PreferredHaircutDayPicker from '@/Components/PreferredHaircutDayPicker.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     profile: {
@@ -49,6 +50,34 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    needsPreferredHaircutDay: {
+        type: Boolean,
+        default: false,
+    },
+    preferredHaircutDay: {
+        type: Number,
+        default: null,
+    },
+    servicePlans: {
+        type: Object,
+        default: () => ({ packages: [], addons: [] }),
+    },
+    hasActiveServicePlanSubscription: {
+        type: Boolean,
+        default: false,
+    },
+    activeServicePlanSubscription: {
+        type: Object,
+        default: null,
+    },
+    pendingServicePlanSubscription: {
+        type: Object,
+        default: null,
+    },
+    acrylicQrOrder: {
+        type: Object,
+        default: null,
+    },
 });
 
 const isAuthenticated = computed(() => !!usePage().props.auth.user);
@@ -62,126 +91,240 @@ const showPaywall = computed(
         !props.isOwner,
 );
 
-const profileBackgroundStyle = computed(() =>
-    props.profile.background_photo_url
-        ? {
-              '--barbershop-bg-image': `url("${props.profile.background_photo_url}")`,
-          }
-        : {},
+const profileSubscriptionPaymentOnTime = computed(
+    () =>
+        !props.isOwner &&
+        props.activeSubscription?.is_active === true,
 );
+
+const profileSubscriptionNeedsPaymentUpdate = computed(() => {
+    if (props.isOwner || !props.activeSubscription) {
+        return false;
+    }
+
+    return ['pending', 'paused'].includes(props.activeSubscription.status);
+});
+
+const showProfileSubscribePaywall = computed(
+    () =>
+        showPaywall.value &&
+        !profileSubscriptionNeedsPaymentUpdate.value &&
+        !profileSubscriptionPaymentOnTime.value,
+);
+
+const layoutComponent = computed(() =>
+    isAuthenticated.value ? AuthenticatedLayout : BarbershopPublicLayout,
+);
+
+const planCheckoutActive = ref(false);
 </script>
 
 <template>
-    <component :is="isAuthenticated ? AuthenticatedLayout : GuestLayout">
-        <Head :title="isOwner && isAuthenticated ? 'Barbearia' : profile.name" />
+    <component :is="layoutComponent">
+        <Head :title="isOwner && isAuthenticated ? 'Sua Barbearia' : profile.name" />
 
         <template v-if="isAuthenticated" #header>
             <h1 class="h4 mb-0 fw-semibold">
-                {{ isOwner ? 'Barbearia' : profile.name }}
+                {{ isOwner ? 'Sua Barbearia' : profile.name }}
             </h1>
         </template>
 
         <div
-            class="barbershop-profile-shell"
+            class="barbershop-profile-page"
             :class="{
-                'barbershop-profile-shell--has-bg': !!profile.background_photo_url,
-                'barbershop-profile-shell--authenticated': isAuthenticated,
+                'barbershop-profile-page--authenticated': isAuthenticated,
             }"
-            :style="profileBackgroundStyle"
         >
-            <div
-                :class="
-                    isAuthenticated
-                        ? 'app-card p-4 mx-auto barbershop-profile-content'
-                        : 'barbershop-profile-content guest-profile-content'
-                "
-                :style="isAuthenticated ? { maxWidth: '48rem' } : undefined"
+            <section
+                v-show="!planCheckoutActive"
+                class="barbershop-profile-services"
             >
-            <div v-if="showPaywall" class="text-center">
-                <ProfileAvatar
-                    class="mx-auto d-block"
-                    :name="profile.name"
-                    :photo-url="profile.profile_photo_url"
-                    size="xl"
-                />
-                <p class="small text-uppercase text-secondary mt-3 mb-0">
-                    Apenas assinantes
-                </p>
-                <h1 class="h3 fw-bold mt-2 mb-1">
-                    {{ subscriptionPlan.title }}
-                </h1>
-                <p class="text-secondary mb-0">@{{ profile.username }}</p>
-                <p class="display-6 fw-semibold text-primary mt-2 mb-0">
-                    {{ subscriptionPlan.formatted_price }}
-                    <span class="fs-6 fw-normal text-secondary">/ mês</span>
-                </p>
-                <p
-                    v-if="subscriptionPlan.description"
-                    class="text-secondary mx-auto mt-3 mb-0"
-                    style="max-width: 28rem"
-                >
-                    {{ subscriptionPlan.description }}
-                </p>
+                <div class="container text-center">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 col-lg-6 service-item">
+                            <ProfileAvatar
+                                class="service-logo mx-auto d-block"
+                                :name="profile.name"
+                                :photo-url="profile.profile_photo_url"
+                                size="xl"
+                            />
 
-                <div class="d-flex flex-column align-items-center gap-3 mt-4">
-                    <BarbershopSignUpButton
-                        :profile="profile"
-                        :is-owner="isOwner"
-                        :is-authenticated="isAuthenticated"
-                        :has-signed-up="hasSignedUp"
-                        :requires-payment="requiresPayment"
-                        :mercadopago-configured="mercadopagoConfigured"
-                    />
+                            <h2 class="barbershop-profile-name mt-3 mb-1">
+                                {{ profile.name }}
+                            </h2>
 
-                    <p class="small text-secondary mb-0">
-                        Link para compartilhar:
-                        <span class="font-monospace">{{ subscribeUrl }}</span>
-                    </p>
+                            <p class="barbershop-profile-meta mb-0">
+                                @{{ profile.username }}
+                            </p>
+
+                            <p
+                                v-if="!showPaywall"
+                                class="barbershop-profile-meta small mt-2 mb-0"
+                            >
+                                Membro desde {{ profile.member_since }}
+                            </p>
+
+                            <p
+                                v-if="showProfileSubscribePaywall && subscriptionPlan?.description"
+                                class="barbershop-profile-meta mt-3 mb-0 mx-auto"
+                                style="max-width: 28rem"
+                            >
+                                {{ subscriptionPlan.description }}
+                            </p>
+
+                            <p
+                                v-if="showProfileSubscribePaywall"
+                                class="plan-card-price display-6 fw-semibold mt-3 mb-0"
+                            >
+                                {{ subscriptionPlan.formatted_price }}
+                                <span class="fs-6 fw-normal">/ mês</span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div v-else>
-                <ProfileAvatar
-                    :name="profile.name"
-                    :photo-url="profile.profile_photo_url"
-                    size="xl"
-                />
-                <p class="small text-uppercase text-secondary mt-3 mb-0">
-                    Perfil público
-                </p>
-                <h1 class="display-6 fw-bold mt-2 mb-1">
-                    {{ profile.name }}
-                </h1>
-                <p class="text-secondary mb-0">@{{ profile.username }}</p>
-                <p class="small text-secondary mt-3 mb-0">
-                    Membro desde {{ profile.member_since }}
-                </p>
+            <section
+                v-if="flashStatus === 'preferred-haircut-day-saved'"
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-success mb-0" role="alert">
+                    Preferência salva. Seu dia preferido para o corte é dia
+                    {{ preferredHaircutDay }}.
+                </div>
+            </section>
 
-                <div
-                    v-if="flashStatus === 'barbershop-signup-success'"
-                    class="alert alert-success mt-3 mb-0"
-                    role="alert"
-                >
+            <section
+                v-else-if="
+                    preferredHaircutDay &&
+                    hasSignedUp &&
+                    !isOwner &&
+                    isAuthenticated
+                "
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-info mb-0" role="alert">
+                    Seu dia preferido para o corte: dia {{ preferredHaircutDay }}.
+                </div>
+            </section>
+
+            <section
+                v-if="flashStatus === 'barbershop-signup-success'"
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-success mb-0" role="alert">
                     Você está cadastrado nesta barbearia.
                 </div>
+            </section>
 
-                <BarbershopSignUpButton
-                    class="mt-4"
-                    :profile="profile"
-                    :is-owner="isOwner"
-                    :is-authenticated="isAuthenticated"
-                    :has-signed-up="hasSignedUp"
-                    :requires-payment="requiresPayment"
-                    :mercadopago-configured="mercadopagoConfigured"
-                />
+            <section
+                v-if="flashStatus === 'service-plan-signup-pending'"
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-success mb-0" role="alert">
+                    Cadastro realizado. Confirme o pagamento do plano quando os
+                    pagamentos estiverem disponíveis.
+                </div>
+            </section>
 
+            <section
+                v-if="servicePlans.packages.length > 0"
+                class="plan-builder"
+            >
                 <div
-                    v-if="hasActiveSubscription && activeSubscription"
-                    class="alert alert-success mt-3 mb-0"
-                    role="alert"
+                    class="container"
+                    :class="planCheckoutActive ? 'text-start' : 'text-center'"
                 >
-                    <p class="fw-medium mb-2 mb-sm-0">
-                        Você tem uma assinatura ativa.
+                    <PlanBuilder
+                        :service-plans="servicePlans"
+                        :barbershop-username="profile.username"
+                        :barbershop-name="profile.name"
+                        :barbershop-photo-url="profile.profile_photo_url"
+                        :is-authenticated="isAuthenticated"
+                        :is-owner="isOwner"
+                        :mercadopago-configured="mercadopagoConfigured"
+                        :has-active-service-plan-subscription="hasActiveServicePlanSubscription"
+                        :pending-service-plan-subscription="pendingServicePlanSubscription"
+                        :has-signed-up="hasSignedUp"
+                        @checkout-step-change="planCheckoutActive = $event"
+                    >
+                        <template
+                            v-if="isOwner && !showPaywall"
+                            #owner-below-plan
+                        >
+                            <p class="small text-secondary mb-2">
+                                Link do perfil:
+                                <span class="font-monospace text-body">{{
+                                    profile.profile_url
+                                }}</span>
+                            </p>
+
+                            <ProfileQrCode
+                                class="mx-auto"
+                                style="max-width: 28rem"
+                                :url="profile.profile_url"
+                                :filename="`${profile.username}-profile`"
+                                show-acrylic-order
+                                :acrylic-order="acrylicQrOrder"
+                            />
+
+                            <div
+                                class="d-flex flex-wrap justify-content-center gap-2 mt-4"
+                            >
+                                <Link
+                                    :href="`${route('profile.edit')}#planos-de-servico`"
+                                    class="btn btn-primary btn-sm"
+                                >
+                                    Editar perfil
+                                </Link>
+                                <Link
+                                    :href="route('dashboard')"
+                                    class="btn btn-outline-secondary btn-sm"
+                                >
+                                    Painel
+                                </Link>
+                            </div>
+                        </template>
+                    </PlanBuilder>
+                </div>
+            </section>
+
+            <section
+                v-else-if="isOwner"
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-warning mb-0" role="alert">
+                    Configure os preços dos seus planos em Editar perfil para
+                    exibir o montador de planos aos clientes.
+                </div>
+            </section>
+
+            <section
+                v-if="hasActiveServicePlanSubscription && activeServicePlanSubscription"
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-success mb-0" role="alert">
+                    Plano ativo: {{ activeServicePlanSubscription.package_label }}
+                    ({{ activeServicePlanSubscription.formatted_total }}/mês)
+                </div>
+            </section>
+
+            <section
+                v-if="profileSubscriptionPaymentOnTime && activeSubscription"
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-success mb-0" role="alert">
+                    <p class="fw-medium mb-2 mb-sm-0">Pagamento em dia.</p>
+                    <p
+                        v-if="activeSubscription.next_payment_date"
+                        class="small mb-2 mb-sm-0"
+                    >
+                        Próximo pagamento:
+                        {{
+                            new Date(
+                                activeSubscription.next_payment_date,
+                            ).toLocaleDateString('pt-BR')
+                        }}
                     </p>
                     <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
                         <CancelSubscriptionButton
@@ -194,53 +337,55 @@ const profileBackgroundStyle = computed(() =>
                             :href="route('subscriptions.index')"
                             class="link-secondary small"
                         >
-                            Gerenciar todas as assinaturas
+                            Gerenciar assinaturas
                         </Link>
                     </div>
                 </div>
+            </section>
 
-                <div
-                    v-if="isOwner && subscriptionPlan?.is_enabled"
-                    class="alert alert-info mt-3 mb-0"
-                    role="alert"
-                >
-                    Acesso pago ativado ({{ subscriptionPlan.formatted_price }}/mês).
-                    Compartilhe seu link de assinatura:
-                    <span class="font-monospace small text-break d-block mt-1">{{
-                        subscribeUrl
-                    }}</span>
+            <section
+                v-if="profileSubscriptionNeedsPaymentUpdate && activeSubscription"
+                class="container barbershop-profile-notices"
+            >
+                <div class="alert alert-warning mb-0" role="alert">
+                    <p class="fw-medium mb-2">
+                        Atualize a forma de pagamento para manter seu acesso.
+                    </p>
+                    <p class="small mb-3">
+                        Status:
+                        <span class="badge bg-secondary">{{
+                            activeSubscription.status_label
+                        }}</span>
+                    </p>
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <Link
+                            v-if="mercadopagoConfigured"
+                            :href="
+                                route('profile.subscribe', {
+                                    username: profile.username,
+                                })
+                            "
+                            method="post"
+                            as="button"
+                            class="btn btn-primary btn-sm"
+                        >
+                            Atualizar forma de pagamento
+                        </Link>
+                        <Link
+                            :href="route('subscriptions.index')"
+                            class="link-secondary small"
+                        >
+                            Gerenciar assinaturas
+                        </Link>
+                    </div>
                 </div>
-
-                <p class="small text-secondary mt-4 mb-0">
-                    Link do perfil:
-                    <span class="font-monospace text-body">{{
-                        profile.profile_url
-                    }}</span>
-                </p>
-
-                <ProfileQrCode
-                    class="mt-3"
-                    style="max-width: 28rem"
-                    :url="profile.profile_url"
-                    :filename="`${profile.username}-profile`"
-                />
-
-                <div v-if="isOwner" class="d-flex flex-wrap gap-2 mt-4">
-                    <Link
-                        :href="route('profile.edit')"
-                        class="btn btn-primary btn-sm"
-                    >
-                        Editar perfil
-                    </Link>
-                    <Link
-                        :href="route('dashboard')"
-                        class="btn btn-outline-secondary btn-sm"
-                    >
-                        Painel
-                    </Link>
-                </div>
-            </div>
+            </section>
         </div>
-        </div>
+
+        <PreferredHaircutDayPicker
+            :show="needsPreferredHaircutDay && isAuthenticated && !isOwner"
+            :barbershop-username="profile.username"
+            :preferred-haircut-day="preferredHaircutDay"
+        />
     </component>
 </template>

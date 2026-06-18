@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProfileSubscription;
+use App\Models\ServicePlanSubscription;
 use App\Services\MercadoPagoService;
 use App\Services\ProfileSubscriptionCancellationService;
 use Illuminate\Http\RedirectResponse;
@@ -15,7 +16,7 @@ class ProfileSubscriptionController extends Controller
 {
     public function index(Request $request): Response
     {
-        $subscriptions = $request->user()
+        $profileSubscriptions = $request->user()
             ->profileSubscriptions()
             ->with('creator:id,name,username')
             ->latest()
@@ -28,6 +29,26 @@ class ProfileSubscriptionController extends Controller
                     'profile_url' => $subscription->creator->profileUrl(),
                 ],
             ]);
+
+        $servicePlanSubscriptions = $request->user()
+            ->servicePlanSubscriptions()
+            ->with('creator:id,name,username')
+            ->latest()
+            ->get()
+            ->map(fn (ServicePlanSubscription $subscription) => [
+                ...$subscription->toSummaryArray(),
+                'creator' => [
+                    'name' => $subscription->creator->name,
+                    'username' => $subscription->creator->username,
+                    'profile_url' => $subscription->creator->profileUrl(),
+                ],
+            ]);
+
+        $subscriptions = $profileSubscriptions
+            ->concat($servicePlanSubscriptions)
+            ->sortByDesc('created_at')
+            ->values()
+            ->all();
 
         return Inertia::render('Subscriptions/Index', [
             'subscriptions' => $subscriptions,

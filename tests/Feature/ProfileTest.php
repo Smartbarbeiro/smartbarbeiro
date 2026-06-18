@@ -146,67 +146,23 @@ class ProfileTest extends TestCase
                 ->where('profile.profile_photo_url', $user->profile_photo_url));
     }
 
-    public function test_barbershop_can_upload_background_photo(): void
+    public function test_barbershop_without_photo_uses_default_icon(): void
     {
-        Storage::fake('public');
+        $user = User::factory()->create(['profile_photo_path' => null]);
 
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->patch('/profile', [
-                'name' => $user->name,
-                'username' => $user->username,
-                'email' => $user->email,
-                'background_photo' => UploadedFile::fake()->create('background.jpg', 500, 'image/jpeg'),
-            ])
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
-
-        $user->refresh();
-
-        $this->assertNotNull($user->background_photo_path);
-        Storage::disk('public')->assertExists($user->background_photo_path);
-        $this->assertNotNull($user->background_photo_url);
-    }
-
-    public function test_barbershop_can_remove_background_photo(): void
-    {
-        Storage::fake('public');
-
-        $user = User::factory()->create();
-        $path = 'background-photos/'.$user->id.'/background.jpg';
-        Storage::disk('public')->put($path, 'fake-image');
-        $user->update(['background_photo_path' => $path]);
-
-        $this->actingAs($user)
-            ->patch('/profile', [
-                'name' => $user->name,
-                'username' => $user->username,
-                'email' => $user->email,
-                'remove_background_photo' => true,
-            ])
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
-
-        $user->refresh();
-
-        $this->assertNull($user->background_photo_path);
-        Storage::disk('public')->assertMissing($path);
-    }
-
-    public function test_public_profile_includes_background_photo_url(): void
-    {
-        Storage::fake('public');
-
-        $user = User::factory()->create();
-        $path = 'background-photos/'.$user->id.'/background.jpg';
-        Storage::disk('public')->put($path, 'fake-image');
-        $user->update(['background_photo_path' => $path]);
+        $this->assertSame(User::defaultBarbershopPhotoUrl(), $user->profile_photo_url);
 
         $this->get(route('profile.public', $user->username))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('profile.background_photo_url', $user->background_photo_url));
+                ->where('profile.profile_photo_url', User::defaultBarbershopPhotoUrl()));
+    }
+
+    public function test_customer_without_photo_has_no_profile_photo_url(): void
+    {
+        $user = User::factory()->customer()->create(['profile_photo_path' => null]);
+
+        $this->assertNull($user->profile_photo_url);
     }
 
     public function test_correct_password_must_be_provided_to_delete_account(): void

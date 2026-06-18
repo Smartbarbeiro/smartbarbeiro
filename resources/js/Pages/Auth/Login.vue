@@ -1,9 +1,8 @@
 <script setup>
 import Checkbox from '@/Components/Checkbox.vue';
-import GuestLayout from '@/Layouts/GuestLayout.vue';
+import AuthHeroLayout from '@/Layouts/AuthHeroLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
@@ -35,21 +34,30 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <AuthHeroLayout active-nav="login">
         <Head title="Entrar" />
 
-        <div v-if="status" class="alert alert-success mb-3" role="alert">
+        <h2 class="auth-hero-title">Bem-vindo de volta.</h2>
+        <p class="auth-hero-lead">
+            Acesse sua conta para gerenciar sua barbearia.
+        </p>
+
+        <div
+            v-if="status"
+            class="alert alert-success auth-hero-alert mb-3"
+            role="alert"
+        >
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
+        <form class="auth-hero-form" @submit.prevent="submit">
             <div class="mb-3">
                 <InputLabel for="email" value="E-mail" />
 
                 <TextInput
                     id="email"
                     type="email"
-                    class="mt-1 w-100"
+                    class="mt-1 w-100 auth-hero-input"
                     v-model="form.email"
                     required
                     autofocus
@@ -65,7 +73,7 @@ const submit = () => {
                 <TextInput
                     id="password"
                     type="password"
-                    class="mt-1 w-100"
+                    class="mt-1 w-100 auth-hero-input"
                     v-model="form.password"
                     required
                     autocomplete="current-password"
@@ -74,24 +82,30 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="form-check mb-3">
+            <div class="form-check mb-4">
                 <Checkbox name="remember" v-model:checked="form.remember" />
                 <label class="form-check-label">Lembrar de mim</label>
             </div>
 
-            <div class="d-flex align-items-center justify-content-end gap-3">
+            <button
+                type="submit"
+                class="btn btn-light btn-lg auth-hero-submit w-100"
+                :disabled="form.processing"
+            >
+                Entrar
+            </button>
+
+            <div
+                v-if="canResetPassword"
+                class="text-center mt-3"
+            >
                 <Link
-                    v-if="canResetPassword"
                     :href="route('password.request')"
-                    class="btn btn-link link-secondary p-0"
+                    class="auth-hero-link"
                 >
                     Esqueceu sua senha?
                 </Link>
-
-                <PrimaryButton :disabled="form.processing">
-                    Entrar
-                </PrimaryButton>
             </div>
         </form>
-    </GuestLayout>
+    </AuthHeroLayout>
 </template>

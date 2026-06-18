@@ -1,6 +1,7 @@
 <script setup>
 import SidebarNavLink from '@/Components/SidebarNavLink.vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import PlatformMessagePopups from '@/Components/PlatformMessagePopups.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -35,27 +36,98 @@ const navItems = computed(() => {
             href: route('profile.public', { username: user.value.username }),
             active: route().current('profile.public'),
             icon: 'shop',
-            label: 'Barbearia',
+            label: 'Sua Barbearia',
         });
     }
 
     if (user.value?.is_administrator) {
-        items.splice(user.value?.is_barbershop && user.value?.username ? 2 : 1, 0, {
+        const insertAt = user.value?.is_barbershop && user.value?.username ? 2 : 1;
+        items.splice(insertAt, 0, {
             href: route('admin.users.index'),
-            active: route().current('admin.*'),
+            active: route().current('admin.users.*'),
             icon: 'shield-lock',
             label: 'Admin',
+        });
+        items.splice(insertAt + 1, 0, {
+            href: route('admin.acrylic-qr-orders.index'),
+            active: route().current('admin.acrylic-qr-orders.*'),
+            icon: 'badge-ad',
+            label: 'QR acrílico',
+        });
+        items.splice(insertAt + 2, 0, {
+            href: route('admin.messages.index'),
+            active: route().current('admin.messages.*'),
+            icon: 'megaphone',
+            label: 'Mensagens',
         });
     }
 
     return items;
+});
+
+const mobileNavItems = computed(() => {
+    const currentUser = user.value;
+
+    let barbeariasHref = route('dashboard');
+    let barbeariasActive = false;
+
+    if (currentUser?.is_barbershop && currentUser?.username) {
+        barbeariasHref = route('profile.public', { username: currentUser.username });
+        barbeariasActive = route().current('profile.public');
+    } else if (currentUser?.is_administrator) {
+        barbeariasHref = route('admin.users.index');
+        barbeariasActive = route().current('admin.users.*');
+    }
+
+    return [
+        {
+            href: route('dashboard'),
+            active: route().current('dashboard'),
+            icon: 'calendar3',
+            label: 'Home',
+        },
+        {
+            href: route('subscriptions.index'),
+            active: route().current('subscriptions.index'),
+            icon: 'journal-bookmark',
+            label: 'Agenda',
+        },
+        {
+            href: barbeariasHref,
+            active: barbeariasActive,
+            icon: 'scissors',
+            label: 'Barbearias',
+        },
+        {
+            href: route('profile.edit'),
+            active: route().current('profile.edit'),
+            icon: 'gear',
+            label: 'Config.',
+        },
+    ];
 });
 </script>
 
 <template>
     <div class="app-shell">
         <aside class="icon-sidebar d-none d-lg-flex">
-            <nav class="sidebar-nav sidebar-nav-top">
+            <Link
+                :href="route('dashboard')"
+                class="sidebar-logo"
+                title="Smart Barbeiro"
+            >
+                <ApplicationLogo size="md" />
+            </Link>
+
+            <nav class="sidebar-nav sidebar-nav-top" aria-label="Menu principal">
+                <p class="sidebar-section-title">
+                    <span>Menu</span>
+                    <i
+                        class="bi bi-chevron-right sidebar-section-chevron"
+                        aria-hidden="true"
+                    ></i>
+                </p>
+
                 <SidebarNavLink
                     v-for="item in navItems"
                     :key="item.href"
@@ -69,7 +141,7 @@ const navItems = computed(() => {
                 <div class="d-flex align-items-center w-100 gap-3 gap-lg-4">
                     <Link
                         :href="route('dashboard')"
-                        class="app-topbar-logo shrink-0"
+                        class="app-topbar-logo shrink-0 d-lg-none"
                         title="Smart Barbeiro"
                     >
                         <ApplicationLogo size="md" />
@@ -123,7 +195,10 @@ const navItems = computed(() => {
                             </ul>
                         </div>
 
-                        <div v-if="$slots.header" class="app-topbar-title min-w-0">
+                        <div
+                            v-if="$slots.header"
+                            class="app-topbar-title min-w-0 d-none d-lg-block"
+                        >
                             <slot name="header" />
                         </div>
                     </div>
@@ -137,39 +212,13 @@ const navItems = computed(() => {
 
         <nav class="mobile-bottom-nav d-lg-none" aria-label="Menu principal">
             <SidebarNavLink
-                v-for="item in navItems"
+                v-for="item in mobileNavItems"
                 :key="`mobile-${item.href}`"
                 v-bind="item"
                 variant="bottom"
             />
-
-            <div class="dropdown dropup mobile-bottom-account">
-                <button
-                    class="mobile-bottom-link border-0 bg-transparent"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                    aria-label="Menu da conta"
-                >
-                    <ProfileAvatar
-                        :name="user?.name ?? 'Usuário'"
-                        :photo-url="user?.profile_photo_url"
-                        size="sm"
-                    />
-                    <span class="mobile-bottom-label">Conta</span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-dark mb-2">
-                    <li class="px-3 py-2 border-bottom border-secondary-subtle">
-                        <div class="fw-semibold">{{ user?.name }}</div>
-                        <div class="small text-secondary">{{ user?.email }}</div>
-                    </li>
-                    <li>
-                        <Link :href="route('logout')" method="post" as="button" class="dropdown-item">
-                            <i class="bi bi-box-arrow-right me-2"></i>Sair
-                        </Link>
-                    </li>
-                </ul>
-            </div>
         </nav>
+
+        <PlatformMessagePopups />
     </div>
 </template>

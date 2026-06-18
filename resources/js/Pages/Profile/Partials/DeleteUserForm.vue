@@ -50,7 +50,7 @@ const closeModal = () => {
             </p>
         </header>
 
-        <DangerButton class="mt-4" @click="confirmUserDeletion">
+        <DangerButton class="mt-4 btn-delete-account" @click="confirmUserDeletion">
             Excluir conta
         </DangerButton>
 
@@ -92,6 +92,7 @@ const closeModal = () => {
                     </SecondaryButton>
 
                     <DangerButton
+                        class="btn-delete-account"
                         :disabled="form.processing"
                         @click="deleteUser"
                     >

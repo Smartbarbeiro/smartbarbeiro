@@ -18,6 +18,10 @@ defineProps({
         type: String,
         required: true,
     },
+    badge: {
+        type: Number,
+        default: null,
+    },
     variant: {
         type: String,
         default: 'sidebar',
@@ -37,6 +41,12 @@ defineProps({
         :aria-label="label"
     >
         <i :class="`bi bi-${icon}`"></i>
+        <span
+            v-if="badge != null && badge > 0"
+            class="sidebar-link-badge"
+        >
+            {{ badge }}
+        </span>
         <span
             v-if="variant === 'bottom'"
             class="mobile-bottom-label"

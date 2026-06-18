@@ -23,6 +23,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    destroyRoute: {
+        type: String,
+        default: null,
+    },
 });
 
 const confirming = ref(false);
@@ -38,7 +42,11 @@ const closeModal = () => {
 };
 
 const cancelSubscription = () => {
-    form.delete(route('subscriptions.destroy', props.subscriptionId), {
+    const targetRoute =
+        props.destroyRoute ??
+        route('subscriptions.destroy', props.subscriptionId);
+
+    form.delete(targetRoute, {
         preserveScroll: true,
         onSuccess: () => closeModal(),
     });

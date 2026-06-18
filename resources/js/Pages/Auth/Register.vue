@@ -64,7 +64,7 @@ const submit = () => {
             </div>
 
             <div v-if="!isCustomerSignup" class="mb-3">
-                <InputLabel for="username" value="Nome de usuário (opcional)" />
+                <InputLabel for="username" value="Nome da Barbearia (opcional)" />
 
                 <TextInput
                     id="username"

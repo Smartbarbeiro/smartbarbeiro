@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BarbershopScheduleDashboard from '@/Components/BarbershopScheduleDashboard.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -7,6 +8,14 @@ defineProps({
     isBarbershop: {
         type: Boolean,
         default: true,
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
+    barbershopAccountsCount: {
+        type: Number,
+        default: null,
     },
     profileUrl: {
         type: String,
@@ -32,6 +41,14 @@ defineProps({
         type: Array,
         default: () => [],
     },
+    acrylicQrOrder: {
+        type: Object,
+        default: null,
+    },
+    schedule: {
+        type: Object,
+        default: null,
+    },
 });
 </script>
 
@@ -43,7 +60,12 @@ defineProps({
             <h1 class="h4 mb-0 fw-semibold">Painel</h1>
         </template>
 
-        <div class="app-card p-4">
+        <BarbershopScheduleDashboard
+            v-if="isBarbershop && schedule"
+            :schedule="schedule"
+        />
+
+        <div v-else class="app-card p-4">
             <p class="mb-0">Você está conectado!</p>
 
             <div v-if="isBarbershop && profileUrl" class="mt-4">
@@ -66,6 +88,8 @@ defineProps({
                     style="max-width: 28rem"
                     :url="profileUrl"
                     :filename="`${$page.props.auth.user.username}-profile`"
+                    show-acrylic-order
+                    :acrylic-order="acrylicQrOrder"
                 />
             </div>
 
@@ -96,7 +120,12 @@ defineProps({
                 </p>
             </div>
 
-            <div v-if="!isBarbershop" class="mt-4">
+            <div v-if="isAdmin" class="mt-4">
+                <p class="small text-secondary mb-1">Contas de barbearia</p>
+                <p class="h3 fw-semibold mb-0">{{ barbershopAccountsCount }}</p>
+            </div>
+
+            <div v-else-if="!isBarbershop" class="mt-4">
                 <p class="small fw-medium text-secondary mb-2">
                     Suas barbearias
                 </p>

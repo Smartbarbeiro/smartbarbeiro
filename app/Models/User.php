@@ -26,7 +26,6 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
-        'background_photo_url',
         'is_administrator',
     ];
 
@@ -53,7 +52,70 @@ class User extends Authenticatable
 
     public function isBarbershop(): bool
     {
+        if ($this->isAdmin()) {
+            return false;
+        }
+
         return (bool) $this->is_barbershop;
+    }
+
+    public function isBarbershopAccount(): bool
+    {
+        return (bool) $this->is_barbershop;
+    }
+
+    public static function countBarbershopAccounts(): int
+    {
+        return static::query()->barbershopAccounts()->count();
+    }
+
+    public function scopeBarbershopAccounts($query)
+    {
+        return $query->where('is_barbershop', true)->where('is_admin', false);
+    }
+
+    public function scopeCustomers($query)
+    {
+        return $query->where('is_barbershop', false);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function ownerEmails(): array
+    {
+        return collect(config('admin.owner_emails', []))
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    public function scopeAdministrators($query)
+    {
+        $ownerEmails = static::ownerEmails();
+
+        return $query->where(function ($query) use ($ownerEmails) {
+            $query->where('is_admin', true);
+
+            foreach ($ownerEmails as $email) {
+                $query->orWhereRaw('LOWER(email) = ?', [$email]);
+            }
+        });
+    }
+
+    public function scopeRegularUsers($query)
+    {
+        $ownerEmails = static::ownerEmails();
+
+        return $query->where('is_admin', false)
+            ->when($ownerEmails !== [], function ($query) use ($ownerEmails) {
+                $query->where(function ($query) use ($ownerEmails) {
+                    foreach ($ownerEmails as $email) {
+                        $query->whereRaw('LOWER(email) != ?', [$email]);
+                    }
+                });
+            });
     }
 
     public function hasPublicProfile(): bool
@@ -69,7 +131,7 @@ class User extends Authenticatable
 
         return in_array(
             strtolower($this->email),
-            config('admin.owner_emails', []),
+            static::ownerEmails(),
             true,
         );
     }
@@ -121,9 +183,54 @@ class User extends Authenticatable
         return $this->hasMany(BarbershopMembership::class, 'member_user_id');
     }
 
+    public function servicePackages(): HasMany
+    {
+        return $this->hasMany(BarbershopServicePackage::class);
+    }
+
+    public function serviceAddons(): HasMany
+    {
+        return $this->hasMany(BarbershopServiceAddon::class);
+    }
+
+    public function servicePlanSubscribers(): HasMany
+    {
+        return $this->hasMany(ServicePlanSubscription::class, 'creator_user_id');
+    }
+
+    public function servicePlanSubscriptions(): HasMany
+    {
+        return $this->hasMany(ServicePlanSubscription::class, 'subscriber_user_id');
+    }
+
+    public function sentBarbershopMessages(): HasMany
+    {
+        return $this->hasMany(BarbershopMessage::class, 'barbershop_user_id');
+    }
+
+    public function receivedBarbershopMessages(): HasMany
+    {
+        return $this->hasMany(BarbershopMessageRecipient::class, 'recipient_user_id');
+    }
+
+    public function receivedAdminBroadcastMessages(): HasMany
+    {
+        return $this->hasMany(AdminBroadcastMessageRecipient::class, 'recipient_user_id');
+    }
+
+    public function acrylicQrOrders(): HasMany
+    {
+        return $this->hasMany(AcrylicQrOrder::class);
+    }
+
     public function subscribeUrl(): ?string
     {
         return $this->profileUrl();
+    }
+
+    public static function defaultBarbershopPhotoUrl(): string
+    {
+        return asset('images/icone-barbearia.png');
     }
 
     /**
@@ -132,11 +239,15 @@ class User extends Authenticatable
     protected function profilePhotoUrl(): Attribute
     {
         return Attribute::get(function (): ?string {
-            if (! $this->profile_photo_path) {
-                return null;
+            if ($this->profile_photo_path) {
+                return Storage::disk('public')->url($this->profile_photo_path);
             }
 
-            return Storage::disk('public')->url($this->profile_photo_path);
+            if ($this->isBarbershop()) {
+                return static::defaultBarbershopPhotoUrl();
+            }
+
+            return null;
         });
     }
 
@@ -151,28 +262,4 @@ class User extends Authenticatable
         $this->forceFill(['profile_photo_path' => null])->save();
     }
 
-    /**
-     * @return Attribute<?string, never>
-     */
-    protected function backgroundPhotoUrl(): Attribute
-    {
-        return Attribute::get(function (): ?string {
-            if (! $this->background_photo_path) {
-                return null;
-            }
-
-            return Storage::disk('public')->url($this->background_photo_path);
-        });
-    }
-
-    public function deleteBackgroundPhoto(): void
-    {
-        if (! $this->background_photo_path) {
-            return;
-        }
-
-        Storage::disk('public')->delete($this->background_photo_path);
-
-        $this->forceFill(['background_photo_path' => null])->save();
-    }
 }

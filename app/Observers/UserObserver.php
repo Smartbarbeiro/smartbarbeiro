@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\User;
+use App\Services\BarbershopServicePlanService;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,6 +17,8 @@ class UserObserver
 
         File::ensureDirectoryExists($user->storagePath());
         File::put($user->storagePath().'/.gitkeep', '');
+
+        app(BarbershopServicePlanService::class)->ensureDefaultPackages($user);
     }
 
     public function deleted(User $user): void

@@ -59,7 +59,8 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_admin' => true,
-            'is_barbershop' => true,
+            'is_barbershop' => false,
+            'username' => null,
         ]);
     }
 

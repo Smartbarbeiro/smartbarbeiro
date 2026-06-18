@@ -6,6 +6,7 @@ import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import UpdatePasswordForm from './UpdatePasswordForm.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
@@ -28,6 +29,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    acrylicQrOrder: {
+        type: Object,
+        default: null,
+    },
 });
 
 const user = usePage().props.auth.user;
@@ -38,14 +43,11 @@ const form = useForm({
     email: user.email,
     profile_photo: null,
     remove_profile_photo: false,
-    background_photo: null,
-    remove_background_photo: false,
 });
 
 const photoPreview = ref(user.profile_photo_url);
-const backgroundPreview = ref(user.background_photo_url);
 const photoInput = ref(null);
-const backgroundInput = ref(null);
+const showPasswordForm = ref(false);
 
 const qrProfileUrl = computed(() => {
     if (!props.isBarbershop || !props.profileUrl) {
@@ -87,28 +89,6 @@ const removePhoto = () => {
     }
 };
 
-const onBackgroundChange = (event) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-        return;
-    }
-
-    form.background_photo = file;
-    form.remove_background_photo = false;
-    backgroundPreview.value = URL.createObjectURL(file);
-};
-
-const removeBackground = () => {
-    form.background_photo = null;
-    form.remove_background_photo = true;
-    backgroundPreview.value = null;
-
-    if (backgroundInput.value) {
-        backgroundInput.value.value = '';
-    }
-};
-
 const submit = () => {
     form.transform((data) => ({
         ...data,
@@ -119,10 +99,7 @@ const submit = () => {
         onSuccess: () => {
             form.profile_photo = null;
             form.remove_profile_photo = false;
-            form.background_photo = null;
-            form.remove_background_photo = false;
             photoPreview.value = usePage().props.auth.user.profile_photo_url;
-            backgroundPreview.value = usePage().props.auth.user.background_photo_url;
         },
     });
 };
@@ -135,7 +112,7 @@ const submit = () => {
 
             <p class="text-secondary small mb-0">
                 <template v-if="isBarbershop">
-                    Atualize as informações do perfil, nome de usuário público e
+                    Atualize as informações do perfil, nome da barbearia e
                     endereço de e-mail da sua conta.
                 </template>
                 <template v-else>
@@ -153,14 +130,6 @@ const submit = () => {
                         {{ profileUrl }}
                     </Link>
                 </p>
-
-                <ProfileQrCode
-                    v-if="qrProfileUrl"
-                    class="mt-3"
-                    style="max-width: 28rem"
-                    :url="qrProfileUrl"
-                    :filename="`${form.username || user.username}-profile`"
-                />
             </template>
 
             <div
@@ -193,74 +162,48 @@ const submit = () => {
 
         <form @submit.prevent="submit" class="mt-4">
             <div v-if="isBarbershop" class="mb-4">
-                <InputLabel value="Foto de perfil" />
+                <div class="row g-4 align-items-start">
+                    <div class="col-lg-6">
+                        <InputLabel value="Foto de perfil" />
 
-                <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
-                    <ProfileAvatar
-                        :name="form.name || user.name"
-                        :photo-url="photoPreview"
-                        size="lg"
-                    />
+                        <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                            <ProfileAvatar
+                                :name="form.name || user.name"
+                                :photo-url="photoPreview"
+                                size="lg"
+                            />
 
-                    <div class="d-flex flex-column gap-2">
-                        <input
-                            ref="photoInput"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            class="form-control form-control-sm"
-                            style="max-width: 20rem"
-                            @change="onPhotoChange"
+                            <div class="d-flex flex-column gap-2">
+                                <input
+                                    ref="photoInput"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    class="form-control form-control-sm"
+                                    style="max-width: 20rem"
+                                    @change="onPhotoChange"
+                                />
+                                <SecondaryButton
+                                    v-if="photoPreview"
+                                    type="button"
+                                    @click="removePhoto"
+                                >
+                                    Remover foto
+                                </SecondaryButton>
+                            </div>
+                        </div>
+
+                        <InputError class="mt-2" :message="form.errors.profile_photo" />
+                    </div>
+
+                    <div v-if="qrProfileUrl" class="col-lg-6">
+                        <ProfileQrCode
+                            :url="qrProfileUrl"
+                            :filename="`${form.username || user.username}-profile`"
+                            show-acrylic-order
+                            :acrylic-order="acrylicQrOrder"
                         />
-                        <p class="form-text mb-0">
-                            JPG, PNG ou WebP. Máx. 2 MB.
-                        </p>
-                        <SecondaryButton
-                            v-if="photoPreview"
-                            type="button"
-                            @click="removePhoto"
-                        >
-                            Remover foto
-                        </SecondaryButton>
                     </div>
                 </div>
-
-                <InputError class="mt-2" :message="form.errors.profile_photo" />
-            </div>
-
-            <div class="mb-4">
-                <InputLabel value="Imagem de fundo (telas grandes)" />
-
-                <div class="mt-2">
-                    <div
-                        v-if="backgroundPreview"
-                        class="barbershop-background-preview mb-3"
-                        :style="{ backgroundImage: `url('${backgroundPreview}')` }"
-                    ></div>
-
-                    <div class="d-flex flex-column gap-2">
-                        <input
-                            ref="backgroundInput"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            class="form-control form-control-sm"
-                            style="max-width: 20rem"
-                            @change="onBackgroundChange"
-                        />
-                        <p class="form-text mb-0">
-                            Exibida em telas grandes na página pública da barbearia.
-                            JPG, PNG ou WebP. Máx. 4 MB.
-                        </p>
-                        <SecondaryButton
-                            v-if="backgroundPreview"
-                            type="button"
-                            @click="removeBackground"
-                        >
-                            Remover imagem de fundo
-                        </SecondaryButton>
-                    </div>
-                </div>
-
-                <InputError class="mt-2" :message="form.errors.background_photo" />
             </div>
 
             <div class="mb-3">
@@ -280,7 +223,7 @@ const submit = () => {
             </div>
 
             <div v-if="isBarbershop" class="mb-3">
-                <InputLabel for="username" value="Nome de usuário" />
+                <InputLabel for="username" value="Nome da Barbearia" />
 
                 <TextInput
                     id="username"
@@ -292,7 +235,7 @@ const submit = () => {
                 />
 
                 <p class="form-text">
-                    Usado no seu link público: /barbearias/{{ form.username || 'username' }}
+                    Usado no seu link público: /barbearias/{{ form.username || 'sua-barbearia' }}
                 </p>
 
                 <InputError class="mt-2" :message="form.errors.username" />
@@ -335,8 +278,20 @@ const submit = () => {
                 </div>
             </div>
 
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
                 <PrimaryButton :disabled="form.processing">Salvar</PrimaryButton>
+
+                <SecondaryButton
+                    type="button"
+                    @click="showPasswordForm = !showPasswordForm"
+                >
+                    <i
+                        class="bi me-1"
+                        :class="showPasswordForm ? 'bi-eye-slash' : 'bi-key'"
+                        aria-hidden="true"
+                    ></i>
+                    {{ showPasswordForm ? 'Ocultar senha' : 'Atualizar senha' }}
+                </SecondaryButton>
 
                 <p
                     v-if="form.recentlySuccessful"
@@ -346,5 +301,11 @@ const submit = () => {
                 </p>
             </div>
         </form>
+
+        <UpdatePasswordForm
+            v-show="showPasswordForm"
+            embedded
+            class="profile-password-panel mt-4 pt-4"
+        />
     </section>
 </template>

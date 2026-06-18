@@ -26,46 +26,113 @@ class UserController extends Controller
         $search = $request->string('search')->trim()->toString();
         $activeStatuses = ProfileSubscription::activeStatuses();
 
-        $users = User::query()
+        $admins = $this->adminUsersQuery($request, $activeStatuses, $search)
+            ->administrators()
+            ->get()
+            ->map(fn (User $user) => $this->mapUserForAdmin($user, $request));
+
+        $barbershops = $this->adminUsersQuery($request, $activeStatuses, $search, includeMemberSearch: true)
+            ->regularUsers()
+            ->barbershopAccounts()
+            ->with([
+                'barbershopMembers' => fn ($query) => $query->latest(),
+                'barbershopMembers.member' => fn ($query) => $query->withCount([
+                    'subscribers',
+                    'subscribers as active_subscribers_count' => fn ($subscribers) => $subscribers->whereIn('status', $activeStatuses),
+                    'barbershopMembers',
+                ]),
+            ])
+            ->paginate(10, ['*'], 'barbershop_page')
+            ->withQueryString()
+            ->through(fn (User $user) => $this->mapBarbershopForAdmin($user, $request));
+
+        $unassignedClients = $this->adminUsersQuery($request, $activeStatuses, $search)
+            ->regularUsers()
+            ->customers()
+            ->whereDoesntHave('barbershopSignups')
+            ->paginate(15, ['*'], 'client_page')
+            ->withQueryString()
+            ->through(fn (User $user) => $this->mapUserForAdmin($user, $request));
+
+        return Inertia::render('Admin/Users/Index', [
+            'admins' => $admins,
+            'barbershops' => $barbershops,
+            'unassignedClients' => $unassignedClients,
+            'barbershopAccountsCount' => User::countBarbershopAccounts(),
+            'filters' => [
+                'search' => $search,
+            ],
+        ]);
+    }
+
+    private function adminUsersQuery(
+        Request $request,
+        array $activeStatuses,
+        string $search,
+        bool $includeMemberSearch = false,
+    ) {
+        return User::query()
             ->withCount([
                 'subscribers',
                 'subscribers as active_subscribers_count' => fn ($query) => $query->whereIn('status', $activeStatuses),
                 'barbershopMembers',
             ])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($query) use ($search) {
+            ->when($search !== '', function ($query) use ($search, $includeMemberSearch) {
+                $query->where(function ($query) use ($search, $includeMemberSearch) {
                     $query->where('name', 'like', "%{$search}%")
                         ->orWhere('username', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
+
+                    if ($includeMemberSearch) {
+                        $query->orWhereHas('barbershopMembers.member', function ($query) use ($search) {
+                            $query->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                    }
                 });
             })
-            ->orderByDesc('created_at')
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (User $user) => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'email' => $user->email,
-                'is_admin' => $user->isAdmin(),
-                'is_barbershop' => $user->isBarbershop(),
-                'is_frozen' => $user->isFrozen(),
-                'profile_photo_url' => $user->profile_photo_url,
-                'profile_url' => $user->profileUrl(),
-                'created_at' => $user->created_at->translatedFormat('j M Y'),
-                'subscribers_count' => $user->subscribers_count,
-                'active_subscribers_count' => $user->active_subscribers_count,
-                'barbershop_members_count' => $user->barbershop_members_count,
-                'can_delete' => $request->user()->can('delete', $user),
-                'can_freeze' => $request->user()->can('freeze', $user),
-            ]);
+            ->orderByDesc('created_at');
+    }
 
-        return Inertia::render('Admin/Users/Index', [
-            'users' => $users,
-            'filters' => [
-                'search' => $search,
-            ],
-        ]);
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapBarbershopForAdmin(User $user, Request $request): array
+    {
+        return [
+            ...$this->mapUserForAdmin($user, $request),
+            'members' => $user->barbershopMembers
+                ->map(fn ($membership) => [
+                    ...$this->mapUserForAdmin($membership->member, $request),
+                    'joined_at' => $membership->created_at->translatedFormat('j M Y'),
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapUserForAdmin(User $user, Request $request): array
+    {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'username' => $user->username,
+            'email' => $user->email,
+            'is_admin' => $user->isAdmin(),
+            'is_barbershop' => $user->isBarbershop(),
+            'is_frozen' => $user->isFrozen(),
+            'profile_photo_url' => $user->profile_photo_url,
+            'profile_url' => $user->profileUrl(),
+            'created_at' => $user->created_at->translatedFormat('j M Y'),
+            'subscribers_count' => $user->subscribers_count,
+            'active_subscribers_count' => $user->active_subscribers_count,
+            'barbershop_members_count' => $user->barbershop_members_count,
+            'can_delete' => $request->user()->can('delete', $user),
+            'can_freeze' => $request->user()->can('freeze', $user),
+        ];
     }
 
     public function edit(User $user): Response
@@ -138,6 +205,11 @@ class UserController extends Controller
 
         if ($request->user()->id !== $user->id) {
             $user->is_admin = $request->boolean('is_admin');
+
+            if ($user->is_admin) {
+                $user->is_barbershop = false;
+                $user->username = null;
+            }
 
             if ($request->user()->can('freeze', $user)) {
                 $user->is_frozen = $request->boolean('is_frozen');

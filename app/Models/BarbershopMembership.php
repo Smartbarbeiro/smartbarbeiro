@@ -10,7 +10,15 @@ class BarbershopMembership extends Model
     protected $fillable = [
         'barbershop_user_id',
         'member_user_id',
+        'preferred_haircut_day',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'preferred_haircut_day' => 'integer',
+        ];
+    }
 
     public function barbershop(): BelongsTo
     {
