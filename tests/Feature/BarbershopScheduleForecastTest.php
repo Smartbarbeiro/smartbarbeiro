@@ -77,9 +77,44 @@ class BarbershopScheduleForecastTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Dashboard')
+                ->where('hasSubscribers', false)
                 ->where('schedule.greeting', 'Bom dia!')
                 ->where('schedule.today.expected_cuts', 0)
                 ->has('schedule.upcoming_days', 5));
+    }
+
+    public function test_dashboard_shows_empty_state_when_barbershop_has_no_clients(): void
+    {
+        $barbershop = User::factory()->create();
+
+        $this->actingAs($barbershop)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->where('hasSubscribers', false)
+                ->where('profileUrl', $barbershop->profileUrl()));
+    }
+
+    public function test_dashboard_shows_schedule_when_barbershop_has_clients(): void
+    {
+        Carbon::setTestNow('2026-09-10 09:00:00');
+
+        $barbershop = User::factory()->create();
+        $client = User::factory()->customer()->create();
+
+        BarbershopMembership::create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $client->id,
+        ]);
+
+        $this->actingAs($barbershop)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->where('hasSubscribers', true)
+                ->has('schedule'));
     }
 
     protected function tearDown(): void

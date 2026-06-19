@@ -17,6 +17,7 @@ use App\Http\Controllers\ProfileSubscriptionPlanController;
 use App\Http\Controllers\PlatformMessageController;
 use App\Http\Controllers\PublicProfileController;
 use App\Models\User;
+use App\Services\BarbershopClientAudienceService;
 use App\Services\BarbershopScheduleForecastService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -52,7 +53,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('/dashboard', function (BarbershopScheduleForecastService $scheduleForecast) {
+Route::get('/dashboard', function (
+    BarbershopScheduleForecastService $scheduleForecast,
+    BarbershopClientAudienceService $clientAudience,
+) {
     $user = auth()->user()->load([
         'subscriptionPlan',
         'barbershopSignups.barbershop:id,name,username',
@@ -78,8 +82,11 @@ Route::get('/dashboard', function (BarbershopScheduleForecastService $scheduleFo
     }
 
     if ($user->isBarbershop()) {
+        $hasSubscribers = $clientAudience->clientsFor($user)->isNotEmpty();
+
         $props = [
             ...$props,
+            'hasSubscribers' => $hasSubscribers,
             'schedule' => $scheduleForecast->dashboardPayload($user),
             'acrylicQrOrder' => app(\App\Services\AcrylicQrOrderService::class)
                 ->activeOrderPayloadFor($user),

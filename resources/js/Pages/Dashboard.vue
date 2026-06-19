@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import BarbershopNoSubscribersDashboard from '@/Components/BarbershopNoSubscribersDashboard.vue';
 import BarbershopScheduleDashboard from '@/Components/BarbershopScheduleDashboard.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import { Head, Link } from '@inertiajs/vue3';
@@ -12,6 +13,10 @@ defineProps({
     isAdmin: {
         type: Boolean,
         default: false,
+    },
+    hasSubscribers: {
+        type: Boolean,
+        default: true,
     },
     barbershopAccountsCount: {
         type: Number,
@@ -57,11 +62,22 @@ defineProps({
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Painel</h1>
+            <h1
+                v-if="!(isBarbershop && !hasSubscribers)"
+                class="h4 mb-0 fw-semibold"
+            >
+                Painel
+            </h1>
         </template>
 
+        <BarbershopNoSubscribersDashboard
+            v-if="isBarbershop && !hasSubscribers && profileUrl"
+            :profile-url="profileUrl"
+            :acrylic-order="acrylicQrOrder"
+        />
+
         <BarbershopScheduleDashboard
-            v-if="isBarbershop && schedule"
+            v-else-if="isBarbershop && schedule && hasSubscribers"
             :schedule="schedule"
         />
 

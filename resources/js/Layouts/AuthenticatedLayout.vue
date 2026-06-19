@@ -134,6 +134,26 @@ const mobileNavItems = computed(() => {
                     v-bind="item"
                 />
             </nav>
+
+            <div
+                v-if="user?.is_barbershop"
+                class="sidebar-footer"
+            >
+                <Link
+                    :href="route('profile.edit')"
+                    class="sidebar-profile"
+                >
+                    <ProfileAvatar
+                        :name="user.name"
+                        :photo-url="user.profile_photo_url"
+                        size="md"
+                    />
+                    <span class="sidebar-profile__info min-w-0">
+                        <span class="sidebar-profile__label">Barbearia:</span>
+                        <span class="sidebar-profile__name">{{ user.name }}</span>
+                    </span>
+                </Link>
+            </div>
         </aside>
 
         <div class="app-main">

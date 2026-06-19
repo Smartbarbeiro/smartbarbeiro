@@ -1,10 +1,7 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import StepSignupForm from '@/Components/StepSignupForm.vue';
+import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     redirect: {
@@ -26,6 +23,64 @@ const form = useForm({
     redirect: props.redirect,
 });
 
+const steps = computed(() => {
+    const fields = [
+        {
+            key: 'name',
+            type: 'text',
+            placeholder: 'DIGITE SEU NOME AQUI',
+            icon: 'bi bi-person',
+            autocomplete: 'name',
+            required: true,
+            emptyMessage: 'Informe seu nome para continuar.',
+        },
+    ];
+
+    if (!props.isCustomerSignup) {
+        fields.push({
+            key: 'username',
+            type: 'text',
+            placeholder: 'NOME DA BARBEARIA (OPCIONAL)',
+            icon: 'bi bi-shop',
+            autocomplete: 'username',
+            required: false,
+            skippable: true,
+        });
+    }
+
+    fields.push(
+        {
+            key: 'email',
+            type: 'email',
+            placeholder: 'DIGITE SEU E-MAIL AQUI',
+            icon: 'bi bi-envelope',
+            autocomplete: 'email',
+            required: true,
+            emptyMessage: 'Informe seu e-mail para continuar.',
+        },
+        {
+            key: 'password',
+            type: 'password',
+            placeholder: 'DIGITE SUA SENHA AQUI',
+            icon: 'bi bi-lock',
+            autocomplete: 'new-password',
+            required: true,
+            emptyMessage: 'Informe sua senha para continuar.',
+        },
+        {
+            key: 'password_confirmation',
+            type: 'password',
+            placeholder: 'CONFIRME SUA SENHA AQUI',
+            icon: 'bi bi-shield-lock',
+            autocomplete: 'new-password',
+            required: true,
+            emptyMessage: 'Confirme sua senha para continuar.',
+        },
+    );
+
+    return fields;
+});
+
 const submit = () => {
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
@@ -34,117 +89,17 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
+    <div class="register-plain">
         <Head title="Cadastrar" />
 
-        <form @submit.prevent="submit">
-            <div
-                v-if="isCustomerSignup"
-                class="alert alert-info mb-3"
-                role="alert"
-            >
-                Crie sua conta para se cadastrar nesta barbearia. Você não terá
-                uma página de perfil público.
-            </div>
-
-            <div class="mb-3">
-                <InputLabel for="name" value="Nome" />
-
-                <TextInput
-                    id="name"
-                    type="text"
-                    class="mt-1 w-100"
-                    v-model="form.name"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
-
-                <InputError class="mt-2" :message="form.errors.name" />
-            </div>
-
-            <div v-if="!isCustomerSignup" class="mb-3">
-                <InputLabel for="username" value="Nome da Barbearia (opcional)" />
-
-                <TextInput
-                    id="username"
-                    type="text"
-                    class="mt-1 w-100"
-                    v-model="form.username"
-                    autocomplete="username"
-                />
-
-                <p class="form-text">
-                    Deixe em branco para gerar a partir do seu nome. A página da sua barbearia ficará em
-                    /barbearias/seu-usuario
-                </p>
-
-                <InputError class="mt-2" :message="form.errors.username" />
-            </div>
-
-            <div class="mb-3">
-                <InputLabel for="email" value="E-mail" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 w-100"
-                    v-model="form.email"
-                    required
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mb-3">
-                <InputLabel for="password" value="Senha" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 w-100"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="mb-3">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirmar senha"
-                />
-
-                <TextInput
-                    id="password_confirmation"
-                    type="password"
-                    class="mt-1 w-100"
-                    v-model="form.password_confirmation"
-                    required
-                    autocomplete="new-password"
-                />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation"
-                />
-            </div>
-
-            <div class="d-flex align-items-center justify-content-end gap-3">
-                <Link
-                    :href="route('login', isCustomerSignup ? { redirect } : {})"
-                    class="btn btn-link link-secondary p-0"
-                >
-                    Já está cadastrado?
-                </Link>
-
-                <PrimaryButton :disabled="form.processing">
-                    Cadastrar
-                </PrimaryButton>
-            </div>
-        </form>
-    </GuestLayout>
+        <div class="register-plain__inner">
+            <StepSignupForm
+                :form="form"
+                :steps="steps"
+                :processing="form.processing"
+                plain
+                @submit="submit"
+            />
+        </div>
+    </div>
 </template>

@@ -34,6 +34,14 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    defaultExpanded: {
+        type: Boolean,
+        default: false,
+    },
+    hideShareButton: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const page = usePage();
@@ -42,7 +50,7 @@ const user = computed(() => page.props.auth.user);
 const dataUrl = ref('');
 const error = ref('');
 const showOrderModal = ref(false);
-const isExpanded = ref(false);
+const isExpanded = ref(props.defaultExpanded);
 
 const orderForm = useForm({
     recipient_name: user.value?.name ?? '',
@@ -124,6 +132,7 @@ watch(() => props.url, generate);
 <template>
     <div class="profile-qr-section">
         <SecondaryButton
+            v-if="!hideShareButton"
             type="button"
             :aria-expanded="isExpanded"
             @click="isExpanded = !isExpanded"

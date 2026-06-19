@@ -545,8 +545,62 @@ a:hover {
 }
 
 .sidebar-footer {
+    flex-shrink: 0;
     margin-top: auto;
-    padding-top: 1rem;
+    padding: 0.75rem 1rem 1rem;
+    border-top: 1px solid var(--sidebar-border);
+}
+
+.sidebar-profile {
+    align-items: center;
+    color: var(--sidebar-text);
+    display: flex;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.375rem 0;
+    text-decoration: none;
+    transition: opacity 0.15s ease;
+}
+
+.sidebar-profile:hover,
+.sidebar-profile:focus {
+    color: var(--sidebar-text-hover);
+    opacity: 0.92;
+}
+
+.sidebar-profile .avatar-md {
+    flex-shrink: 0;
+    height: 2.75rem;
+    width: 2.75rem;
+}
+
+.sidebar-profile .avatar-md.avatar-has-photo {
+    height: 2.75rem;
+    width: 2.75rem;
+}
+
+.sidebar-profile__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+}
+
+.sidebar-profile__label {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.sidebar-profile__name {
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .app-main {
@@ -725,6 +779,48 @@ li {
     gap: 1rem;
     max-width: min(28rem, 100%);
     margin-inline: auto;
+}
+
+.barbershop-empty-dashboard {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-inline: auto;
+    max-width: min(28rem, 100%);
+    min-height: calc(100vh - var(--topbar-height) - 3rem);
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.barbershop-empty-dashboard__icon {
+    height: auto;
+    max-width: min(280px, 72vw);
+    width: 100%;
+}
+
+.barbershop-empty-dashboard__message {
+    color: #000000;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.75rem;
+}
+
+.barbershop-empty-dashboard__share-btn {
+    border-radius: 200px;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    min-width: 14rem;
+    padding: 0.75rem 1.75rem;
+}
+
+.barbershop-empty-dashboard__qr {
+    margin-top: 1.5rem;
+    width: 100%;
+}
+
+.barbershop-empty-dashboard__qr .profile-qr-section {
+    text-align: left;
 }
 
 .barbershop-dashboard-hero {
@@ -1607,7 +1703,8 @@ li {
     padding-right: 1.25rem;
 }
 
-.marketing-page:has(.marketing-hero-login) .marketing-main {
+.marketing-page:has(.marketing-hero-login) .marketing-main,
+.marketing-page:has(.marketing-hero-register) .marketing-main {
     display: flex;
     flex-direction: column;
 }
@@ -1618,6 +1715,16 @@ li {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+}
+
+.marketing-hero-register {
+    align-items: center;
+    flex: 1;
+    justify-content: flex-start;
+    min-height: calc(100vh - 90px);
+    padding-left: clamp(1.25rem, 6vw, 4rem);
+    padding-right: clamp(1.25rem, 4vw, 2.5rem);
+    text-align: left;
 }
 
 .marketing-hero-login .auth-hero-input {
@@ -1895,6 +2002,361 @@ li {
     color: #ffffff;
 }
 
+.auth-hero-slot {
+    width: 100%;
+    max-width: 25rem;
+    margin: 0;
+}
+
+.marketing-hero-register .auth-hero-slot {
+    max-width: min(32rem, 100%);
+}
+
+.auth-register {
+    width: 100%;
+}
+
+.auth-register-copy {
+    margin-bottom: 1.75rem;
+}
+
+.auth-register-heading {
+    color: #ffffff;
+    font-family: 'Just Another Hand', cursive;
+    font-size: clamp(2.75rem, 8vw, 3.75rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 0.95;
+    margin-bottom: 0.15rem;
+    position: relative;
+    text-shadow: 0 4px 4px rgba(0, 0, 0, 0.5);
+}
+
+.auth-register-heading::before {
+    background: linear-gradient(90deg, #ffdf11 0%, rgba(255, 165, 0, 0) 100%);
+    border-bottom-left-radius: 20px;
+    border-top-left-radius: 40px;
+    bottom: 0;
+    content: '';
+    height: 50%;
+    left: 0;
+    opacity: 0.3;
+    position: absolute;
+    width: 120%;
+}
+
+.auth-register-lead {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    margin-top: 1rem;
+    max-width: 28rem;
+    text-shadow: 0 4px 4px rgba(0, 0, 0, 0.5);
+}
+
+.auth-register__notice {
+    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 1rem;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
+}
+
+.auth-register-footer {
+    margin-top: 1.5rem;
+    text-align: left;
+}
+
+.auth-register-footer__link {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+    text-decoration: underline;
+    text-decoration-color: #ffdf11;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
+}
+
+.auth-register-footer__link:hover {
+    color: #ffffff;
+}
+
+.step-signup-form {
+    background: transparent;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    border-radius: 15px;
+    overflow: hidden;
+    text-align: left;
+    width: 100%;
+}
+
+.step-signup-form__header {
+    background: #ffffff;
+    border-radius: 15px 15px 0 0;
+    padding: 1.25rem 2rem 1.125rem;
+    position: relative;
+    z-index: 4;
+}
+
+.step-signup-form__title {
+    color: #1a1a1a;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.step-signup-form__subtitle {
+    color: #8f9aa8;
+    font-size: 1rem;
+    margin: 0.35rem 0 0;
+}
+
+.step-signup-form__body {
+    position: relative;
+}
+
+.step-signup-form__stack {
+    position: relative;
+    width: 100%;
+}
+
+.step-signup-section {
+    background: #f7f8ff;
+    box-shadow: 0 0 100px rgba(0, 0, 0, 0.2);
+    display: flex;
+    height: 4.6875rem;
+    left: 50%;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    transform: translate(-50%, 0);
+    transition: all 0.2s ease-in;
+    width: 100%;
+}
+
+.auth-register .step-signup-form__error,
+.auth-register .step-signup-form__server-error {
+    color: #ffb4b4 !important;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    text-align: left;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
+}
+
+.step-signup-section--active {
+    z-index: 3;
+}
+
+.step-signup-section--active:last-child {
+    border-radius: 0 0 15px 15px;
+}
+
+.step-signup-form__stack .step-signup-section:last-child.step-signup-section--folded {
+    border-radius: 0 0 15px 15px;
+}
+
+.step-signup-section--folded {
+    width: 95%;
+    z-index: 2;
+}
+
+.step-signup-section--folded + .step-signup-section--folded {
+    margin-top: 0.625rem;
+    width: 90%;
+    z-index: 1;
+}
+
+.step-signup-section--folded + .step-signup-section--folded + .step-signup-section--folded {
+    margin-top: 1.25rem;
+    width: 85%;
+    z-index: 0;
+}
+
+.step-signup-section--fold-up {
+    margin-top: -4.6875rem;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.step-signup-section--folded .step-signup-section__input,
+.step-signup-section--folded .step-signup-section__action {
+    background-color: #e8ebf8;
+}
+
+.step-signup-section--folded + .step-signup-section--folded .step-signup-section__input,
+.step-signup-section--folded + .step-signup-section--folded .step-signup-section__action {
+    background-color: #dce4ff;
+}
+
+.step-signup-section__input {
+    background: #f7f8ff;
+    border: 0;
+    color: #4f5fd0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    width: 80%;
+}
+
+.step-signup-section__input:focus {
+    outline: none;
+}
+
+.step-signup-section__input::placeholder {
+    color: #8f99e8;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+}
+
+.step-signup-section__action {
+    background: #d4dcff;
+    overflow: hidden;
+    position: relative;
+    width: 20%;
+}
+
+.step-signup-section__icon,
+.step-signup-section__next {
+    align-items: center;
+    display: flex;
+    height: 4.6875rem;
+    justify-content: center;
+    transition: all 0.2s ease-in;
+    width: 100%;
+}
+
+.step-signup-section__icon {
+    color: #6d7ce8;
+    font-size: 1.35rem;
+}
+
+.step-signup-section__icon--next {
+    margin-top: -4.6875rem;
+}
+
+.step-signup-section__next {
+    background: transparent;
+    border: 0;
+    color: #4f5fd0;
+    font-size: 1.35rem;
+}
+
+.step-signup-section__next:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.step-signup-section__next:not(:disabled) {
+    cursor: pointer;
+}
+
+.step-signup-form__error,
+.step-signup-form__server-error {
+    color: #ffb4b4 !important;
+    font-size: 0.9rem;
+    margin-top: 0.75rem;
+    text-align: center;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.65);
+}
+
+.register-plain {
+    align-items: center;
+    background: #ffffff;
+    color: #000000;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.register-plain__inner {
+    max-width: 25rem;
+    width: 100%;
+}
+
+.step-signup-form--plain {
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+}
+
+.step-signup-form--plain .step-signup-form__header {
+    background: #ffffff;
+    border: 1px solid #000000;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.step-signup-form--plain .step-signup-form__body {
+    overflow: visible;
+}
+
+.step-signup-form--plain .step-signup-form__title {
+    color: #000000;
+}
+
+.step-signup-form--plain .step-signup-form__subtitle {
+    color: #444444;
+}
+
+.step-signup-form--plain .step-signup-section {
+    background: #ffffff;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.step-signup-form--plain .step-signup-section--folded {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.step-signup-form--plain .step-signup-section__input {
+    background: #ffffff;
+    border: 0;
+    border-bottom: 1px solid #000000;
+    border-left: 1px solid #000000;
+    color: #000000;
+}
+
+.step-signup-form--plain .step-signup-section__input::placeholder {
+    color: #666666;
+}
+
+.step-signup-form--plain .step-signup-section__action {
+    background: #000000;
+    border-left: 1px solid #000000;
+}
+
+.step-signup-form--plain .step-signup-section__icon,
+.step-signup-form--plain .step-signup-section__next {
+    color: #ffffff;
+}
+
+.step-signup-form--plain .step-signup-section--folded .step-signup-section__input,
+.step-signup-form--plain .step-signup-section--folded .step-signup-section__action {
+    background-color: #f2f2f2;
+}
+
+.step-signup-form--plain
+    .step-signup-section--folded
+    + .step-signup-section--folded
+    .step-signup-section__input,
+.step-signup-form--plain
+    .step-signup-section--folded
+    + .step-signup-section--folded
+    .step-signup-section__action {
+    background-color: #e5e5e5;
+}
+
+.step-signup-form--plain .step-signup-form__error,
+.step-signup-form--plain .step-signup-form__server-error {
+    color: #b00020 !important;
+    text-align: center;
+    text-shadow: none;
+}
+
 .marketing-nav .btn-light {
     background-color: #ffffff !important;
     border-color: #ffffff !important;
@@ -2165,5 +2627,24 @@ body.mobile-menu-open {
         display: block !important;
         width: auto !important;
         height: 50vh !important;
+    }
+
+    .marketing-hero-register {
+        justify-content: center;
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+        text-align: center;
+    }
+
+    .marketing-hero-register .auth-hero-slot {
+        margin-inline: auto;
+    }
+
+    .auth-register-footer {
+        text-align: center;
+    }
+
+    .auth-register-lead {
+        margin-inline: auto;
     }
 }
