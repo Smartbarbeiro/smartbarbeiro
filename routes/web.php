@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\BarbershopPreferredHaircutDayController;
 use App\Http\Controllers\BarbershopServicePlanController;
+use App\Http\Controllers\CepLookupController;
 use App\Http\Controllers\ServicePlanSubscribeController;
 use App\Http\Controllers\ServicePlanSubscriptionController;
 use App\Http\Controllers\MercadoPagoWebhookController;
@@ -114,6 +115,9 @@ Route::middleware(['auth', 'not_frozen'])->group(function () {
         ->name('profile.service-plans.update');
     Route::post('/profile/acrylic-qr-orders', [AcrylicQrOrderController::class, 'store'])
         ->name('profile.acrylic-qr-orders.store');
+    Route::get('/cep/{postalCode}', CepLookupController::class)
+        ->where('postalCode', '[0-9\-]+')
+        ->name('cep.lookup');
 
     Route::get('/subscriptions', [ProfileSubscriptionController::class, 'index'])
         ->name('subscriptions.index');

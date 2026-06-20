@@ -12,6 +12,7 @@ return [
     'service_plan_invalid_addons' => 'Um ou mais opcionais selecionados não estão disponíveis.',
     'service_plan_already_subscribed' => 'Você já possui um plano de serviço ativo nesta barbearia.',
     'service_plan_owner_cannot_subscribe' => 'O dono da barbearia não pode assinar o próprio plano.',
+    'cep_not_found' => 'CEP não encontrado.',
 
     'status' => [
         'user-updated' => 'Usuário atualizado.',

@@ -28,9 +28,31 @@ class MercadoPagoService
 
         MercadoPagoConfig::setAccessToken($token);
 
+        $this->configureRuntimeEnvironment();
+    }
+
+    private function configureRuntimeEnvironment(): void
+    {
         if (config('mercadopago.runtime_environment') === 'local') {
             MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::LOCAL);
+
+            return;
         }
+
+        if (app()->environment('local') && ! $this->systemHasSslCertificates()) {
+            MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::LOCAL);
+        }
+    }
+
+    private function systemHasSslCertificates(): bool
+    {
+        foreach ([ini_get('curl.cainfo'), ini_get('openssl.cafile')] as $path) {
+            if (filled($path) && is_file($path)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function createPreApprovalPlan(

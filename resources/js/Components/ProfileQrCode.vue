@@ -51,6 +51,10 @@ const dataUrl = ref('');
 const error = ref('');
 const showOrderModal = ref(false);
 const isExpanded = ref(props.defaultExpanded);
+const cepLookupLoading = ref(false);
+const cepLookupError = ref('');
+const numberInput = ref(null);
+const lastLookedUpCep = ref('');
 
 const orderForm = useForm({
     recipient_name: user.value?.name ?? '',
@@ -109,12 +113,74 @@ const download = () => {
 const openOrderModal = () => {
     orderForm.reset();
     orderForm.recipient_name = user.value?.name ?? '';
+    cepLookupError.value = '';
+    lastLookedUpCep.value = '';
     showOrderModal.value = true;
 };
 
 const closeOrderModal = () => {
     showOrderModal.value = false;
     orderForm.clearErrors();
+    cepLookupError.value = '';
+    lastLookedUpCep.value = '';
+};
+
+const normalizePostalCode = (value) => (value ?? '').replace(/\D/g, '').slice(0, 8);
+
+const formatPostalCode = (value) => {
+    const digits = normalizePostalCode(value);
+
+    if (digits.length <= 5) {
+        return digits;
+    }
+
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+};
+
+const lookupPostalCode = async () => {
+    const digits = normalizePostalCode(orderForm.postal_code);
+
+    if (digits.length !== 8 || digits === lastLookedUpCep.value) {
+        return;
+    }
+
+    cepLookupLoading.value = true;
+    cepLookupError.value = '';
+
+    try {
+        const response = await fetch(
+            route('cep.lookup', { postalCode: digits }),
+            {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            },
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            cepLookupError.value =
+                data.message ?? 'CEP não encontrado. Verifique e tente novamente.';
+            return;
+        }
+
+        lastLookedUpCep.value = digits;
+        orderForm.postal_code = data.postal_code ?? formatPostalCode(digits);
+        orderForm.street = data.street ?? '';
+        orderForm.neighborhood = data.neighborhood ?? '';
+        orderForm.city = data.city ?? '';
+        orderForm.state = data.state ?? '';
+
+        numberInput.value?.focus();
+    } catch {
+        cepLookupError.value =
+            'Não foi possível consultar o CEP. Tente novamente.';
+    } finally {
+        cepLookupLoading.value = false;
+    }
 };
 
 const submitOrder = () => {
@@ -127,6 +193,24 @@ const submitOrder = () => {
 onMounted(generate);
 
 watch(() => props.url, generate);
+
+watch(
+    () => orderForm.postal_code,
+    (value) => {
+        const formatted = formatPostalCode(value);
+
+        if (formatted !== value) {
+            orderForm.postal_code = formatted;
+            return;
+        }
+
+        const digits = normalizePostalCode(formatted);
+
+        if (digits.length === 8 && digits !== lastLookedUpCep.value) {
+            lookupPostalCode();
+        }
+    },
+);
 </script>
 
 <template>
@@ -249,8 +333,26 @@ watch(() => props.url, generate);
                                 id="postal_code"
                                 v-model="orderForm.postal_code"
                                 class="mt-1 w-100"
+                                inputmode="numeric"
+                                autocomplete="postal-code"
+                                maxlength="9"
+                                placeholder="00000-000"
                                 required
+                                @blur="lookupPostalCode"
                             />
+                            <p
+                                v-if="cepLookupLoading"
+                                class="small text-secondary mb-0 mt-2"
+                            >
+                                Buscando endereço...
+                            </p>
+                            <p
+                                v-else-if="cepLookupError"
+                                class="small text-danger mb-0 mt-2"
+                                role="alert"
+                            >
+                                {{ cepLookupError }}
+                            </p>
                             <InputError class="mt-2" :message="orderForm.errors.postal_code" />
                         </div>
                         <div class="col-md-8">
@@ -259,6 +361,7 @@ watch(() => props.url, generate);
                                 id="street"
                                 v-model="orderForm.street"
                                 class="mt-1 w-100"
+                                autocomplete="address-line1"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.street" />
@@ -267,8 +370,10 @@ watch(() => props.url, generate);
                             <InputLabel for="number" value="Número" />
                             <TextInput
                                 id="number"
+                                ref="numberInput"
                                 v-model="orderForm.number"
                                 class="mt-1 w-100"
+                                autocomplete="off"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.number" />
@@ -279,6 +384,7 @@ watch(() => props.url, generate);
                                 id="complement"
                                 v-model="orderForm.complement"
                                 class="mt-1 w-100"
+                                autocomplete="address-line2"
                             />
                             <InputError class="mt-2" :message="orderForm.errors.complement" />
                         </div>
@@ -288,6 +394,7 @@ watch(() => props.url, generate);
                                 id="neighborhood"
                                 v-model="orderForm.neighborhood"
                                 class="mt-1 w-100"
+                                autocomplete="address-level3"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.neighborhood" />
@@ -298,6 +405,7 @@ watch(() => props.url, generate);
                                 id="city"
                                 v-model="orderForm.city"
                                 class="mt-1 w-100"
+                                autocomplete="address-level2"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.city" />
@@ -309,6 +417,7 @@ watch(() => props.url, generate);
                                 v-model="orderForm.state"
                                 class="mt-1 w-100"
                                 maxlength="2"
+                                autocomplete="address-level1"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.state" />

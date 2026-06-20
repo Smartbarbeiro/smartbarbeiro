@@ -1,6 +1,7 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
+import StepSignupForm from '@/Components/StepSignupForm.vue';
 import { Link, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 
@@ -62,6 +63,54 @@ const checkoutForm = useForm({
     package_type: selectedPackageType.value,
     addon_ids: [],
 });
+
+const guestRegisterForm = useForm({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+    package_type: selectedPackageType.value,
+    addon_ids: [],
+});
+
+const guestSignupSteps = [
+    {
+        key: 'name',
+        type: 'text',
+        placeholder: 'DIGITE SEU NOME AQUI',
+        icon: 'bi bi-person',
+        autocomplete: 'name',
+        required: true,
+        emptyMessage: 'Informe seu nome para continuar.',
+    },
+    {
+        key: 'email',
+        type: 'email',
+        placeholder: 'DIGITE SEU E-MAIL AQUI',
+        icon: 'bi bi-envelope',
+        autocomplete: 'email',
+        required: true,
+        emptyMessage: 'Informe seu e-mail para continuar.',
+    },
+    {
+        key: 'password',
+        type: 'password',
+        placeholder: 'DIGITE SUA SENHA AQUI',
+        icon: 'bi bi-lock',
+        autocomplete: 'new-password',
+        required: true,
+        emptyMessage: 'Informe sua senha para continuar.',
+    },
+    {
+        key: 'password_confirmation',
+        type: 'password',
+        placeholder: 'CONFIRME SUA SENHA AQUI',
+        icon: 'bi bi-shield-lock',
+        autocomplete: 'new-password',
+        required: true,
+        emptyMessage: 'Confirme sua senha para continuar.',
+    },
+];
 
 const loginUrl = computed(() =>
     route('login', {
@@ -160,6 +209,23 @@ const isGuest = computed(() => !props.isAuthenticated && !props.isOwner);
 const editPlan = () => {
     showSummary.value = false;
     checkoutForm.clearErrors();
+    guestRegisterForm.clearErrors();
+};
+
+const submitGuestRegistration = () => {
+    guestRegisterForm.package_type = selectedPackageType.value;
+    guestRegisterForm.addon_ids = [...selectedAddonIds.value];
+
+    guestRegisterForm.post(
+        route('service-plan.subscribe.register', {
+            username: props.barbershopUsername,
+        }),
+        {
+            preserveScroll: true,
+            onFinish: () =>
+                guestRegisterForm.reset('password', 'password_confirmation'),
+        },
+    );
 };
 
 watch(showSummary, (active) => {
@@ -471,15 +537,34 @@ watch(showSummary, (active) => {
                         confirmar o pagamento quando estiverem disponíveis.
                     </p>
 
-                    <div class="d-flex flex-column gap-3 mt-4">
-                        <Link
-                            v-if="isGuest && mercadopagoConfigured"
-                            :href="loginUrl"
-                            class="btn btn-plan-submit text-decoration-none"
-                        >
-                            CONFIRMAR PAGAMENTO
-                        </Link>
+                    <div v-if="isGuest" class="mt-4">
+                        <p class="h6 fw-bold mb-3">
+                            Crie sua conta para assinar
+                        </p>
 
+                        <StepSignupForm
+                            :form="guestRegisterForm"
+                            :steps="guestSignupSteps"
+                            :processing="guestRegisterForm.processing"
+                            plain
+                            @submit="submitGuestRegistration"
+                        />
+
+                        <InputError
+                            class="mt-3 mb-0"
+                            :message="guestRegisterForm.errors.checkout"
+                        />
+
+                        <p class="plan-guest-login mt-3 mb-0">
+                            Já tem uma conta,
+                            <Link :href="loginUrl">entre aqui</Link>
+                        </p>
+                    </div>
+
+                    <div
+                        v-else
+                        class="d-flex flex-column gap-3 mt-4"
+                    >
                         <button
                             v-if="isAuthenticated && mercadopagoConfigured && !isOwner && !pendingServicePlanSubscription"
                             type="button"

@@ -26,6 +26,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('local')) {
+            $caBundle = storage_path('certs/cacert.pem');
+
+            if (is_file($caBundle)) {
+                ini_set('curl.cainfo', $caBundle);
+                ini_set('openssl.cafile', $caBundle);
+            }
+        }
+
         User::observe(UserObserver::class);
 
         Gate::policy(User::class, AdminUserPolicy::class);
