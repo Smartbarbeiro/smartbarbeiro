@@ -16,9 +16,20 @@ defineProps({
 });
 
 const page = usePage();
-const pageTitle = computed(() =>
-    page.props.auth.user?.is_barbershop ? 'Clientes' : 'Minhas assinaturas',
-);
+const pageTitle = computed(() => {
+    if (page.props.auth.user?.is_barbershop) {
+        return 'Clientes';
+    }
+
+    if (
+        page.props.auth.user?.primary_barbershop_username &&
+        !page.props.auth.user?.is_barbershop
+    ) {
+        return 'Plano';
+    }
+
+    return 'Minhas assinaturas';
+});
 
 const statusClass = (status) => {
     if (status === 'authorized') return 'badge bg-success';

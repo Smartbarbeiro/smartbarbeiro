@@ -48,7 +48,7 @@ defineProps({
                 <div class="row align-items-center g-0">
                     <div class="col-lg-6 col-md-12 text-center ms-lg-auto">
                         <img
-                            src="https://smartbarbeiro.com.br/imagens/cadeira.png"
+                            src="/images/cadeira.svg"
                             alt="Cadeira de barbearia"
                             class="marketing-hero-2-image img-fluid"
                         >
@@ -78,7 +78,7 @@ defineProps({
                         class="col-sm-12 col-md-6 text-center"
                     >
                         <img
-                            src="https://smartbarbeiro.com.br/imagens/celular-mock.png"
+                            src="/images/celular-mock.svg"
                             alt="Aplicativo SmartBarbeiro no celular"
                             class="marketing-hero-3-image"
                         >

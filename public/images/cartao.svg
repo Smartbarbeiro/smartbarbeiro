@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Cartão">
+  <rect width="120" height="120" rx="16" fill="#111827"/>
+  <rect x="18" y="34" width="84" height="52" rx="8" fill="#374151"/>
+  <rect x="18" y="44" width="84" height="12" fill="#6B7280"/>
+  <rect x="26" y="66" width="28" height="8" rx="2" fill="#F3F4F6"/>
+  <rect x="62" y="66" width="32" height="8" rx="2" fill="#F3F4F6"/>
+</svg>

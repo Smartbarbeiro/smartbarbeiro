@@ -73,6 +73,31 @@ class BarbershopPreferredHaircutDayTest extends TestCase
                 ->where('preferredHaircutDay', 8));
     }
 
+    public function test_client_can_update_preferred_haircut_day(): void
+    {
+        $barbershop = User::factory()->create();
+        $customer = User::factory()->customer()->create();
+
+        BarbershopMembership::create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $customer->id,
+            'preferred_haircut_day' => 8,
+        ]);
+
+        $this->actingAs($customer)
+            ->patch(route('barbershop.preferred-haircut-day.update', $barbershop->username), [
+                'preferred_haircut_day' => 22,
+            ])
+            ->assertRedirect(route('profile.public', $barbershop->username))
+            ->assertSessionHas('status', 'preferred-haircut-day-saved');
+
+        $this->assertDatabaseHas('barbershop_memberships', [
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $customer->id,
+            'preferred_haircut_day' => 22,
+        ]);
+    }
+
     public function test_preferred_haircut_day_must_be_between_1_and_31(): void
     {
         $barbershop = User::factory()->create();

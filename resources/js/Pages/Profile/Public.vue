@@ -6,8 +6,9 @@ import PlanBuilder from '@/Components/PlanBuilder.vue';
 import PreferredHaircutDayPicker from '@/Components/PreferredHaircutDayPicker.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps({
     profile: {
@@ -117,6 +118,49 @@ const layoutComponent = computed(() =>
 );
 
 const planCheckoutActive = ref(false);
+const ownerQrExpanded = ref(false);
+const preferredDayPickerOpen = ref(false);
+
+const showPreferredDayPicker = computed(
+    () =>
+        (props.needsPreferredHaircutDay ||
+            preferredDayPickerOpen.value) &&
+        isAuthenticated.value &&
+        !props.isOwner,
+);
+
+const preferredDayPickerCloseable = computed(
+    () => !props.needsPreferredHaircutDay,
+);
+
+const scrollToPlanSection = () => {
+    if (window.location.hash !== '#plano') {
+        return;
+    }
+
+    document
+        .getElementById('plano')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+onMounted(() => {
+    scrollToPlanSection();
+    window.addEventListener('hashchange', scrollToPlanSection);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('hashchange', scrollToPlanSection);
+});
+
+watch(planCheckoutActive, (active) => {
+    if (!active || props.isOwner) {
+        return;
+    }
+
+    const url = `${window.location.pathname}#plano`;
+    window.history.replaceState(null, '', url);
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+});
 </script>
 
 <template>
@@ -204,7 +248,22 @@ const planCheckoutActive = ref(false);
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-info mb-0" role="alert">
-                    Seu dia preferido para o corte: dia {{ preferredHaircutDay }}.
+                    <div
+                        class="d-flex flex-wrap align-items-center justify-content-between gap-3"
+                    >
+                        <p class="mb-0">
+                            Seu dia preferido para o corte: dia
+                            {{ preferredHaircutDay }}.
+                        </p>
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            @click="preferredDayPickerOpen = true"
+                        >
+                            Atualizar dia preferido
+                        </button>
+                    </div>
                 </div>
             </section>
 
@@ -229,12 +288,57 @@ const planCheckoutActive = ref(false);
 
             <section
                 v-if="servicePlans.packages.length > 0"
+                id="plano"
                 class="plan-builder"
             >
                 <div
                     class="container"
                     :class="planCheckoutActive ? 'text-start' : 'text-center'"
                 >
+                    <div
+                        v-if="isOwner && !showPaywall"
+                        class="d-flex flex-wrap justify-content-center gap-2 mb-3"
+                    >
+                        <Link
+                            :href="`${route('profile.edit')}#planos-de-servico`"
+                            class="btn btn-outline-secondary"
+                        >
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Editar perfil
+                        </Link>
+
+                        <SecondaryButton
+                            type="button"
+                            :aria-expanded="ownerQrExpanded"
+                            @click="ownerQrExpanded = !ownerQrExpanded"
+                        >
+                            <i class="bi bi-qr-code me-2"></i>
+                            Compartilhar Qr-code
+                        </SecondaryButton>
+                    </div>
+
+                    <div
+                        v-if="isOwner && !showPaywall && ownerQrExpanded"
+                        class="mb-4 mx-auto text-start"
+                        style="max-width: 28rem"
+                    >
+                        <p class="small text-secondary mb-2">
+                            Link do perfil:
+                            <span class="font-monospace text-body">{{
+                                profile.profile_url
+                            }}</span>
+                        </p>
+
+                        <ProfileQrCode
+                            v-model:expanded="ownerQrExpanded"
+                            :url="profile.profile_url"
+                            :filename="`${profile.username}-profile`"
+                            hide-share-button
+                            show-acrylic-order
+                            :acrylic-order="acrylicQrOrder"
+                        />
+                    </div>
+
                     <PlanBuilder
                         :service-plans="servicePlans"
                         :barbershop-username="profile.username"
@@ -247,45 +351,7 @@ const planCheckoutActive = ref(false);
                         :pending-service-plan-subscription="pendingServicePlanSubscription"
                         :has-signed-up="hasSignedUp"
                         @checkout-step-change="planCheckoutActive = $event"
-                    >
-                        <template
-                            v-if="isOwner && !showPaywall"
-                            #owner-below-plan
-                        >
-                            <p class="small text-secondary mb-2">
-                                Link do perfil:
-                                <span class="font-monospace text-body">{{
-                                    profile.profile_url
-                                }}</span>
-                            </p>
-
-                            <ProfileQrCode
-                                class="mx-auto"
-                                style="max-width: 28rem"
-                                :url="profile.profile_url"
-                                :filename="`${profile.username}-profile`"
-                                show-acrylic-order
-                                :acrylic-order="acrylicQrOrder"
-                            />
-
-                            <div
-                                class="d-flex flex-wrap justify-content-center gap-2 mt-4"
-                            >
-                                <Link
-                                    :href="`${route('profile.edit')}#planos-de-servico`"
-                                    class="btn btn-primary btn-sm"
-                                >
-                                    Editar perfil
-                                </Link>
-                                <Link
-                                    :href="route('dashboard')"
-                                    class="btn btn-outline-secondary btn-sm"
-                                >
-                                    Painel
-                                </Link>
-                            </div>
-                        </template>
-                    </PlanBuilder>
+                    />
                 </div>
             </section>
 
@@ -383,9 +449,11 @@ const planCheckoutActive = ref(false);
         </div>
 
         <PreferredHaircutDayPicker
-            :show="needsPreferredHaircutDay && isAuthenticated && !isOwner"
+            :show="showPreferredDayPicker"
+            :closeable="preferredDayPickerCloseable"
             :barbershop-username="profile.username"
             :preferred-haircut-day="preferredHaircutDay"
+            @close="preferredDayPickerOpen = false"
         />
     </component>
 </template>

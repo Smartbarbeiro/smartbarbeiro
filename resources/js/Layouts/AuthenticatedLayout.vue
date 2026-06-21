@@ -9,11 +9,96 @@ import { computed } from 'vue';
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 
+const isClient = computed(
+    () =>
+        user.value &&
+        !user.value.is_barbershop &&
+        !user.value.is_administrator &&
+        user.value.primary_barbershop_username,
+);
+
+const clientBarbershopProfileUrl = computed(() => {
+    if (!user.value?.primary_barbershop_username) {
+        return null;
+    }
+
+    return route('profile.public', {
+        username: user.value.primary_barbershop_username,
+    });
+});
+
+const homeHref = computed(() => {
+    if (user.value?.is_barbershop && user.value?.username) {
+        return route('profile.public', { username: user.value.username });
+    }
+
+    if (user.value?.primary_barbershop_username) {
+        return route('profile.public', {
+            username: user.value.primary_barbershop_username,
+        });
+    }
+
+    return route('dashboard');
+});
+
+const isHomeActive = computed(() => {
+    if (user.value?.is_barbershop && user.value?.username) {
+        return route().current('profile.public');
+    }
+
+    if (user.value?.primary_barbershop_username) {
+        return route().current('profile.public', {
+            username: user.value.primary_barbershop_username,
+        });
+    }
+
+    return route().current('dashboard');
+});
+
+const clientNavItems = computed(() => {
+    if (!isClient.value || !clientBarbershopProfileUrl.value) {
+        return null;
+    }
+
+    const username = user.value.primary_barbershop_username;
+
+    return [
+        {
+            href: clientBarbershopProfileUrl.value,
+            active: route().current('profile.public', { username }),
+            icon: 'house',
+            label: 'Home',
+        },
+        {
+            href: route('subscriptions.index'),
+            active: route().current('subscriptions.index'),
+            icon: 'credit-card',
+            label: 'Plano',
+        },
+        {
+            href: route('haircuts.index'),
+            active: route().current('haircuts.*'),
+            icon: 'scissors',
+            label: 'Cortes',
+        },
+        {
+            href: route('profile.edit'),
+            active: route().current('profile.edit'),
+            icon: 'gear',
+            label: 'Config',
+        },
+    ];
+});
+
 const navItems = computed(() => {
+    if (clientNavItems.value) {
+        return clientNavItems.value;
+    }
+
     const items = [
         {
-            href: route('dashboard'),
-            active: route().current('dashboard'),
+            href: homeHref.value,
+            active: isHomeActive.value,
             icon: 'speedometer2',
             label: 'Painel',
         },
@@ -66,14 +151,26 @@ const navItems = computed(() => {
 });
 
 const mobileNavItems = computed(() => {
-    const currentUser = user.value;
+    if (clientNavItems.value) {
+        return clientNavItems.value.map((item) => ({
+            ...item,
+            label: item.label.toUpperCase(),
+        }));
+    }
 
-    let barbeariasHref = route('dashboard');
+    const currentUser = user.value;
     let barbeariasActive = false;
 
     if (currentUser?.is_barbershop && currentUser?.username) {
         barbeariasHref = route('profile.public', { username: currentUser.username });
         barbeariasActive = route().current('profile.public');
+    } else if (currentUser?.primary_barbershop_username) {
+        barbeariasHref = route('profile.public', {
+            username: currentUser.primary_barbershop_username,
+        });
+        barbeariasActive = route().current('profile.public', {
+            username: currentUser.primary_barbershop_username,
+        });
     } else if (currentUser?.is_administrator) {
         barbeariasHref = route('admin.users.index');
         barbeariasActive = route().current('admin.users.*');
@@ -81,8 +178,8 @@ const mobileNavItems = computed(() => {
 
     return [
         {
-            href: route('dashboard'),
-            active: route().current('dashboard'),
+            href: homeHref.value,
+            active: isHomeActive.value,
             icon: 'calendar3',
             label: 'Home',
         },
@@ -112,7 +209,7 @@ const mobileNavItems = computed(() => {
     <div class="app-shell">
         <aside class="icon-sidebar d-none d-lg-flex">
             <Link
-                :href="route('dashboard')"
+                :href="homeHref"
                 class="sidebar-logo"
                 title="Smart Barbeiro"
             >
@@ -160,7 +257,7 @@ const mobileNavItems = computed(() => {
             <header class="app-topbar">
                 <div class="d-flex align-items-center w-100 gap-3 gap-lg-4">
                     <Link
-                        :href="route('dashboard')"
+                        :href="homeHref"
                         class="app-topbar-logo shrink-0 d-lg-none"
                         title="Smart Barbeiro"
                     >

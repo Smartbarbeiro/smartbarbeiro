@@ -203,6 +203,11 @@ class User extends Authenticatable
         return $this->hasMany(ServicePlanSubscription::class, 'subscriber_user_id');
     }
 
+    public function clientHaircutPhotos(): HasMany
+    {
+        return $this->hasMany(ClientHaircutPhoto::class);
+    }
+
     public function sentBarbershopMessages(): HasMany
     {
         return $this->hasMany(BarbershopMessage::class, 'barbershop_user_id');
@@ -228,9 +233,34 @@ class User extends Authenticatable
         return $this->profileUrl();
     }
 
+    public function primaryBarbershop(): ?User
+    {
+        if ($this->isBarbershop()) {
+            return null;
+        }
+
+        $membership = $this->barbershopSignups()
+            ->with('barbershop:id,username,is_barbershop,is_frozen')
+            ->latest()
+            ->first();
+
+        $barbershop = $membership?->barbershop;
+
+        if (
+            $barbershop === null
+            || ! $barbershop->isBarbershop()
+            || $barbershop->is_frozen
+            || blank($barbershop->username)
+        ) {
+            return null;
+        }
+
+        return $barbershop;
+    }
+
     public static function defaultBarbershopPhotoUrl(): string
     {
-        return asset('images/icone-barbearia.png');
+        return '/images/icone-barbearia.png';
     }
 
     /**
@@ -240,7 +270,7 @@ class User extends Authenticatable
     {
         return Attribute::get(function (): ?string {
             if ($this->profile_photo_path) {
-                return Storage::disk('public')->url($this->profile_photo_path);
+                return '/storage/'.ltrim($this->profile_photo_path, '/');
             }
 
             if ($this->isBarbershop()) {

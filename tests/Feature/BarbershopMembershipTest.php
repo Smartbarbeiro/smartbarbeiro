@@ -125,6 +125,37 @@ class BarbershopMembershipTest extends TestCase
                 ->where('profileUrl', null));
     }
 
+    public function test_customer_dashboard_redirects_to_barbershop_profile(): void
+    {
+        $barbershop = User::factory()->create();
+        $customer = User::factory()->customer()->create();
+
+        BarbershopMembership::create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $customer->id,
+        ]);
+
+        $this->actingAs($customer)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('profile.public', $barbershop->username));
+    }
+
+    public function test_customer_login_redirects_to_barbershop_profile(): void
+    {
+        $barbershop = User::factory()->create();
+        $customer = User::factory()->customer()->create();
+
+        BarbershopMembership::create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $customer->id,
+        ]);
+
+        $this->post(route('login'), [
+            'email' => $customer->email,
+            'password' => 'password',
+        ])->assertRedirect(route('profile.public', $barbershop->username));
+    }
+
     public function test_normal_registration_creates_barbershop_owner_with_public_profile(): void
     {
         $this->post(route('register'), [

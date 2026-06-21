@@ -50,7 +50,7 @@ const user = computed(() => page.props.auth.user);
 const dataUrl = ref('');
 const error = ref('');
 const showOrderModal = ref(false);
-const isExpanded = ref(props.defaultExpanded);
+const expanded = defineModel('expanded', { type: Boolean, default: false });
 const cepLookupLoading = ref(false);
 const cepLookupError = ref('');
 const numberInput = ref(null);
@@ -190,7 +190,13 @@ const submitOrder = () => {
     });
 };
 
-onMounted(generate);
+onMounted(() => {
+    if (props.defaultExpanded) {
+        expanded.value = true;
+    }
+
+    generate();
+});
 
 watch(() => props.url, generate);
 
@@ -218,14 +224,14 @@ watch(
         <SecondaryButton
             v-if="!hideShareButton"
             type="button"
-            :aria-expanded="isExpanded"
-            @click="isExpanded = !isExpanded"
+            :aria-expanded="expanded"
+            @click="expanded = !expanded"
         >
             <i class="bi bi-qr-code me-2"></i>
             Compartilhar Qrcode
         </SecondaryButton>
 
-        <div v-show="isExpanded" class="app-card p-3 mt-3">
+        <div v-show="expanded" class="app-card p-3 mt-3">
             <p class="font-monospace small text-secondary text-break mb-0">
                 {{ url }}
             </p>

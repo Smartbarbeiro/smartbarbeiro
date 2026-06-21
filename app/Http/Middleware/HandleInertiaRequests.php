@@ -37,7 +37,12 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user ? array_merge(
                     $user->append('is_administrator')->toArray(),
-                    ['is_barbershop' => $user->isBarbershop()],
+                    [
+                        'is_barbershop' => $user->isBarbershop(),
+                        'primary_barbershop_username' => $user->isBarbershop()
+                            ? null
+                            : $user->primaryBarbershop()?->username,
+                    ],
                 ) : null,
             ],
             'flash' => [

@@ -27,6 +27,8 @@ return [
         'subscription-plan-updated' => 'Plano de assinatura atualizado.',
         'service-plans-updated' => 'Planos de serviço atualizados.',
         'preferred-haircut-day-saved' => 'Dia preferido para o corte salvo.',
+        'haircut-photo-uploaded' => 'Foto do corte enviada com sucesso.',
+        'haircut-photo-deleted' => 'Foto removida.',
         'message-sent' => 'Mensagem enviada aos clientes.',
         'admin-message-sent' => 'Mensagem enviada aos destinatários.',
         'acrylic-qr-order-created' => 'Pedido de QR acrílico recebido. Entraremos em contato para produção e envio.',

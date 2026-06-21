@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\BarbershopPreferredHaircutDayController;
 use App\Http\Controllers\BarbershopServicePlanController;
+use App\Http\Controllers\ClientHaircutPhotoController;
 use App\Http\Controllers\CepLookupController;
 use App\Http\Controllers\ServicePlanSubscribeController;
 use App\Http\Controllers\ServicePlanSubscriptionController;
@@ -62,6 +63,14 @@ Route::get('/dashboard', function (
         'subscriptionPlan',
         'barbershopSignups.barbershop:id,name,username',
     ]);
+
+    if (! $user->isBarbershop() && ! $user->isAdmin()) {
+        $barbershop = $user->primaryBarbershop();
+
+        if ($barbershop !== null) {
+            return redirect()->route('profile.public', $barbershop->username);
+        }
+    }
 
     $props = [
         'isBarbershop' => $user->isBarbershop(),
@@ -125,6 +134,13 @@ Route::middleware(['auth', 'not_frozen'])->group(function () {
         ->name('subscriptions.destroy');
     Route::delete('/service-plan-subscriptions/{servicePlanSubscription}', [ServicePlanSubscriptionController::class, 'destroy'])
         ->name('service-plan-subscriptions.destroy');
+
+    Route::get('/cortes', [ClientHaircutPhotoController::class, 'index'])
+        ->name('haircuts.index');
+    Route::post('/cortes', [ClientHaircutPhotoController::class, 'store'])
+        ->name('haircuts.store');
+    Route::delete('/cortes/{clientHaircutPhoto}', [ClientHaircutPhotoController::class, 'destroy'])
+        ->name('haircuts.destroy');
 
     Route::patch('/platform-messages/{recipient}/dismiss', [PlatformMessageController::class, 'dismiss'])
         ->name('platform-messages.dismiss');

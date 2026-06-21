@@ -33,6 +33,7 @@ class UserObserver
 
         Storage::disk('public')->deleteDirectory('profile-photos/'.$user->id);
         Storage::disk('public')->deleteDirectory('background-photos/'.$user->id);
+        Storage::disk('public')->deleteDirectory('client-haircut-photos/'.$user->id);
 
         if (File::isDirectory($user->storagePath())) {
             File::deleteDirectory($user->storagePath());

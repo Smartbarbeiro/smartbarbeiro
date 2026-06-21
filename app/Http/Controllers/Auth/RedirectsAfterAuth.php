@@ -10,11 +10,23 @@ trait RedirectsAfterAuth
     {
         $redirect = $this->barbershopRedirect($request);
 
-        if ($redirect === null) {
-            return route('dashboard', absolute: false);
+        if ($redirect !== null) {
+            return $redirect;
         }
 
-        return $redirect;
+        $user = $request->user();
+
+        if ($user && ! $user->isBarbershop() && ! $user->isAdmin()) {
+            $barbershop = $user->primaryBarbershop();
+
+            if ($barbershop !== null) {
+                return route('profile.public', [
+                    'username' => $barbershop->username,
+                ], absolute: false);
+            }
+        }
+
+        return route('dashboard', absolute: false);
     }
 
     protected function isCustomerSignup(Request $request): bool

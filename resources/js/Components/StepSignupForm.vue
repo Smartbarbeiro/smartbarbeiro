@@ -19,6 +19,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    hideHeader: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(['submit']);
@@ -141,7 +145,7 @@ onMounted(() => {
         class="step-signup-form"
         :class="{ 'step-signup-form--plain': plain }"
     >
-        <header class="step-signup-form__header">
+        <header v-if="!hideHeader" class="step-signup-form__header">
             <h1 class="step-signup-form__title">Cadastrar</h1>
             <p class="step-signup-form__subtitle">Preencha as informações</p>
         </header>

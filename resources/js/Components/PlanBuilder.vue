@@ -54,10 +54,10 @@ const selectedPackageType = ref(props.servicePlans.packages[0]?.type ?? null);
 const selectedAddonIds = ref([]);
 const showAddons = ref(false);
 const showSummary = ref(false);
-const paymentMethod = ref('card');
+const paymentMethod = ref(null);
 
-const pixImageUrl = 'https://smartbarbeiro.com.br/imagens/pix.png';
-const cardImageUrl = 'https://smartbarbeiro.com.br/imagens/cartao.png';
+const pixImageUrl = '/images/pix.svg';
+const cardImageUrl = '/images/cartao.svg';
 
 const checkoutForm = useForm({
     package_type: selectedPackageType.value,
@@ -164,7 +164,32 @@ const buildPlan = () => {
         return;
     }
 
+    paymentMethod.value = null;
     showSummary.value = true;
+};
+
+const openPendingCheckout = () => {
+    if (!props.pendingServicePlanSubscription || !props.mercadopagoConfigured) {
+        return;
+    }
+
+    selectedPackageType.value =
+        props.pendingServicePlanSubscription.package_type;
+    selectedAddonIds.value = [
+        ...(props.pendingServicePlanSubscription.selected_addon_ids ?? []),
+    ];
+    paymentMethod.value = null;
+    showSummary.value = true;
+};
+
+const confirmCheckoutPayment = () => {
+    if (props.pendingServicePlanSubscription) {
+        confirmPendingPayment();
+
+        return;
+    }
+
+    confirmSubscription();
 };
 
 const confirmSubscription = (packageType = selectedPackageType.value, addonIds = selectedAddonIds.value) => {
@@ -200,14 +225,39 @@ const confirmPendingPayment = () => {
     );
 };
 
-const planBuilderSubmitLabel = computed(() =>
-    props.hasSignedUp ? 'ALTERE SEU PLANO' : 'MONTE SEU PLANO',
-);
+const planBuilderSubmitLabel = computed(() => {
+    if (
+        props.pendingServicePlanSubscription &&
+        props.mercadopagoConfigured &&
+        props.isAuthenticated &&
+        !props.isOwner
+    ) {
+        return 'CONTINUAR PAGAMENTO';
+    }
+
+    return props.hasSignedUp ? 'ALTERE SEU PLANO' : 'MONTE SEU PLANO';
+});
+
+const handlePlanSubmit = () => {
+    if (
+        props.pendingServicePlanSubscription &&
+        props.mercadopagoConfigured &&
+        props.isAuthenticated &&
+        !props.isOwner
+    ) {
+        openPendingCheckout();
+
+        return;
+    }
+
+    buildPlan();
+};
 
 const isGuest = computed(() => !props.isAuthenticated && !props.isOwner);
 
 const editPlan = () => {
     showSummary.value = false;
+    paymentMethod.value = null;
     checkoutForm.clearErrors();
     guestRegisterForm.clearErrors();
 };
@@ -244,37 +294,16 @@ watch(showSummary, (active) => {
         </div>
 
         <div
-            v-else-if="pendingServicePlanSubscription && isAuthenticated"
-            class="alert alert-info mb-3"
+            v-if="isOwner"
+            class="alert alert-info mb-3 text-start"
             role="alert"
         >
-            <p class="mb-2">
-                Plano escolhido: {{ pendingServicePlanSubscription.package_label }}
-                ({{ pendingServicePlanSubscription.formatted_total }}/mês).
+            <p class="mb-0">
+                Esta é a visualização do montador de planos para seus clientes.
             </p>
-            <p
-                v-if="!mercadopagoConfigured"
-                class="small mb-0"
-            >
-                Pagamentos indisponíveis no momento. Volte aqui para confirmar
-                o pagamento quando estiverem disponíveis.
-            </p>
-            <button
-                v-else
-                type="button"
-                class="btn btn-plan-submit"
-                :disabled="checkoutForm.processing"
-                @click="confirmPendingPayment"
-            >
-                {{
-                    checkoutForm.processing
-                        ? 'REDIRECIONANDO...'
-                        : 'CONFIRMAR PAGAMENTO'
-                }}
-            </button>
         </div>
 
-        <form class="plan-form" @submit.prevent="buildPlan">
+        <form class="plan-form" @submit.prevent="handlePlanSubmit">
             <template v-if="!showSummary || isOwner">
                 <fieldset>
                     <legend class="visually-hidden">Escolha seu plano mensal</legend>
@@ -344,15 +373,15 @@ watch(showSummary, (active) => {
                 </fieldset>
 
                 <button
-                    v-if="availableAddons.length > 0"
+                    v-if="availableAddons.length > 0 && !showAddons"
                     type="button"
                     class="btn-optionals"
-                    @click="showAddons = !showAddons"
+                    @click="showAddons = true"
                 >
                     <span class="btn-optionals-icon" aria-hidden="true">
                         <i class="bi bi-plus-lg"></i>
                     </span>
-                    {{ showAddons ? 'OCULTAR OPCIONAIS' : 'ADICIONAR OPCIONAIS' }}
+                    ADICIONAR OPCIONAIS
                 </button>
 
                 <div
@@ -404,10 +433,6 @@ watch(showSummary, (active) => {
                 "
                 :role="isOwner ? 'alert' : undefined"
             >
-                <p v-if="isOwner" class="mb-3">
-                    Esta é a visualização do montador de planos para seus clientes.
-                </p>
-
                 <div :class="{ 'plan-checkout text-start': isOwner }">
                     <div class="section-header mb-4">
                         <button
@@ -547,6 +572,7 @@ watch(showSummary, (active) => {
                             :steps="guestSignupSteps"
                             :processing="guestRegisterForm.processing"
                             plain
+                            hide-header
                             @submit="submitGuestRegistration"
                         />
 
@@ -562,15 +588,23 @@ watch(showSummary, (active) => {
                     </div>
 
                     <div
-                        v-else
+                        v-else-if="isAuthenticated || isOwner"
                         class="d-flex flex-column gap-3 mt-4"
                     >
                         <button
-                            v-if="isAuthenticated && mercadopagoConfigured && !isOwner && !pendingServicePlanSubscription"
+                            v-if="
+                                isAuthenticated &&
+                                mercadopagoConfigured &&
+                                !isOwner &&
+                                paymentMethod
+                            "
                             type="button"
                             class="btn btn-plan-submit"
-                            :disabled="checkoutForm.processing || hasActiveServicePlanSubscription"
-                            @click="confirmSubscription()"
+                            :disabled="
+                                checkoutForm.processing ||
+                                hasActiveServicePlanSubscription
+                            "
+                            @click="confirmCheckoutPayment"
                         >
                             {{
                                 checkoutForm.processing
@@ -580,7 +614,7 @@ watch(showSummary, (active) => {
                         </button>
 
                         <button
-                            v-else-if="isOwner"
+                            v-else-if="isOwner && paymentMethod"
                             type="button"
                             class="btn btn-plan-submit"
                             disabled
@@ -589,20 +623,6 @@ watch(showSummary, (active) => {
                         </button>
                     </div>
                 </div>
-
-                <slot v-if="isOwner" name="owner-below-plan" />
-            </div>
-
-            <div
-                v-else-if="isOwner && !hasActiveServicePlanSubscription"
-                class="alert alert-info mb-3 mt-3 text-start"
-                role="alert"
-            >
-                <p class="mb-3">
-                    Esta é a visualização do montador de planos para seus clientes.
-                </p>
-
-                <slot name="owner-below-plan" />
             </div>
         </form>
     </section>
