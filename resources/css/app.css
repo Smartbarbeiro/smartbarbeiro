@@ -1704,7 +1704,8 @@ li {
 }
 
 .marketing-page:has(.marketing-hero-login) .marketing-main,
-.marketing-page:has(.marketing-hero-register) .marketing-main {
+.marketing-page:has(.marketing-hero-register) .marketing-main,
+.marketing-page:has(.register-hero) .marketing-main {
     display: flex;
     flex-direction: column;
 }
@@ -1725,6 +1726,112 @@ li {
     padding-left: clamp(1.25rem, 6vw, 4rem);
     padding-right: clamp(1.25rem, 4vw, 2.5rem);
     text-align: left;
+}
+
+.register-hero {
+    align-items: center;
+    background-color: #000000;
+    background-image: url('/images/registrar-bg.png');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    min-height: calc(100vh - 90px);
+    padding: clamp(2rem, 5vw, 4rem) clamp(1.25rem, 4vw, 2.5rem);
+    position: relative;
+    text-align: left;
+}
+
+.register-hero::after {
+    background: radial-gradient(
+        ellipse at center,
+        rgba(0, 0, 0, 0.08) 0%,
+        rgba(0, 0, 0, 0.42) 58%,
+        rgba(0, 0, 0, 0.84) 100%
+    );
+    box-shadow: inset 0 0 180px rgba(0, 0, 0, 0.7);
+    content: '';
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.register-hero__inner {
+    max-width: 25rem;
+    position: relative;
+    width: 100%;
+    z-index: 1;
+}
+
+.login-panel {
+    background: #ffffff;
+    border: 1px solid #000000;
+    color: #000000;
+    padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.login-panel__header {
+    border-bottom: 1px solid #000000;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+}
+
+.login-panel__title {
+    color: #000000;
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.login-panel__subtitle {
+    color: #444444;
+    font-size: 1rem;
+    margin: 0.35rem 0 0;
+}
+
+.login-panel__form .form-label,
+.login-panel__form .form-check-label {
+    color: #000000;
+    font-weight: 600;
+}
+
+.login-panel__form .form-control {
+    background: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 0;
+    color: #000000;
+    min-height: 3.25rem;
+}
+
+.login-panel__form .form-control:focus {
+    border-color: #000000;
+    box-shadow: none;
+}
+
+.login-panel__toggle-password {
+    border-radius: 0;
+    min-width: 3.25rem;
+}
+
+.login-panel__submit {
+    border-radius: 0;
+    font-weight: 700;
+    min-height: 3.25rem;
+}
+
+.login-panel__link {
+    color: #000000;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.login-panel__footer {
+    margin-top: 1.25rem;
+    text-align: center;
 }
 
 .marketing-hero-login .auth-hero-input {
@@ -2183,11 +2290,13 @@ li {
 }
 
 .step-signup-section--folded .step-signup-section__input,
+.step-signup-section--folded .step-signup-section__field,
 .step-signup-section--folded .step-signup-section__action {
     background-color: #e8ebf8;
 }
 
 .step-signup-section--folded + .step-signup-section--folded .step-signup-section__input,
+.step-signup-section--folded + .step-signup-section--folded .step-signup-section__field,
 .step-signup-section--folded + .step-signup-section--folded .step-signup-section__action {
     background-color: #dce4ff;
 }
@@ -2201,6 +2310,43 @@ li {
     margin: 0;
     padding: 1.25rem 1.5rem;
     width: 80%;
+}
+
+.step-signup-section__field {
+    align-items: stretch;
+    background: #f7f8ff;
+    display: flex;
+    position: relative;
+    width: 80%;
+}
+
+.step-signup-section__field .step-signup-section__input {
+    width: 100%;
+}
+
+.step-signup-section__input--password {
+    padding-right: 3.25rem;
+}
+
+.step-signup-section__toggle-password {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #6d7ce8;
+    cursor: pointer;
+    display: flex;
+    font-size: 1.15rem;
+    height: 100%;
+    justify-content: center;
+    padding: 0 1rem;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.step-signup-section__toggle-password:focus-visible {
+    outline: 2px solid #4f5fd0;
+    outline-offset: -2px;
 }
 
 .step-signup-section__input:focus {
@@ -2280,15 +2426,18 @@ li {
 }
 
 .step-signup-form--plain {
-    border: none;
+    border: 1px solid #000000;
+    border-radius: 0;
     box-shadow: none;
     overflow: visible;
 }
 
 .step-signup-form--plain .step-signup-form__header {
     background: #ffffff;
-    border: 1px solid #000000;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+    border: none;
+    border-bottom: 1px solid #000000;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .step-signup-form--plain .step-signup-form__body {
@@ -2305,19 +2454,41 @@ li {
 
 .step-signup-form--plain .step-signup-section {
     background: #ffffff;
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+    border: 1px solid #000000;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.step-signup-form--plain .step-signup-section--active:last-child,
+.step-signup-form--plain .step-signup-form__stack .step-signup-section:last-child.step-signup-section--folded {
+    border-radius: 0;
 }
 
 .step-signup-form--plain .step-signup-section--folded {
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
 }
 
 .step-signup-form--plain .step-signup-section__input {
     background: #ffffff;
     border: 0;
-    border-bottom: 1px solid #000000;
-    border-left: 1px solid #000000;
     color: #000000;
+}
+
+.step-signup-form--plain .step-signup-section__field {
+    background: #ffffff;
+    border: 0;
+}
+
+.step-signup-form--plain .step-signup-section__field .step-signup-section__input {
+    border: 0;
+}
+
+.step-signup-form--plain .step-signup-section__toggle-password {
+    color: #444444;
+}
+
+.step-signup-form--plain .step-signup-section__toggle-password:focus-visible {
+    outline-color: #000000;
 }
 
 .step-signup-form--plain .step-signup-section__input::placeholder {
@@ -2329,13 +2500,18 @@ li {
     border-left: 1px solid #000000;
 }
 
-.step-signup-form--plain .step-signup-section__icon,
+.step-signup-form--plain .step-signup-section__icon {
+    background: #000000;
+    color: #ffffff;
+}
+
 .step-signup-form--plain .step-signup-section__next {
+    background: #000000;
     color: #ffffff;
 }
 
 .step-signup-form--plain .step-signup-section--folded .step-signup-section__input,
-.step-signup-form--plain .step-signup-section--folded .step-signup-section__action {
+.step-signup-form--plain .step-signup-section--folded .step-signup-section__field {
     background-color: #f2f2f2;
 }
 
@@ -2346,8 +2522,27 @@ li {
 .step-signup-form--plain
     .step-signup-section--folded
     + .step-signup-section--folded
-    .step-signup-section__action {
+    .step-signup-section__field {
     background-color: #e5e5e5;
+}
+
+.step-signup-form--plain .step-signup-section--folded .step-signup-section__action,
+.step-signup-form--plain
+    .step-signup-section--folded
+    + .step-signup-section--folded
+    .step-signup-section__action,
+.step-signup-form--plain .step-signup-section--folded .step-signup-section__icon,
+.step-signup-form--plain
+    .step-signup-section--folded
+    + .step-signup-section--folded
+    .step-signup-section__icon,
+.step-signup-form--plain .step-signup-section--folded .step-signup-section__next,
+.step-signup-form--plain
+    .step-signup-section--folded
+    + .step-signup-section--folded
+    .step-signup-section__next {
+    background-color: #000000;
+    color: #ffffff;
 }
 
 .step-signup-form--plain .step-signup-form__error,

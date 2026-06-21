@@ -1,10 +1,10 @@
 <script setup>
 import Checkbox from '@/Components/Checkbox.vue';
-import AuthHeroLayout from '@/Layouts/AuthHeroLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import TextInput from '@/Components/TextInput.vue';
+import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     canResetPassword: {
@@ -19,93 +19,158 @@ const props = defineProps({
     },
 });
 
+const showPassword = ref(false);
+
+const barbershopRedirect = computed(() =>
+    props.redirect?.startsWith('/barbearias/') ? props.redirect : null,
+);
+
 const form = useForm({
     email: '',
     password: '',
     remember: false,
-    redirect: props.redirect,
+    ...(barbershopRedirect.value ? { redirect: barbershopRedirect.value } : {}),
 });
 
 const submit = () => {
     form.post(route('login'), {
+        preserveScroll: true,
         onFinish: () => form.reset('password'),
     });
 };
 </script>
 
 <template>
-    <AuthHeroLayout active-nav="login">
+    <MarketingLayout active-nav="login">
         <Head title="Entrar" />
 
-        <h2 class="auth-hero-title">Bem-vindo de volta.</h2>
-        <p class="auth-hero-lead">
-            Acesse sua conta para gerenciar sua barbearia.
-        </p>
+        <section class="register-hero">
+            <div class="register-hero__inner">
+                <div class="login-panel">
+                    <header class="login-panel__header">
+                        <h1 class="login-panel__title">Entrar</h1>
+                        <p class="login-panel__subtitle">
+                            Acesse sua conta para gerenciar sua barbearia.
+                        </p>
+                    </header>
 
-        <div
-            v-if="status"
-            class="alert alert-success auth-hero-alert mb-3"
-            role="alert"
-        >
-            {{ status }}
-        </div>
+                    <div
+                        v-if="status"
+                        class="alert alert-success mb-3"
+                        role="alert"
+                    >
+                        {{ status }}
+                    </div>
 
-        <form class="auth-hero-form" @submit.prevent="submit">
-            <div class="mb-3">
-                <InputLabel for="email" value="E-mail" />
+                    <form class="login-panel__form" @submit.prevent="submit">
+                        <div class="mb-3">
+                            <InputLabel for="email" value="E-mail" />
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 w-100 auth-hero-input"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
+                            <input
+                                id="email"
+                                v-model="form.email"
+                                type="email"
+                                class="form-control mt-1"
+                                required
+                                autofocus
+                                autocomplete="username"
+                            />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.email"
+                            />
+                        </div>
+
+                        <div class="mb-3">
+                            <InputLabel for="password" value="Senha" />
+
+                            <div class="input-group mt-1">
+                                <input
+                                    id="password"
+                                    v-model="form.password"
+                                    :type="showPassword ? 'text' : 'password'"
+                                    class="form-control"
+                                    required
+                                    autocomplete="current-password"
+                                />
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-dark login-panel__toggle-password"
+                                    :aria-label="
+                                        showPassword
+                                            ? 'Ocultar senha'
+                                            : 'Mostrar senha'
+                                    "
+                                    @click="showPassword = !showPassword"
+                                >
+                                    <i
+                                        class="bi"
+                                        :class="
+                                            showPassword
+                                                ? 'bi-eye-slash'
+                                                : 'bi-eye'
+                                        "
+                                        aria-hidden="true"
+                                    ></i>
+                                </button>
+                            </div>
+
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.password"
+                            />
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <Checkbox
+                                name="remember"
+                                v-model:checked="form.remember"
+                            />
+                            <label class="form-check-label">
+                                Lembrar de mim
+                            </label>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-dark btn-lg w-100 login-panel__submit"
+                            :disabled="form.processing"
+                        >
+                            Entrar
+                        </button>
+
+                        <div
+                            v-if="canResetPassword"
+                            class="text-center mt-3"
+                        >
+                            <Link
+                                :href="route('password.request')"
+                                class="login-panel__link"
+                            >
+                                Esqueceu sua senha?
+                            </Link>
+                        </div>
+
+                        <p class="login-panel__footer mb-0">
+                            Não tem conta?
+                            <Link
+                                :href="
+                                    route(
+                                        'register',
+                                        barbershopRedirect
+                                            ? { redirect: barbershopRedirect }
+                                            : {},
+                                    )
+                                "
+                                class="login-panel__link"
+                            >
+                                Cadastrar
+                            </Link>
+                        </p>
+                    </form>
+                </div>
             </div>
-
-            <div class="mb-3">
-                <InputLabel for="password" value="Senha" />
-
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 w-100 auth-hero-input"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
-
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
-
-            <div class="form-check mb-4">
-                <Checkbox name="remember" v-model:checked="form.remember" />
-                <label class="form-check-label">Lembrar de mim</label>
-            </div>
-
-            <button
-                type="submit"
-                class="btn btn-light btn-lg auth-hero-submit w-100"
-                :disabled="form.processing"
-            >
-                Entrar
-            </button>
-
-            <div
-                v-if="canResetPassword"
-                class="text-center mt-3"
-            >
-                <Link
-                    :href="route('password.request')"
-                    class="auth-hero-link"
-                >
-                    Esqueceu sua senha?
-                </Link>
-            </div>
-        </form>
-    </AuthHeroLayout>
+        </section>
+    </MarketingLayout>
 </template>

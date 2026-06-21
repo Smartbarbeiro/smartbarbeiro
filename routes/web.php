@@ -156,6 +156,8 @@ Route::middleware(['auth', 'verified', 'admin'])
     ->group(function () {
         Route::get('/pedidos-qrcode', [AdminAcrylicQrOrderController::class, 'index'])
             ->name('acrylic-qr-orders.index');
+        Route::get('/pedidos-qrcode/{acrylicQrOrder}/pdf', [AdminAcrylicQrOrderController::class, 'downloadPdf'])
+            ->name('acrylic-qr-orders.pdf');
         Route::patch('/pedidos-qrcode/{acrylicQrOrder}', [AdminAcrylicQrOrderController::class, 'update'])
             ->name('acrylic-qr-orders.update');
         Route::get('/mensagens', [AdminBroadcastMessageController::class, 'index'])
@@ -163,6 +165,8 @@ Route::middleware(['auth', 'verified', 'admin'])
         Route::post('/mensagens', [AdminBroadcastMessageController::class, 'store'])
             ->name('messages.store');
         Route::get('/', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('/{user}/qrcode.pdf', [AdminUserController::class, 'downloadQrPdf'])
+            ->name('users.qrcode.pdf');
         Route::get('/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
         Route::patch('/{user}', [AdminUserController::class, 'update'])->name('users.update');
         Route::patch('/{user}/freeze', [AdminUserController::class, 'toggleFreeze'])->name('users.freeze');

@@ -164,6 +164,21 @@ const qrProfileUrl = computed(() => {
                     :filename="`${form.username || managedUser.username}-profile`"
                 />
 
+                <div
+                    v-if="managedUser.is_barbershop && managedUser.profile_url"
+                    class="mt-3"
+                >
+                    <a
+                        :href="route('admin.users.qrcode.pdf', managedUser.id)"
+                        class="btn btn-outline-secondary btn-sm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i class="bi bi-printer me-2" aria-hidden="true"></i>
+                        Imprimir PDF do QR code
+                    </a>
+                </div>
+
                 <form @submit.prevent="submit" class="mt-4">
                     <div class="mb-3">
                         <InputLabel for="name" value="Nome" />

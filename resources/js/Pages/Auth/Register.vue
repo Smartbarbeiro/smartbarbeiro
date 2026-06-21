@@ -1,5 +1,6 @@
 <script setup>
 import StepSignupForm from '@/Components/StepSignupForm.vue';
+import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -17,6 +18,8 @@ const props = defineProps({
 const form = useForm({
     name: '',
     username: '',
+    cpf: '',
+    cpf_cnpj: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -38,13 +41,34 @@ const steps = computed(() => {
 
     if (!props.isCustomerSignup) {
         fields.push({
+            key: 'cpf_cnpj',
+            type: 'text',
+            placeholder: 'DIGITE SEU CPF OU CNPJ AQUI',
+            icon: 'bi bi-card-text',
+            autocomplete: 'off',
+            inputmode: 'numeric',
+            required: true,
+            emptyMessage: 'Informe seu CPF ou CNPJ para continuar.',
+        });
+        fields.push({
             key: 'username',
             type: 'text',
-            placeholder: 'NOME DA BARBEARIA (OPCIONAL)',
+            placeholder: 'NOME DA BARBEARIA',
             icon: 'bi bi-shop',
             autocomplete: 'username',
-            required: false,
-            skippable: true,
+            required: true,
+            emptyMessage: 'Informe o nome da barbearia para continuar.',
+        });
+    } else {
+        fields.push({
+            key: 'cpf',
+            type: 'text',
+            placeholder: 'DIGITE SEU CPF AQUI',
+            icon: 'bi bi-card-text',
+            autocomplete: 'off',
+            inputmode: 'numeric',
+            required: true,
+            emptyMessage: 'Informe seu CPF para continuar.',
         });
     }
 
@@ -89,17 +113,19 @@ const submit = () => {
 </script>
 
 <template>
-    <div class="register-plain">
+    <MarketingLayout active-nav="register">
         <Head title="Cadastrar" />
 
-        <div class="register-plain__inner">
-            <StepSignupForm
-                :form="form"
-                :steps="steps"
-                :processing="form.processing"
-                plain
-                @submit="submit"
-            />
-        </div>
-    </div>
+        <section class="register-hero">
+            <div class="register-hero__inner">
+                <StepSignupForm
+                    :form="form"
+                    :steps="steps"
+                    :processing="form.processing"
+                    plain
+                    @submit="submit"
+                />
+            </div>
+        </section>
+    </MarketingLayout>
 </template>

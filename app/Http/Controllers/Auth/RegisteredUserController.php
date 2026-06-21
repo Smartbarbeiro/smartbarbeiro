@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\BarbershopMembership;
 use App\Models\User;
+use App\Rules\UniqueTaxDocument;
 use App\Services\UsernameGenerator;
+use App\Support\TaxDocument;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,40 +43,55 @@ class RegisteredUserController extends Controller
     {
         $isCustomerSignup = $this->isCustomerSignup($request);
 
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
-            'username' => [
-                'nullable',
+            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ];
+
+        if ($isCustomerSignup) {
+            $rules['cpf'] = ['required', 'string', 'cpf', new UniqueTaxDocument];
+        } else {
+            $rules['cpf_cnpj'] = ['required', 'string', 'cpf_ou_cnpj', new UniqueTaxDocument];
+            $rules['username'] = [
+                'required',
                 'string',
                 'min:3',
                 'max:30',
                 'alpha_dash',
                 Rule::unique(User::class),
-            ],
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        $taxDocument = TaxDocument::normalize(
+            $isCustomerSignup ? $validated['cpf'] : $validated['cpf_cnpj'],
+        );
 
         if ($isCustomerSignup) {
             $user = User::create([
-                'name' => $request->name,
+                'name' => $validated['name'],
                 'username' => null,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'email' => $validated['email'],
+                'tax_document' => $taxDocument,
+                'password' => Hash::make($validated['password']),
                 'is_barbershop' => false,
             ]);
 
             $this->attachCustomerToBarbershop($user, $request);
         } else {
-            $username = $request->username
-                ? app(UsernameGenerator::class)->uniqueFrom($request->name, $request->username)
-                : app(UsernameGenerator::class)->uniqueFrom($request->name);
+            $username = app(UsernameGenerator::class)->uniqueFrom(
+                $validated['name'],
+                $validated['username'],
+            );
 
             $user = User::create([
-                'name' => $request->name,
+                'name' => $validated['name'],
                 'username' => $username,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'email' => $validated['email'],
+                'tax_document' => $taxDocument,
+                'password' => Hash::make($validated['password']),
                 'is_barbershop' => true,
             ]);
         }

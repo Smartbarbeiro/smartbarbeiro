@@ -36,7 +36,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->redirectAfterAuth($request));
+        return redirect()->to($this->resolvePostLoginDestination($request));
     }
 
     /**

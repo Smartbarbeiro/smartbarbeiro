@@ -157,6 +157,19 @@ const markShipped = (orderId) => {
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-2">
+                                    <a
+                                        :href="
+                                            route(
+                                                'admin.acrylic-qr-orders.pdf',
+                                                order.id,
+                                            )
+                                        "
+                                        class="btn btn-outline-secondary btn-sm"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        Imprimir PDF
+                                    </a>
                                     <SecondaryButton
                                         v-if="order.status === 'pending'"
                                         type="button"

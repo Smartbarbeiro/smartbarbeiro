@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\BarbershopMembership;
 use App\Models\ServicePlanSubscription;
 use App\Models\User;
+use App\Rules\UniqueTaxDocument;
 use App\Services\MercadoPagoService;
 use App\Services\ServicePlanCheckoutService;
 use App\Services\ServicePlanSubscriptionSyncService;
+use App\Support\TaxDocument;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -86,6 +88,7 @@ class ServicePlanSubscribeController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'cpf' => ['required', 'string', 'cpf', new UniqueTaxDocument],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'package_type' => ['required', 'in:cut,cut_beard'],
@@ -97,6 +100,7 @@ class ServicePlanSubscribeController extends Controller
             'name' => $validated['name'],
             'username' => null,
             'email' => $validated['email'],
+            'tax_document' => TaxDocument::normalize($validated['cpf']),
             'password' => Hash::make($validated['password']),
             'is_barbershop' => false,
         ]);

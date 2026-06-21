@@ -66,6 +66,7 @@ const checkoutForm = useForm({
 
 const guestRegisterForm = useForm({
     name: '',
+    cpf: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -82,6 +83,16 @@ const guestSignupSteps = [
         autocomplete: 'name',
         required: true,
         emptyMessage: 'Informe seu nome para continuar.',
+    },
+    {
+        key: 'cpf',
+        type: 'text',
+        placeholder: 'DIGITE SEU CPF AQUI',
+        icon: 'bi bi-card-text',
+        autocomplete: 'off',
+        inputmode: 'numeric',
+        required: true,
+        emptyMessage: 'Informe seu CPF para continuar.',
     },
     {
         key: 'email',
@@ -589,38 +600,46 @@ watch(showSummary, (active) => {
 
                     <div
                         v-else-if="isAuthenticated || isOwner"
-                        class="d-flex flex-column gap-3 mt-4"
+                        class="row g-3 justify-content-center mt-4"
                     >
-                        <button
+                        <div
                             v-if="
                                 isAuthenticated &&
                                 mercadopagoConfigured &&
                                 !isOwner &&
                                 paymentMethod
                             "
-                            type="button"
-                            class="btn btn-plan-submit"
-                            :disabled="
-                                checkoutForm.processing ||
-                                hasActiveServicePlanSubscription
-                            "
-                            @click="confirmCheckoutPayment"
+                            class="col-12 col-md-6"
                         >
-                            {{
-                                checkoutForm.processing
-                                    ? 'REDIRECIONANDO...'
-                                    : 'CONFIRMAR PAGAMENTO'
-                            }}
-                        </button>
+                            <button
+                                type="button"
+                                class="btn btn-plan-submit w-100"
+                                :disabled="
+                                    checkoutForm.processing ||
+                                    hasActiveServicePlanSubscription
+                                "
+                                @click="confirmCheckoutPayment"
+                            >
+                                {{
+                                    checkoutForm.processing
+                                        ? 'REDIRECIONANDO...'
+                                        : 'CONFIRMAR PAGAMENTO'
+                                }}
+                            </button>
+                        </div>
 
-                        <button
+                        <div
                             v-else-if="isOwner && paymentMethod"
-                            type="button"
-                            class="btn btn-plan-submit"
-                            disabled
+                            class="col-12 col-md-6"
                         >
-                            CONFIRMAR PAGAMENTO
-                        </button>
+                            <button
+                                type="button"
+                                class="btn btn-plan-submit w-100"
+                                disabled
+                            >
+                                CONFIRMAR PAGAMENTO
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

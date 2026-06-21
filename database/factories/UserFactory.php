@@ -30,6 +30,7 @@ class UserFactory extends Factory
             'name' => $name,
             'username' => Str::slug(fake()->unique()->userName()),
             'email' => fake()->unique()->safeEmail(),
+            'tax_document' => fake()->unique()->numerify('###########'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -42,6 +43,7 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'username' => null,
             'is_barbershop' => false,
+            'tax_document' => fake()->unique()->numerify('###########'),
         ]);
     }
 

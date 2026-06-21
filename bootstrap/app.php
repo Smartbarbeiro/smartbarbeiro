@@ -24,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'not_frozen' => \App\Http\Middleware\EnsureUserIsNotFrozen::class,
         ]);
+
+        $middleware->redirectUsersTo('/dashboard');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

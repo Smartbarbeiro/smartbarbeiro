@@ -12,8 +12,16 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
+    Route::get('registrar', [RegisteredUserController::class, 'create'])
         ->name('register');
+
+    Route::post('registrar', [RegisteredUserController::class, 'store']);
+
+    Route::get('register', function () {
+        $query = request()->getQueryString();
+
+        return redirect('/registrar'.($query ? '?'.$query : ''), 301);
+    });
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 

@@ -17,8 +17,19 @@ const form = useForm({
     photo: null,
 });
 
-const photoInput = ref(null);
+const galleryInput = ref(null);
+const cameraInput = ref(null);
 const previewUrl = ref(null);
+
+const resetPhotoInputs = () => {
+    if (galleryInput.value) {
+        galleryInput.value.value = '';
+    }
+
+    if (cameraInput.value) {
+        cameraInput.value.value = '';
+    }
+};
 
 const selectPhoto = (event) => {
     const file = event.target.files?.[0] ?? null;
@@ -33,15 +44,17 @@ const selectPhoto = (event) => {
     previewUrl.value = file ? URL.createObjectURL(file) : null;
 };
 
+const openCamera = () => {
+    cameraInput.value?.click();
+};
+
 const submit = () => {
     form.post(route('haircuts.store'), {
         forceFormData: true,
         preserveScroll: true,
         onSuccess: () => {
             form.reset();
-            if (photoInput.value) {
-                photoInput.value.value = '';
-            }
+            resetPhotoInputs();
             if (previewUrl.value) {
                 URL.revokeObjectURL(previewUrl.value);
                 previewUrl.value = null;
@@ -99,7 +112,8 @@ const flashStatus = () => usePage().props.flash?.status;
                 <h2 class="h5 fw-semibold mb-2">Enviar foto do corte</h2>
                 <p class="text-secondary small mb-4">
                     Salve fotos dos seus cortes para acompanhar o estilo ao longo
-                    do tempo.
+                    do tempo. Escolha uma foto da galeria ou tire uma nova foto
+                    agora.
                 </p>
 
                 <form class="haircut-upload-form" @submit.prevent="submit">
@@ -116,15 +130,34 @@ const flashStatus = () => usePage().props.flash?.status;
 
                     <div class="d-flex flex-wrap align-items-center gap-3">
                         <label class="btn btn-outline-secondary mb-0">
+                            <i class="bi bi-images me-2" aria-hidden="true"></i>
                             Escolher foto
                             <input
-                                ref="photoInput"
+                                ref="galleryInput"
                                 type="file"
                                 accept="image/*"
                                 class="visually-hidden"
                                 @change="selectPhoto"
                             />
                         </label>
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary mb-0"
+                            @click="openCamera"
+                        >
+                            <i class="bi bi-camera me-2" aria-hidden="true"></i>
+                            Tirar foto
+                        </button>
+
+                        <input
+                            ref="cameraInput"
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            class="visually-hidden"
+                            @change="selectPhoto"
+                        />
 
                         <PrimaryButton
                             type="submit"

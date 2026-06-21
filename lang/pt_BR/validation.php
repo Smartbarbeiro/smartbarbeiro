@@ -201,6 +201,8 @@ return [
         'email' => 'e-mail',
         'password' => 'senha',
         'password_confirmation' => 'confirmação de senha',
+        'cpf' => 'CPF',
+        'cpf_cnpj' => 'CPF/CNPJ',
         'title' => 'título',
         'description' => 'descrição',
         'monthly_amount' => 'valor mensal',

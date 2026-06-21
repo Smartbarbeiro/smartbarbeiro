@@ -7,13 +7,13 @@ defineOptions({
 
 const model = defineModel({
     type: String,
-    required: true,
+    default: '',
 });
 
 const input = ref(null);
 
 onMounted(() => {
-    if (input.value.hasAttribute('autofocus')) {
+    if (input.value?.hasAttribute('autofocus')) {
         input.value.focus();
     }
 });

@@ -6,6 +6,7 @@ use App\Models\BarbershopMembership;
 use App\Models\ProfileSubscriptionPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Support\TestTaxDocuments;
 use Tests\TestCase;
 
 class BarbershopMembershipTest extends TestCase
@@ -94,6 +95,7 @@ class BarbershopMembershipTest extends TestCase
 
         $this->post(route('register'), [
             'name' => 'New Customer',
+            'cpf' => TestTaxDocuments::CPF,
             'email' => 'customer@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
@@ -160,6 +162,8 @@ class BarbershopMembershipTest extends TestCase
     {
         $this->post(route('register'), [
             'name' => 'Shop Owner',
+            'cpf_cnpj' => TestTaxDocuments::CNPJ,
+            'username' => 'barbearia-do-owner',
             'email' => 'owner@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',

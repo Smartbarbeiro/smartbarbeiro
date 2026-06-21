@@ -159,6 +159,7 @@ const mobileNavItems = computed(() => {
     }
 
     const currentUser = user.value;
+    let barbeariasHref = homeHref.value;
     let barbeariasActive = false;
 
     if (currentUser?.is_barbershop && currentUser?.username) {

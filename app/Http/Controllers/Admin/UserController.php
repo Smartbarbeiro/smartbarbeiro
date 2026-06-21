@@ -6,17 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\ProfileSubscription;
 use App\Models\User;
+use App\Services\BarbershopProfileQrPdfService;
 use App\Services\DeleteUserAccountService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class UserController extends Controller
 {
     public function __construct(
         private DeleteUserAccountService $deleteUserAccount,
+        private BarbershopProfileQrPdfService $barbershopProfileQrPdfService,
     ) {}
 
     public function index(Request $request): Response
@@ -250,5 +253,12 @@ class UserController extends Controller
 
         return Redirect::route('admin.users.index')
             ->with('status', 'user-deleted');
+    }
+
+    public function downloadQrPdf(User $user): HttpResponse
+    {
+        $this->authorize('view', $user);
+
+        return $this->barbershopProfileQrPdfService->download($user);
     }
 }

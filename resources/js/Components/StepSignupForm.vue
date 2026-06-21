@@ -30,6 +30,28 @@ const emit = defineEmits(['submit']);
 const activeIndex = ref(0);
 const localError = ref('');
 const inputRefs = ref([]);
+const visiblePasswords = ref({});
+
+const isPasswordStep = (step) => step.type === 'password';
+
+const isPasswordVisible = (key) => Boolean(visiblePasswords.value[key]);
+
+const inputType = (step) => {
+    if (isPasswordStep(step)) {
+        return isPasswordVisible(step.key) ? 'text' : 'password';
+    }
+
+    return step.type;
+};
+
+const togglePasswordVisibility = (key) => {
+    visiblePasswords.value[key] = !visiblePasswords.value[key];
+};
+
+const passwordToggleLabel = (step) =>
+    isPasswordVisible(step.key)
+        ? 'Ocultar senha'
+        : 'Mostrar senha';
 
 const isLastStep = computed(
     () => activeIndex.value === props.steps.length - 1,
@@ -162,12 +184,45 @@ onMounted(() => {
                     :class="sectionClass(index)"
                     :style="{ zIndex: steps.length - index }"
                 >
+                    <div
+                        v-if="isPasswordStep(step)"
+                        class="step-signup-section__field"
+                    >
+                        <input
+                            :ref="(element) => (inputRefs[index] = element)"
+                            :id="`step-${step.key}`"
+                            :type="inputType(step)"
+                            :placeholder="step.placeholder"
+                            :autocomplete="step.autocomplete"
+                            :required="step.required"
+                            class="step-signup-section__input step-signup-section__input--password"
+                            v-model="form[step.key]"
+                            @keydown.enter="onEnter(step, index, $event)"
+                        />
+
+                        <button
+                            type="button"
+                            class="step-signup-section__toggle-password"
+                            :aria-label="passwordToggleLabel(step)"
+                            :aria-pressed="isPasswordVisible(step.key)"
+                            @click="togglePasswordVisibility(step.key)"
+                        >
+                            <i
+                                class="bi"
+                                :class="isPasswordVisible(step.key) ? 'bi-eye-slash' : 'bi-eye'"
+                                aria-hidden="true"
+                            ></i>
+                        </button>
+                    </div>
+
                     <input
+                        v-else
                         :ref="(element) => (inputRefs[index] = element)"
                         :id="`step-${step.key}`"
                         :type="step.type"
                         :placeholder="step.placeholder"
                         :autocomplete="step.autocomplete"
+                        :inputmode="step.inputmode"
                         :required="step.required"
                         class="step-signup-section__input"
                         v-model="form[step.key]"

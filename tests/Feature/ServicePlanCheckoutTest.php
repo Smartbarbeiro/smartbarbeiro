@@ -11,6 +11,7 @@ use App\Services\MercadoPagoService;
 use App\Services\ServicePlanSubscriptionSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use MercadoPago\Resources\PreApproval;
+use Tests\Support\TestTaxDocuments;
 use Tests\TestCase;
 
 class ServicePlanCheckoutTest extends TestCase
@@ -51,6 +52,7 @@ class ServicePlanCheckoutTest extends TestCase
         $this->from(route('profile.public', $barbershop->username))
             ->post(route('service-plan.subscribe.register', $barbershop->username), [
                 'name' => 'Cliente Novo',
+                'cpf' => TestTaxDocuments::CPF,
                 'email' => 'cliente@example.com',
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
@@ -91,6 +93,7 @@ class ServicePlanCheckoutTest extends TestCase
         $this->from(route('profile.public', $barbershop->username))
             ->post(route('service-plan.subscribe.register', $barbershop->username), [
                 'name' => '',
+                'cpf' => '123',
                 'email' => 'invalid-email',
                 'password' => 'short',
                 'password_confirmation' => 'other',
@@ -98,7 +101,7 @@ class ServicePlanCheckoutTest extends TestCase
                 'addon_ids' => [],
             ])
             ->assertRedirect(route('profile.public', $barbershop->username))
-            ->assertSessionHasErrors(['name', 'email', 'password']);
+            ->assertSessionHasErrors(['name', 'cpf', 'email', 'password']);
 
         $this->assertGuest();
     }
@@ -116,6 +119,7 @@ class ServicePlanCheckoutTest extends TestCase
         $this->from(route('profile.public', $barbershop->username))
             ->post(route('service-plan.subscribe.register', $barbershop->username), [
                 'name' => 'Cliente Sem Pagamento',
+                'cpf' => '981.366.228-09',
                 'email' => 'sem-pagamento@example.com',
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
