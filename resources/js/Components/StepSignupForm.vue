@@ -1,5 +1,11 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
+import {
+    formatTaxDocumentField,
+    isTaxDocumentFieldComplete,
+    taxDocumentFieldMaxLength,
+    validateTaxDocumentField,
+} from '@/utils/taxDocument';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -33,6 +39,9 @@ const inputRefs = ref([]);
 const visiblePasswords = ref({});
 
 const isPasswordStep = (step) => step.type === 'password';
+
+const isTaxDocumentStep = (step) =>
+    step.key === 'cpf' || step.key === 'cpf_cnpj';
 
 const isPasswordVisible = (key) => Boolean(visiblePasswords.value[key]);
 
@@ -81,7 +90,26 @@ const hasValue = (step) => {
         return true;
     }
 
-    return fieldValue(step.key).length > 0;
+    const value = fieldValue(step.key);
+
+    if (isTaxDocumentStep(step)) {
+        return isTaxDocumentFieldComplete(step.key, value);
+    }
+
+    return value.length > 0;
+};
+
+const onFieldInput = (step, event) => {
+    let { value } = event.target;
+
+    if (isTaxDocumentStep(step)) {
+        value = formatTaxDocumentField(step.key, value);
+        props.form[step.key] = value;
+        event.target.value = value;
+        return;
+    }
+
+    props.form[step.key] = value;
 };
 
 const validateStep = (step) => {
@@ -101,6 +129,12 @@ const validateStep = (step) => {
 
     if (step.key === 'password_confirmation' && value !== fieldValue('password')) {
         return 'As senhas não coincidem.';
+    }
+
+    const taxDocumentError = validateTaxDocumentField(step.key, value);
+
+    if (taxDocumentError) {
+        return taxDocumentError;
     }
 
     return null;
@@ -196,7 +230,8 @@ onMounted(() => {
                             :autocomplete="step.autocomplete"
                             :required="step.required"
                             class="step-signup-section__input step-signup-section__input--password"
-                            v-model="form[step.key]"
+                            :value="form[step.key]"
+                            @input="onFieldInput(step, $event)"
                             @keydown.enter="onEnter(step, index, $event)"
                         />
 
@@ -224,8 +259,10 @@ onMounted(() => {
                         :autocomplete="step.autocomplete"
                         :inputmode="step.inputmode"
                         :required="step.required"
+                        :maxlength="taxDocumentFieldMaxLength(step.key) ?? undefined"
                         class="step-signup-section__input"
-                        v-model="form[step.key]"
+                        :value="form[step.key]"
+                        @input="onFieldInput(step, $event)"
                         @keydown.enter="onEnter(step, index, $event)"
                     />
 

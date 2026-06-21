@@ -110,6 +110,18 @@ const submit = () => {
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };
+
+const panelTitle = computed(() =>
+    props.isCustomerSignup
+        ? 'Cadastre-se'
+        : 'Cadastre sua Barbearia',
+);
+
+const panelSubtitle = computed(() =>
+    props.isCustomerSignup
+        ? 'Preencha o formulário para criar sua conta.'
+        : 'Preencha o formulário para criar seu perfil.',
+);
 </script>
 
 <template>
@@ -118,13 +130,23 @@ const submit = () => {
 
         <section class="register-hero">
             <div class="register-hero__inner">
-                <StepSignupForm
-                    :form="form"
-                    :steps="steps"
-                    :processing="form.processing"
-                    plain
-                    @submit="submit"
-                />
+                <div class="login-panel register-panel">
+                    <header class="login-panel__header">
+                        <h1 class="login-panel__title">{{ panelTitle }}</h1>
+                        <p class="login-panel__subtitle">
+                            {{ panelSubtitle }}
+                        </p>
+                    </header>
+
+                    <StepSignupForm
+                        :form="form"
+                        :steps="steps"
+                        :processing="form.processing"
+                        plain
+                        hide-header
+                        @submit="submit"
+                    />
+                </div>
             </div>
         </section>
     </MarketingLayout>

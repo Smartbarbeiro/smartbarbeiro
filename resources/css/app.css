@@ -1834,6 +1834,25 @@ li {
     text-align: center;
 }
 
+.register-panel .step-signup-form--plain {
+    background: #ffffff;
+    border: none;
+    border-radius: 0;
+}
+
+.register-panel .step-signup-form--plain .step-signup-form__body {
+    padding: 0 0 1.25rem;
+}
+
+.register-panel .step-signup-form--plain .step-signup-form__stack {
+    padding: 0 1.25rem;
+}
+
+.register-panel .step-signup-form--plain .step-signup-form__error,
+.register-panel .step-signup-form--plain .step-signup-form__server-error {
+    padding-inline: 1.25rem;
+}
+
 .marketing-hero-login .auth-hero-input {
     min-height: 3.25rem;
     padding: 0.875rem 1rem;
