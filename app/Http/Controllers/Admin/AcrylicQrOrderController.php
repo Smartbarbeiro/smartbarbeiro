@@ -80,6 +80,7 @@ class AcrylicQrOrderController extends Controller
                 $barbershop->username ?? $barbershop->id,
                 $acrylicQrOrder->id,
             ),
+            $acrylicQrOrder,
         );
     }
 }

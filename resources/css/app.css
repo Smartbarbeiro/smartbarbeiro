@@ -1765,6 +1765,176 @@ li {
     z-index: 1;
 }
 
+.register-hero__layout {
+    align-items: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(1.5rem, 4vw, 2.75rem);
+    justify-content: center;
+    max-width: min(56rem, 100%);
+}
+
+.register-hero__layout .register-panel {
+    flex: 1 1 22rem;
+    max-width: 25rem;
+}
+
+.register-plan-cards {
+    flex: 1 1 18rem;
+    max-width: 21rem;
+    position: relative;
+    width: 100%;
+}
+
+.register-plan-cards .cards__inner {
+    display: flex;
+}
+
+.register-plan-card {
+    --flow-space: 0.65em;
+    --hue: 165;
+    --saturation: 82.26%;
+    --lightness: 51.37%;
+    --hsl: var(--hue), var(--saturation), var(--lightness);
+    align-items: start;
+    background-color: rgba(20, 20, 20, 0.92);
+    border: 1px solid rgba(236, 239, 241, 0.2);
+    border-radius: 15px;
+    color: #eceff1;
+    display: grid;
+    gap: 1.25em;
+    grid-template-rows: auto auto 1fr;
+    padding: 1.5em 1.75em;
+    width: 100%;
+}
+
+.register-plan-card .card__heading {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.register-plan-card .card__bullets {
+    line-height: 1.45;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.register-plan-card .card__bullets li::before {
+    content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' width='16' fill='%23dddddd'%3E%3Cpath d='M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998 26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203 36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207 9.997-36.204-.001z' /%3E%3C/svg%3E");
+    display: inline-block;
+    margin-right: 0.65ch;
+    transform: translateY(0.2ch);
+}
+
+.register-plan-card .flow > * + * {
+    margin-top: var(--flow-space, 1.25em);
+}
+
+.register-plan-card .cta,
+.register-plan-cards .overlay .cta {
+    align-self: end;
+    background-color: #0d0d0d;
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    cursor: pointer;
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 0.75em 0 0;
+    padding: 0.85em 0.9em;
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+}
+
+.register-plan-cards .overlay {
+    display: none;
+    inset: 0;
+    mask: radial-gradient(
+        25rem 25rem at var(--x) var(--y),
+        #000 1%,
+        transparent 50%
+    );
+    -webkit-mask: radial-gradient(
+        25rem 25rem at var(--x) var(--y),
+        #000 1%,
+        transparent 50%
+    );
+    opacity: var(--opacity, 0);
+    pointer-events: none;
+    position: absolute;
+    transition: 400ms mask ease;
+    user-select: none;
+    will-change: mask;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .register-plan-cards .overlay {
+        display: block;
+    }
+
+    .register-plan-cards .cards__inner > .register-plan-card:hover {
+        --lightness: 95%;
+        background: hsla(var(--hsl), 0.1);
+    }
+}
+
+.register-plan-cards .overlay .card {
+    background-color: hsla(var(--hsl), 0.15);
+    border-color: hsl(var(--hsl));
+    box-shadow: 0 0 0 1px inset hsl(var(--hsl));
+}
+
+.register-plan-cards .overlay .cta {
+    background-color: hsl(var(--hsl));
+    box-shadow: 0 0 0 1px hsl(var(--hsl));
+    grid-row: -1;
+}
+
+.register-plan-cards:not(.overlay) > .cards__inner > .card,
+.register-plan-cards .cards__inner > .register-plan-card {
+    transition: 400ms background ease;
+}
+
+#register-form-panel:focus-within {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
+.registration-fireworks-overlay {
+    background: rgba(0, 0, 0, 0.72);
+    inset: 0;
+    pointer-events: none;
+    position: fixed;
+    z-index: 2000;
+}
+
+.registration-fireworks-overlay__canvas {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+.registration-fireworks-overlay__message {
+    color: #ffffff;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    left: 50%;
+    letter-spacing: 0.04em;
+    margin: 0;
+    position: fixed;
+    text-align: center;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+    top: 18%;
+    transform: translateX(-50%);
+    z-index: 2001;
+}
+
 .login-panel {
     background: #ffffff;
     border: 1px solid #000000;

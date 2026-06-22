@@ -69,6 +69,32 @@
                 line-height: 1.5;
                 margin: 0;
             }
+
+            .recipient {
+                border: 1px solid #dddddd;
+                border-radius: 12px;
+                margin: 40px auto 0;
+                max-width: 420px;
+                padding: 16px 18px;
+                text-align: left;
+            }
+
+            .recipient__title {
+                font-size: 14px;
+                font-weight: 700;
+                margin: 0 0 10px;
+                text-transform: uppercase;
+            }
+
+            .recipient__line {
+                font-size: 13px;
+                line-height: 1.5;
+                margin: 0 0 6px;
+            }
+
+            .recipient__line:last-child {
+                margin-bottom: 0;
+            }
         </style>
     </head>
     <body>
@@ -90,6 +116,21 @@
             <p class="hint">
                 Escaneie o QR code para abrir o perfil público desta barbearia.
             </p>
+
+            @if ($recipient)
+                <div class="recipient">
+                    <p class="recipient__title">Destinatário</p>
+                    <p class="recipient__line">
+                        <strong>Nome:</strong> {{ $recipient['name'] }}
+                    </p>
+                    <p class="recipient__line">
+                        <strong>Telefone:</strong> {{ $recipient['phone'] }}
+                    </p>
+                    <p class="recipient__line">
+                        <strong>Endereço:</strong> {{ $recipient['address'] }}
+                    </p>
+                </div>
+            @endif
         </div>
     </body>
 </html>

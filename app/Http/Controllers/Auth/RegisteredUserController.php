@@ -100,7 +100,33 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        if (! $isCustomerSignup) {
+            $request->session()->put(
+                'registration.redirect_to',
+                $this->redirectAfterAuth($request),
+            );
+
+            return redirect()->route('register.celebration');
+        }
+
         return redirect($this->redirectAfterAuth($request));
+    }
+
+    public function celebration(Request $request): Response
+    {
+        abort_unless($request->user() !== null, 403);
+
+        $redirectTo = $request->session()->pull(
+            'registration.redirect_to',
+            route('dashboard', absolute: false),
+        );
+
+        return Inertia::render('Auth/Register', [
+            'redirect' => null,
+            'isCustomerSignup' => false,
+            'celebrateRegistration' => true,
+            'redirectTo' => $redirectTo,
+        ]);
     }
 
     private function attachCustomerToBarbershop(User $user, Request $request): void

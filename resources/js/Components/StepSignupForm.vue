@@ -142,6 +142,22 @@ const validateStep = (step) => {
 
 const serverError = (step) => props.form.errors?.[step.key] ?? null;
 
+const passwordStepIndex = () =>
+    props.steps.findIndex((step) => step.key === 'password');
+
+const returnToPasswordStep = async (message) => {
+    localError.value = message;
+    props.form.password = '';
+    props.form.password_confirmation = '';
+
+    const index = passwordStepIndex();
+
+    if (index >= 0) {
+        activeIndex.value = index;
+        await focusStep(index);
+    }
+};
+
 const focusStep = async (index) => {
     await nextTick();
     inputRefs.value[index]?.focus();
@@ -157,6 +173,11 @@ const advance = (step, index) => {
     const validationMessage = validateStep(step);
 
     if (validationMessage) {
+        if (step.key === 'password_confirmation') {
+            returnToPasswordStep(validationMessage);
+            return;
+        }
+
         localError.value = validationMessage;
         return;
     }
@@ -182,6 +203,18 @@ watch(
             return;
         }
 
+        if (errors.password_confirmation) {
+            returnToPasswordStep(
+                errors.password_confirmation ?? 'As senhas não coincidem.',
+            );
+            return;
+        }
+
+        if (errors.password && fieldValue('password_confirmation')) {
+            returnToPasswordStep(errors.password);
+            return;
+        }
+
         const firstErrorIndex = props.steps.findIndex((step) => errors[step.key]);
 
         if (firstErrorIndex >= 0) {
@@ -193,6 +226,10 @@ watch(
 
 onMounted(() => {
     focusStep(0);
+});
+
+defineExpose({
+    focusFirstField: () => focusStep(0),
 });
 </script>
 

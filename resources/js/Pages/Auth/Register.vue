@@ -1,8 +1,10 @@
 <script setup>
+import RegisterPlanCard from '@/Components/RegisterPlanCard.vue';
+import RegistrationFireworksOverlay from '@/Components/RegistrationFireworksOverlay.vue';
 import StepSignupForm from '@/Components/StepSignupForm.vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     redirect: {
@@ -12,6 +14,14 @@ const props = defineProps({
     isCustomerSignup: {
         type: Boolean,
         default: false,
+    },
+    celebrateRegistration: {
+        type: Boolean,
+        default: false,
+    },
+    redirectTo: {
+        type: String,
+        default: null,
     },
 });
 
@@ -120,8 +130,45 @@ const panelTitle = computed(() =>
 const panelSubtitle = computed(() =>
     props.isCustomerSignup
         ? 'Preencha o formulário para criar sua conta.'
-        : 'Preencha o formulário para criar seu perfil.',
+        : 'Preencha o formulário com seus dados',
 );
+
+const formPanelRef = ref(null);
+const signupFormRef = ref(null);
+const showCelebration = ref(false);
+
+const startCelebration = () => {
+    showCelebration.value = true;
+};
+
+const finishCelebration = () => {
+    if (props.redirectTo) {
+        router.visit(props.redirectTo);
+    }
+};
+
+onMounted(() => {
+    if (props.celebrateRegistration) {
+        startCelebration();
+    }
+});
+
+watch(
+    () => props.celebrateRegistration,
+    (value) => {
+        if (value) {
+            startCelebration();
+        }
+    },
+);
+
+const focusRegisterForm = () => {
+    formPanelRef.value?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+    });
+    signupFormRef.value?.focusFirstField();
+};
 </script>
 
 <template>
@@ -129,8 +176,20 @@ const panelSubtitle = computed(() =>
         <Head title="Cadastrar" />
 
         <section class="register-hero">
-            <div class="register-hero__inner">
-                <div class="login-panel register-panel">
+            <div
+                class="register-hero__inner"
+                :class="{ 'register-hero__layout': !isCustomerSignup }"
+            >
+                <RegisterPlanCard
+                    v-if="!isCustomerSignup"
+                    @start="focusRegisterForm"
+                />
+
+                <div
+                    id="register-form-panel"
+                    ref="formPanelRef"
+                    class="login-panel register-panel"
+                >
                     <header class="login-panel__header">
                         <h1 class="login-panel__title">{{ panelTitle }}</h1>
                         <p class="login-panel__subtitle">
@@ -139,6 +198,7 @@ const panelSubtitle = computed(() =>
                     </header>
 
                     <StepSignupForm
+                        ref="signupFormRef"
                         :form="form"
                         :steps="steps"
                         :processing="form.processing"
@@ -149,5 +209,10 @@ const panelSubtitle = computed(() =>
                 </div>
             </div>
         </section>
+
+        <RegistrationFireworksOverlay
+            v-if="showCelebration"
+            @complete="finishCelebration"
+        />
     </MarketingLayout>
 </template>

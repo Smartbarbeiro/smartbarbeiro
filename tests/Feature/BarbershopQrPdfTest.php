@@ -55,6 +55,35 @@ class BarbershopQrPdfTest extends TestCase
             ->assertHeader('content-type', 'application/pdf');
     }
 
+    public function test_acrylic_order_qr_pdf_includes_recipient_details(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $barbershop = User::factory()->create();
+
+        $order = AcrylicQrOrder::query()->create([
+            'user_id' => $barbershop->id,
+            'status' => AcrylicQrOrder::STATUS_PENDING,
+            ...$this->validOrderPayload(),
+        ]);
+
+        $html = view('pdf.barbershop-profile-qr', [
+            'barbershopName' => $barbershop->name,
+            'username' => $barbershop->username,
+            'profileUrl' => $barbershop->profileUrl(),
+            'qrCodeDataUri' => 'data:image/svg+xml;base64,test',
+            'recipient' => [
+                'name' => $order->recipient_name,
+                'phone' => $order->phone,
+                'address' => $order->formattedAddress(),
+            ],
+        ])->render();
+
+        $this->assertStringContainsString('Destinatário', $html);
+        $this->assertStringContainsString('João Barbeiro', $html);
+        $this->assertStringContainsString('(67) 99999-9999', $html);
+        $this->assertStringContainsString('Rua Example, 123', $html);
+    }
+
     public function test_admin_can_download_qr_pdf_for_barbershop_user(): void
     {
         $admin = User::factory()->admin()->create();

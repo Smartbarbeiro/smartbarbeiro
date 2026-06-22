@@ -35,7 +35,15 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertRedirect(route('register.celebration', absolute: false));
+
+        $this->get(route('register.celebration'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Auth/Register')
+                ->where('celebrateRegistration', true)
+                ->where('redirectTo', route('dashboard', absolute: false))
+            );
     }
 
     public function test_barbershop_registration_requires_username(): void

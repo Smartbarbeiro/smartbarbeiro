@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AcrylicQrOrder;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
@@ -13,8 +14,11 @@ use InvalidArgumentException;
 
 class BarbershopProfileQrPdfService
 {
-    public function download(User $barbershop, ?string $filename = null): Response
-    {
+    public function download(
+        User $barbershop,
+        ?string $filename = null,
+        ?AcrylicQrOrder $acrylicQrOrder = null,
+    ): Response {
         abort_unless($barbershop->isBarbershop(), 403);
 
         $profileUrl = $barbershop->profileUrl();
@@ -34,9 +38,26 @@ class BarbershopProfileQrPdfService
             'username' => $barbershop->username,
             'profileUrl' => $profileUrl,
             'qrCodeDataUri' => $qrCodeDataUri,
+            'recipient' => $this->recipientPayload($acrylicQrOrder),
         ])
             ->setPaper('a4', 'portrait')
             ->download($filename);
+    }
+
+    /**
+     * @return array{name: string, phone: string, address: string}|null
+     */
+    private function recipientPayload(?AcrylicQrOrder $acrylicQrOrder): ?array
+    {
+        if ($acrylicQrOrder === null) {
+            return null;
+        }
+
+        return [
+            'name' => $acrylicQrOrder->recipient_name,
+            'phone' => $acrylicQrOrder->phone,
+            'address' => $acrylicQrOrder->formattedAddress(),
+        ];
     }
 
     private function buildQrCodeDataUri(string $profileUrl): string

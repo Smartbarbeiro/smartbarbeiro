@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\ProfileSubscription;
 use App\Models\User;
+use App\Services\AcrylicQrOrderService;
 use App\Services\BarbershopProfileQrPdfService;
 use App\Services\DeleteUserAccountService;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,7 @@ class UserController extends Controller
     public function __construct(
         private DeleteUserAccountService $deleteUserAccount,
         private BarbershopProfileQrPdfService $barbershopProfileQrPdfService,
+        private AcrylicQrOrderService $acrylicQrOrderService,
     ) {}
 
     public function index(Request $request): Response
@@ -259,6 +261,11 @@ class UserController extends Controller
     {
         $this->authorize('view', $user);
 
-        return $this->barbershopProfileQrPdfService->download($user);
+        $acrylicQrOrder = $user->acrylicQrOrders()->latest()->first();
+
+        return $this->barbershopProfileQrPdfService->download(
+            $user,
+            acrylicQrOrder: $acrylicQrOrder,
+        );
     }
 }
