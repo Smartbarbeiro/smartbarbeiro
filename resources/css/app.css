@@ -1816,6 +1816,19 @@ li {
     text-transform: uppercase;
 }
 
+.register-plan-card .card__price {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.register-plan-card .card__price-period {
+    font-size: 0.95rem;
+    font-weight: 500;
+    opacity: 0.75;
+}
+
 .register-plan-card .card__bullets {
     line-height: 1.45;
     list-style: none;

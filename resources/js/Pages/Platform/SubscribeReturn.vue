@@ -1,0 +1,42 @@
+<script setup>
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link } from '@inertiajs/vue3';
+
+defineProps({
+    subscription: {
+        type: Object,
+        default: null,
+    },
+});
+</script>
+
+<template>
+    <AuthenticatedLayout>
+        <Head title="Assinatura da plataforma" />
+
+        <template #header>
+            <h1 class="h4 mb-0 fw-semibold">Status da assinatura</h1>
+        </template>
+
+        <div class="app-card p-4 mx-auto" style="max-width: 32rem">
+            <p
+                v-if="subscription?.is_active"
+                class="text-success mb-3"
+            >
+                Sua assinatura da plataforma está ativa. Agora você pode usar
+                todos os recursos da Smart Barbeiro.
+            </p>
+            <p v-else class="text-warning mb-3">
+                Estamos confirmando seu pagamento com o Mercado Pago. Se você
+                concluiu o checkout, o acesso será liberado em breve.
+            </p>
+
+            <Link
+                :href="route('dashboard')"
+                class="btn btn-primary btn-sm"
+            >
+                Ir para o painel
+            </Link>
+        </div>
+    </AuthenticatedLayout>
+</template>

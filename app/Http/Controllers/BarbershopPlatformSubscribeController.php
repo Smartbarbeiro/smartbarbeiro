@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\BarbershopPlatformPlan;
+use App\Models\BarbershopPlatformSubscription;
+use App\Services\BarbershopPlatformCheckoutService;
+use App\Services\BarbershopPlatformSubscriptionSyncService;
+use App\Services\MercadoPagoService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+use MercadoPago\Exceptions\MPApiException;
+
+class BarbershopPlatformSubscribeController extends Controller
+{
+    public function show(Request $request): Response|RedirectResponse
+    {
+        $user = $request->user();
+
+        abort_unless($user->isBarbershopAccount(), 403);
+
+        if ($user->hasActivePlatformSubscription()) {
+            return redirect()->route('dashboard');
+        }
+
+        $plan = BarbershopPlatformPlan::current();
+        $subscription = $user->platformSubscription;
+
+        return Inertia::render('Platform/Subscribe', [
+            'plan' => $plan->toPublicArray(),
+            'subscription' => $subscription ? [
+                'status' => $subscription->status,
+                'status_label' => $subscription->statusLabel(),
+                'is_active' => $subscription->isActive(),
+            ] : null,
+            'paymentsConfigured' => app(MercadoPagoService::class)->isConfigured(),
+        ]);
+    }
+
+    public function store(
+        Request $request,
+        BarbershopPlatformCheckoutService $checkoutService,
+        MercadoPagoService $mercadoPago,
+    ): RedirectResponse {
+        $user = $request->user();
+
+        abort_unless($user->isBarbershopAccount(), 403);
+
+        if ($user->hasActivePlatformSubscription()) {
+            return redirect()->route('dashboard');
+        }
+
+        try {
+            $result = $checkoutService->startCheckout($user);
+        } catch (\InvalidArgumentException $exception) {
+            return back()->withErrors(['subscribe' => $exception->getMessage()]);
+        } catch (MPApiException $exception) {
+            return back()->withErrors([
+                'subscribe' => $mercadoPago->apiExceptionMessage($exception),
+            ]);
+        }
+
+        if ($result['checkout_url'] === null) {
+            return back()->with('status', 'platform-subscription-pending');
+        }
+
+        if ($result['checkout_url'] === '') {
+            return back()->withErrors([
+                'subscribe' => __('messages.mercadopago_no_checkout_url'),
+            ]);
+        }
+
+        return redirect()->away($result['checkout_url']);
+    }
+
+    public function return(
+        Request $request,
+        BarbershopPlatformSubscriptionSyncService $syncService,
+    ): Response {
+        $user = $request->user();
+
+        abort_unless($user->isBarbershopAccount(), 403);
+
+        $subscription = BarbershopPlatformSubscription::query()
+            ->where('barbershop_user_id', $user->id)
+            ->latest()
+            ->first();
+
+        if ($subscription?->mercadopago_preapproval_id) {
+            try {
+                $syncService->syncByMercadoPagoId($subscription->mercadopago_preapproval_id);
+                $subscription->refresh();
+            } catch (\Throwable) {
+                // Webhook will reconcile; show return page with current status.
+            }
+        }
+
+        return Inertia::render('Platform/SubscribeReturn', [
+            'subscription' => $subscription ? [
+                'status' => $subscription->status,
+                'status_label' => $subscription->statusLabel(),
+                'is_active' => $subscription->isActive(),
+            ] : null,
+        ]);
+    }
+}

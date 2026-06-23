@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AcrylicQrOrderController;
+use App\Http\Controllers\Admin\BarbershopPlatformPlanController;
 use App\Http\Controllers\Admin\AcrylicQrOrderController as AdminAcrylicQrOrderController;
 use App\Http\Controllers\Admin\AdminBroadcastMessageController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\BarbershopPlatformSubscribeController;
 use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\BarbershopPreferredHaircutDayController;
 use App\Http\Controllers\BarbershopServicePlanController;
@@ -34,6 +36,15 @@ Route::post('/barbearias/{username}/service-plans/subscribe-register', [ServiceP
     ->name('service-plan.subscribe.register');
 
 Route::middleware(['auth', 'not_frozen'])->group(function () {
+    Route::get('/assinatura/plataforma', [BarbershopPlatformSubscribeController::class, 'show'])
+        ->name('platform.subscribe');
+    Route::post('/assinatura/plataforma', [BarbershopPlatformSubscribeController::class, 'store'])
+        ->name('platform.subscribe.store');
+    Route::get('/assinatura/plataforma/retorno', [BarbershopPlatformSubscribeController::class, 'return'])
+        ->name('platform.subscribe.return');
+});
+
+Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(function () {
     Route::post('/barbearias/{username}/subscribe', [ProfileSubscribeController::class, 'store'])
         ->name('profile.subscribe');
     Route::post('/barbearias/{username}/signup', [BarbershopMembershipController::class, 'store'])
@@ -112,9 +123,18 @@ Route::get('/dashboard', function (
     }
 
     return Inertia::render('Dashboard', $props);
-})->middleware(['auth', 'verified', 'not_frozen'])->name('dashboard');
+})->middleware(['auth', 'verified', 'not_frozen', 'barbershop_subscribed'])->name('dashboard');
 
 Route::middleware(['auth', 'not_frozen'])->group(function () {
+    Route::get('/assinatura/plataforma', [BarbershopPlatformSubscribeController::class, 'show'])
+        ->name('platform.subscribe');
+    Route::post('/assinatura/plataforma', [BarbershopPlatformSubscribeController::class, 'store'])
+        ->name('platform.subscribe.store');
+    Route::get('/assinatura/plataforma/retorno', [BarbershopPlatformSubscribeController::class, 'return'])
+        ->name('platform.subscribe.return');
+});
+
+Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -164,6 +184,10 @@ Route::middleware(['auth', 'verified', 'admin'])
             ->name('messages.index');
         Route::post('/mensagens', [AdminBroadcastMessageController::class, 'store'])
             ->name('messages.store');
+        Route::get('/plano-barbearia', [BarbershopPlatformPlanController::class, 'edit'])
+            ->name('platform-plan.edit');
+        Route::patch('/plano-barbearia', [BarbershopPlatformPlanController::class, 'update'])
+            ->name('platform-plan.update');
         Route::get('/', [AdminUserController::class, 'index'])->name('users.index');
         Route::get('/{user}/qrcode.pdf', [AdminUserController::class, 'downloadQrPdf'])
             ->name('users.qrcode.pdf');

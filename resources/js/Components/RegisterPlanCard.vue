@@ -3,6 +3,13 @@ import { onMounted, onUnmounted, ref } from 'vue';
 
 const emit = defineEmits(['start']);
 
+defineProps({
+    platformPlan: {
+        type: Object,
+        default: null,
+    },
+});
+
 const bullets = [
     'Fidelize clientes em segundos',
     'Garanta renda garantida',
@@ -123,6 +130,11 @@ onUnmounted(() => {
         <div class="cards__inner">
             <div ref="cardEl" class="card register-plan-card">
                 <h2 class="card__heading">Plano Único</h2>
+
+                <p v-if="platformPlan" class="card__price">
+                    {{ platformPlan.formatted_price }}
+                    <span class="card__price-period">/ mês</span>
+                </p>
 
                 <ul role="list" class="card__bullets flow">
                     <li v-for="bullet in bullets" :key="bullet">

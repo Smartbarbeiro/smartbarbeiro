@@ -130,7 +130,7 @@ class ProfileSubscriptionTest extends TestCase
             ->assertRedirect()
             ->assertSessionHasErrors('mercadopago');
 
-        config(['mercadopago.access_token' => 'TEST_TOKEN']);
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
 
         $this->actingAs($user)
             ->put(route('profile.subscription-plan.update'), [

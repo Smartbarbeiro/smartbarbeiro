@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ProfileSubscription;
+use Illuminate\Support\Facades\Log;
 use MercadoPago\Client\PreApproval\PreApprovalClient;
 use MercadoPago\Client\PreApprovalPlan\PreApprovalPlanClient;
 use MercadoPago\Exceptions\MPApiException;
@@ -114,7 +115,7 @@ class MercadoPagoService
         $client = new PreApprovalClient;
 
         $payload = [
-            'reason' => $reason,
+            'reason' => mb_substr($reason, 0, 200),
             'payer_email' => $payerEmail,
             'external_reference' => $externalReference,
             'back_url' => $backUrl,
@@ -124,15 +125,71 @@ class MercadoPagoService
         if ($preapprovalPlanId) {
             $payload['preapproval_plan_id'] = $preapprovalPlanId;
         } elseif ($amount !== null && $currencyId !== null) {
-            $payload['auto_recurring'] = [
-                'frequency' => 1,
-                'frequency_type' => 'months',
-                'transaction_amount' => $amount,
-                'currency_id' => $currencyId,
-            ];
+            $payload['auto_recurring'] = $this->buildAutoRecurringPayload($amount, $currencyId);
         }
 
-        return $client->create($payload);
+        try {
+            return $client->create($payload);
+        } catch (MPApiException $exception) {
+            $this->logApiException($exception, [
+                'operation' => 'create_preapproval',
+                'external_reference' => $externalReference,
+                'back_url' => $backUrl,
+                'uses_plan_id' => filled($preapprovalPlanId),
+                'payload' => $this->redactPayloadForLog($payload),
+            ]);
+
+            throw $exception;
+        }
+    }
+
+    public function checkoutUrl(PreApproval $preapproval): ?string
+    {
+        $url = $preapproval->sandbox_init_point ?? $preapproval->init_point;
+
+        return filled($url) ? $url : null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildAutoRecurringPayload(float $amount, string $currencyId): array
+    {
+        return [
+            'frequency' => 1,
+            'frequency_type' => 'months',
+            'transaction_amount' => round($amount, 2),
+            'currency_id' => $currencyId,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    private function redactPayloadForLog(array $payload): array
+    {
+        if (isset($payload['payer_email']) && is_string($payload['payer_email'])) {
+            $email = $payload['payer_email'];
+            $at = strrpos($email, '@');
+
+            if ($at !== false) {
+                $payload['payer_email'] = substr($email, 0, min(3, $at)).'***'.substr($email, $at);
+            }
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $context
+     */
+    public function logApiException(MPApiException $exception, array $context = []): void
+    {
+        Log::warning('Mercado Pago API error', array_merge($context, [
+            'status_code' => $exception->getApiResponse()?->getStatusCode(),
+            'response' => $exception->getApiResponse()?->getContent(),
+        ]));
     }
 
     public function getPreApproval(string $preapprovalId): PreApproval
@@ -166,6 +223,24 @@ class MercadoPagoService
         return filled(config('mercadopago.access_token'));
     }
 
+    public function usesTestCredentials(): bool
+    {
+        return str_starts_with((string) config('mercadopago.access_token'), 'TEST-');
+    }
+
+    public function assertSandboxTestBuyer(string $payerEmail): void
+    {
+        if (! $this->usesTestCredentials()) {
+            return;
+        }
+
+        if (str_ends_with(strtolower($payerEmail), '@testuser.com')) {
+            return;
+        }
+
+        throw new \InvalidArgumentException(__('messages.mercadopago_test_buyer_required'));
+    }
+
     /**
      * @throws MPApiException
      */
@@ -173,10 +248,50 @@ class MercadoPagoService
     {
         $content = $exception->getApiResponse()?->getContent();
 
-        if (is_array($content) && isset($content['message'])) {
-            return (string) $content['message'];
+        if (! is_array($content)) {
+            return $exception->getMessage();
+        }
+
+        $parts = [];
+
+        if (isset($content['message'])) {
+            $parts[] = (string) $content['message'];
+        }
+
+        if (isset($content['error']) && is_string($content['error'])) {
+            $parts[] = $content['error'];
+        }
+
+        if (isset($content['cause']) && is_array($content['cause'])) {
+            foreach ($content['cause'] as $cause) {
+                if (! is_array($cause)) {
+                    continue;
+                }
+
+                $description = $cause['description'] ?? $cause['message'] ?? null;
+
+                if (filled($description)) {
+                    $parts[] = (string) $description;
+                }
+            }
+        }
+
+        $parts = array_values(array_unique(array_filter($parts)));
+        $parts = array_map(fn (string $part) => $this->translateApiMessage($part), $parts);
+
+        if ($parts !== []) {
+            return implode(' — ', $parts);
         }
 
         return $exception->getMessage();
+    }
+
+    private function translateApiMessage(string $message): string
+    {
+        if (str_contains($message, 'Both payer and collector must be real or test users')) {
+            return __('messages.mercadopago_sandbox_users_required');
+        }
+
+        return $message;
     }
 }

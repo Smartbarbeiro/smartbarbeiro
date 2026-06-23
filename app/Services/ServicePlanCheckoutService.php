@@ -50,6 +50,8 @@ class ServicePlanCheckoutService
             ]);
         }
 
+        $this->mercadoPago->assertSandboxTestBuyer($subscriber->email);
+
         $backUrl = route('service-plan.subscribe.return', $barbershop->username);
 
         $preapproval = $this->mercadoPago->createSubscriptionCheckout(
@@ -66,13 +68,13 @@ class ServicePlanCheckoutService
             'status' => $this->mercadoPago->mapPreApprovalStatus($preapproval->status),
         ]);
 
-        if (! $preapproval->init_point) {
+        if (! $this->mercadoPago->checkoutUrl($preapproval)) {
             throw new \RuntimeException(__('messages.mercadopago_no_checkout_url'));
         }
 
         return [
             'subscription' => $subscription,
-            'checkout_url' => $preapproval->init_point,
+            'checkout_url' => $this->mercadoPago->checkoutUrl($preapproval),
         ];
     }
 

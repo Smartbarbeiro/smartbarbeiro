@@ -145,6 +145,12 @@ const navItems = computed(() => {
             icon: 'megaphone',
             label: 'Mensagens',
         });
+        items.splice(insertAt + 3, 0, {
+            href: route('admin.platform-plan.edit'),
+            active: route().current('admin.platform-plan.*'),
+            icon: 'cash-stack',
+            label: 'Plano',
+        });
     }
 
     return items;

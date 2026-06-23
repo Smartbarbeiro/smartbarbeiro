@@ -8,6 +8,7 @@ use App\Observers\UserObserver;
 use App\Policies\AdminBroadcastMessageRecipientPolicy;
 use App\Policies\AdminUserPolicy;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -41,6 +42,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AdminBroadcastMessageRecipient::class, AdminBroadcastMessageRecipientPolicy::class);
 
         Vite::prefetch(concurrency: 3);
+
+        if (! $this->app->runningInConsole()) {
+            $request = request();
+
+            if ($request->header('X-Forwarded-Proto') === 'https') {
+                URL::forceScheme('https');
+            }
+        }
 
         \Illuminate\Support\Facades\Date::setLocale(config('app.locale'));
     }

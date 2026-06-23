@@ -36,7 +36,7 @@ class ServicePlanCheckoutTest extends TestCase
             ->where('type', BarbershopServicePackage::TYPE_CUT)
             ->update(['monthly_price' => 99, 'is_enabled' => true]);
 
-        config(['mercadopago.access_token' => 'TEST_TOKEN']);
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
 
         $preapproval = new PreApproval;
         $preapproval->id = 'mp-preapproval-guest';
@@ -45,8 +45,10 @@ class ServicePlanCheckoutTest extends TestCase
 
         $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('assertSandboxTestBuyer')->andReturnNull();
             $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
+            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/checkout-guest');
         });
 
         $this->from(route('profile.public', $barbershop->username))
@@ -88,7 +90,7 @@ class ServicePlanCheckoutTest extends TestCase
             ->where('type', BarbershopServicePackage::TYPE_CUT)
             ->update(['monthly_price' => 99, 'is_enabled' => true]);
 
-        config(['mercadopago.access_token' => 'TEST_TOKEN']);
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
 
         $this->from(route('profile.public', $barbershop->username))
             ->post(route('service-plan.subscribe.register', $barbershop->username), [
@@ -161,7 +163,7 @@ class ServicePlanCheckoutTest extends TestCase
         $barbershop = User::factory()->create();
         $customer = User::factory()->customer()->create();
 
-        config(['mercadopago.access_token' => 'TEST_TOKEN']);
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
 
         $this->actingAs($customer)
             ->from(route('profile.public', $barbershop->username))
@@ -190,7 +192,7 @@ class ServicePlanCheckoutTest extends TestCase
             'sort_order' => 0,
         ]);
 
-        config(['mercadopago.access_token' => 'TEST_TOKEN']);
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
 
         $preapproval = new PreApproval;
         $preapproval->id = 'mp-preapproval-1';
@@ -199,8 +201,10 @@ class ServicePlanCheckoutTest extends TestCase
 
         $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('assertSandboxTestBuyer')->andReturnNull();
             $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
+            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/checkout');
         });
 
         $this->actingAs($customer)

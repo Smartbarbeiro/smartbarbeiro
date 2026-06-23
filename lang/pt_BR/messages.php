@@ -6,12 +6,18 @@ return [
     'profile_no_subscription_required' => 'Este perfil não exige assinatura.',
     'payments_not_configured' => 'Os pagamentos ainda não estão configurados neste servidor.',
     'mercadopago_no_checkout_url' => 'O Mercado Pago não retornou a URL de pagamento. Tente novamente mais tarde.',
+    'mercadopago_https_back_url_required' => 'Configure MERCADOPAGO_BACK_URL com uma URL HTTPS pública (ex.: ngrok ou seu domínio) para habilitar o checkout.',
     'mercadopago_configure_token' => 'Configure MERCADOPAGO_ACCESS_TOKEN no arquivo .env para habilitar perfis pagos.',
+    'mercadopago_test_buyer_required' => 'Em modo de teste do Mercado Pago, cadastre-se com um e-mail de comprador de teste (@testuser.com) do painel de desenvolvedores.',
+    'mercadopago_sandbox_users_required' => 'No modo de teste do Mercado Pago, vendedor e comprador precisam ser contas de teste criadas no painel de desenvolvedores da sua aplicação.',
     'subscription_cannot_be_cancelled' => 'Esta assinatura não pode ser cancelada.',
     'service_plan_invalid_package' => 'Selecione um pacote de serviço válido.',
     'service_plan_invalid_addons' => 'Um ou mais opcionais selecionados não estão disponíveis.',
     'service_plan_already_subscribed' => 'Você já possui um plano de serviço ativo nesta barbearia.',
     'service_plan_owner_cannot_subscribe' => 'O dono da barbearia não pode assinar o próprio plano.',
+    'platform_subscription_barbershop_only' => 'Apenas contas de barbearia podem assinar o plano da plataforma.',
+    'platform_plan_not_active' => 'O plano da plataforma não está disponível no momento.',
+    'platform_subscription_already_active' => 'Sua assinatura da plataforma já está ativa.',
     'cep_not_found' => 'CEP não encontrado.',
 
     'status' => [
@@ -34,6 +40,8 @@ return [
         'acrylic-qr-order-created' => 'Pedido de QR acrílico recebido. Entraremos em contato para produção e envio.',
         'acrylic-qr-order-updated' => 'Pedido de QR acrílico atualizado.',
         'service-plan-checkout-started' => 'Redirecionando para o pagamento.',
+        'platform-plan-updated' => 'Plano da plataforma atualizado.',
+        'platform-subscription-pending' => 'Cadastro realizado. Confirme o pagamento quando os pagamentos estiverem disponíveis.',
         'verification-link-sent' => 'Um novo link de verificação foi enviado para o seu e-mail.',
     ],
 

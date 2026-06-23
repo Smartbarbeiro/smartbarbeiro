@@ -23,6 +23,10 @@ const props = defineProps({
         type: String,
         default: null,
     },
+    platformPlan: {
+        type: Object,
+        default: null,
+    },
 });
 
 const form = useForm({
@@ -130,7 +134,7 @@ const panelTitle = computed(() =>
 const panelSubtitle = computed(() =>
     props.isCustomerSignup
         ? 'Preencha o formulário para criar sua conta.'
-        : 'Preencha o formulário com seus dados',
+        : 'Preencha o formulário e comece a fidelizar seus clientes!',
 );
 
 const formPanelRef = ref(null);
@@ -182,6 +186,7 @@ const focusRegisterForm = () => {
             >
                 <RegisterPlanCard
                     v-if="!isCustomerSignup"
+                    :platform-plan="platformPlan"
                     @start="focusRegisterForm"
                 />
 

@@ -7,7 +7,7 @@ defineProps({
     },
 });
 
-const logoUrl = 'https://smartbarbeiro.com.br/logo.png';
+const logoUrl = '/favicon-96x96.png';
 </script>
 
 <template>

@@ -4,14 +4,21 @@
         <meta charset="utf-8" />
         <title>QR code — {{ $barbershopName }}</title>
         <style>
+            @page {
+                margin: 0;
+            }
+
             * {
                 box-sizing: border-box;
             }
 
+            html,
             body {
-                color: #111111;
+                background-color: #000000;
+                color: #ffffff;
                 font-family: DejaVu Sans, sans-serif;
                 margin: 0;
+                min-height: 100%;
                 padding: 48px 40px;
             }
 
@@ -22,7 +29,7 @@
             }
 
             .brand {
-                color: #666666;
+                color: #ffffff;
                 font-size: 12px;
                 letter-spacing: 0.08em;
                 margin: 0 0 24px;
@@ -30,19 +37,21 @@
             }
 
             h1 {
+                color: #ffffff;
                 font-size: 28px;
                 line-height: 1.2;
                 margin: 0 0 8px;
             }
 
             .username {
-                color: #666666;
+                color: #ffffff;
                 font-size: 14px;
                 margin: 0 0 28px;
             }
 
             .qr-frame {
-                border: 1px solid #dddddd;
+                background: #ffffff;
+                border: 2px solid #ffffff;
                 border-radius: 16px;
                 display: inline-block;
                 margin: 0 auto 24px;
@@ -56,7 +65,7 @@
             }
 
             .profile-url {
-                color: #222222;
+                color: #ffffff;
                 font-size: 13px;
                 line-height: 1.5;
                 margin: 0 0 18px;
@@ -64,15 +73,16 @@
             }
 
             .hint {
-                color: #666666;
+                color: #ffffff;
                 font-size: 12px;
                 line-height: 1.5;
                 margin: 0;
             }
 
             .recipient {
-                border: 1px solid #dddddd;
+                border: 1px solid #ffffff;
                 border-radius: 12px;
+                color: #ffffff;
                 margin: 40px auto 0;
                 max-width: 420px;
                 padding: 16px 18px;
@@ -80,6 +90,7 @@
             }
 
             .recipient__title {
+                color: #ffffff;
                 font-size: 14px;
                 font-weight: 700;
                 margin: 0 0 10px;
@@ -87,6 +98,7 @@
             }
 
             .recipient__line {
+                color: #ffffff;
                 font-size: 13px;
                 line-height: 1.5;
                 margin: 0 0 6px;

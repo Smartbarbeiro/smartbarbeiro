@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\BarbershopPlatformSubscriptionSyncService;
 use App\Services\ProfileSubscriptionSyncService;
 use App\Services\ServicePlanSubscriptionSyncService;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ class MercadoPagoWebhookController extends Controller
         Request $request,
         ProfileSubscriptionSyncService $profileSyncService,
         ServicePlanSubscriptionSyncService $servicePlanSyncService,
+        BarbershopPlatformSubscriptionSyncService $platformSyncService,
     ): Response {
         $type = $request->input('type') ?? $request->input('topic');
         $dataId = $request->input('data.id') ?? $request->input('data_id') ?? $request->input('id');
@@ -22,6 +24,7 @@ class MercadoPagoWebhookController extends Controller
             try {
                 $profileSyncService->syncByMercadoPagoId((string) $dataId);
                 $servicePlanSyncService->syncByMercadoPagoId((string) $dataId);
+                $platformSyncService->syncByMercadoPagoId((string) $dataId);
             } catch (\Throwable $exception) {
                 Log::warning('Mercado Pago webhook sync failed', [
                     'type' => $type,

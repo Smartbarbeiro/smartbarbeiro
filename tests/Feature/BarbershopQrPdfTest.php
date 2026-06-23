@@ -82,6 +82,8 @@ class BarbershopQrPdfTest extends TestCase
         $this->assertStringContainsString('João Barbeiro', $html);
         $this->assertStringContainsString('(67) 99999-9999', $html);
         $this->assertStringContainsString('Rua Example, 123', $html);
+        $this->assertStringContainsString('background-color: #000000', $html);
+        $this->assertStringContainsString('color: #ffffff', $html);
     }
 
     public function test_admin_can_download_qr_pdf_for_barbershop_user(): void

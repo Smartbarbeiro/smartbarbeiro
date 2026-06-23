@@ -94,13 +94,13 @@ class ProfileSubscribeController extends Controller
             'status' => $mercadoPago->mapPreApprovalStatus($preapproval->status),
         ]);
 
-        if (! $preapproval->init_point) {
+        if (! $mercadoPago->checkoutUrl($preapproval)) {
             return back()->withErrors([
                 'subscribe' => __('messages.mercadopago_no_checkout_url'),
             ]);
         }
 
-        return redirect()->away($preapproval->init_point);
+        return redirect()->away($mercadoPago->checkoutUrl($preapproval));
     }
 
     public function return(

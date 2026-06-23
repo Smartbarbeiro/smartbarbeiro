@@ -167,15 +167,20 @@ class BarbershopMembershipTest extends TestCase
             'email' => 'owner@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
-        ])->assertRedirect(route('dashboard', absolute: false));
+        ])->assertRedirect(route('register.celebration', absolute: false));
 
         $owner = User::query()->where('email', 'owner@example.com')->first();
 
         $this->assertNotNull($owner);
         $this->assertTrue($owner->isBarbershop());
         $this->assertNotNull($owner->username);
-        $this->assertNotNull($owner->profileUrl());
+        $this->assertNull($owner->profileUrl());
 
+        $owner->platformSubscription()->update([
+            'status' => \App\Models\BarbershopPlatformSubscription::STATUS_AUTHORIZED,
+        ]);
+
+        $this->assertNotNull($owner->fresh()->profileUrl());
         $this->get(route('profile.public', $owner->username))->assertOk();
     }
 }

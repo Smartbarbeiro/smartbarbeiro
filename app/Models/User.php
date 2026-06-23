@@ -120,7 +120,25 @@ class User extends Authenticatable
 
     public function hasPublicProfile(): bool
     {
-        return $this->isBarbershop() && filled($this->username) && ! $this->isFrozen();
+        if (! $this->isBarbershop() || blank($this->username) || $this->isFrozen()) {
+            return false;
+        }
+
+        return $this->hasActivePlatformSubscription();
+    }
+
+    public function platformSubscription(): HasOne
+    {
+        return $this->hasOne(BarbershopPlatformSubscription::class, 'barbershop_user_id');
+    }
+
+    public function hasActivePlatformSubscription(): bool
+    {
+        if (! $this->isBarbershopAccount()) {
+            return true;
+        }
+
+        return $this->platformSubscription?->isActive() ?? false;
     }
 
     public function isAdmin(): bool

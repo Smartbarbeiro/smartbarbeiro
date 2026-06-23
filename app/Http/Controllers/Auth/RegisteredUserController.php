@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\BarbershopMembership;
+use App\Models\BarbershopPlatformPlan;
 use App\Models\User;
 use App\Rules\UniqueTaxDocument;
+use App\Services\BarbershopPlatformCheckoutService;
 use App\Services\UsernameGenerator;
 use App\Support\TaxDocument;
 use Illuminate\Auth\Events\Registered;
@@ -13,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -28,9 +31,16 @@ class RegisteredUserController extends Controller
      */
     public function create(Request $request): Response
     {
+        $platformPlan = null;
+
+        if (! $this->isCustomerSignup($request) && Schema::hasTable('barbershop_platform_plans')) {
+            $platformPlan = BarbershopPlatformPlan::current()->toPublicArray();
+        }
+
         return Inertia::render('Auth/Register', [
             'redirect' => $request->query('redirect'),
             'isCustomerSignup' => $this->isCustomerSignup($request),
+            'platformPlan' => $platformPlan,
         ]);
     }
 
@@ -94,6 +104,8 @@ class RegisteredUserController extends Controller
                 'password' => Hash::make($validated['password']),
                 'is_barbershop' => true,
             ]);
+
+            app(BarbershopPlatformCheckoutService::class)->ensurePendingSubscription($user);
         }
 
         event(new Registered($user));
@@ -103,7 +115,7 @@ class RegisteredUserController extends Controller
         if (! $isCustomerSignup) {
             $request->session()->put(
                 'registration.redirect_to',
-                $this->redirectAfterAuth($request),
+                route('platform.subscribe', absolute: false),
             );
 
             return redirect()->route('register.celebration');
@@ -118,7 +130,7 @@ class RegisteredUserController extends Controller
 
         $redirectTo = $request->session()->pull(
             'registration.redirect_to',
-            route('dashboard', absolute: false),
+            route('platform.subscribe', absolute: false),
         );
 
         return Inertia::render('Auth/Register', [

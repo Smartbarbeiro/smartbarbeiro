@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
@@ -23,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
             'not_frozen' => \App\Http\Middleware\EnsureUserIsNotFrozen::class,
+            'barbershop_subscribed' => \App\Http\Middleware\EnsureBarbershopHasPlatformSubscription::class,
         ]);
 
         $middleware->redirectUsersTo('/dashboard');
