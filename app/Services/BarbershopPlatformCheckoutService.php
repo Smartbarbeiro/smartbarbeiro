@@ -44,7 +44,7 @@ class BarbershopPlatformCheckoutService
             ];
         }
 
-        $this->mercadoPago->assertSandboxTestBuyer($barbershop->email);
+        $this->mercadoPago->assertSandboxCheckoutUsers($barbershop->email);
 
         $backUrl = rtrim((string) config('mercadopago.back_url', config('app.url')), '/')
             .'/assinatura/plataforma/retorno';

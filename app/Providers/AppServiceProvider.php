@@ -48,6 +48,15 @@ class AppServiceProvider extends ServiceProvider
 
             if ($request->header('X-Forwarded-Proto') === 'https') {
                 URL::forceScheme('https');
+                config(['session.secure' => true]);
+            }
+
+            if (filled(config('services.google.client_id'))) {
+                config(['services.google.redirect' => url('/auth/google/callback')]);
+
+                if (class_exists(\Laravel\Socialite\Facades\Socialite::class)) {
+                    \Laravel\Socialite\Facades\Socialite::forgetDrivers();
+                }
             }
         }
 

@@ -1,9 +1,11 @@
 <script setup>
+import InputError from '@/Components/InputError.vue';
+import OAuthGoogleButton from '@/Components/OAuthGoogleButton.vue';
 import RegisterPlanCard from '@/Components/RegisterPlanCard.vue';
 import RegistrationFireworksOverlay from '@/Components/RegistrationFireworksOverlay.vue';
 import StepSignupForm from '@/Components/StepSignupForm.vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -27,6 +29,10 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    oauthGoogleEnabled: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const form = useForm({
@@ -39,6 +45,9 @@ const form = useForm({
     password_confirmation: '',
     redirect: props.redirect,
 });
+
+const page = usePage();
+const oauthError = computed(() => page.props.errors?.email ?? null);
 
 const steps = computed(() => {
     const fields = [
@@ -125,16 +134,12 @@ const submit = () => {
     });
 };
 
-const panelTitle = computed(() =>
-    props.isCustomerSignup
-        ? 'Cadastre-se'
-        : 'Cadastre sua Barbearia',
-);
+const panelTitle = 'Cadastre-se';
 
 const panelSubtitle = computed(() =>
     props.isCustomerSignup
         ? 'Preencha o formulário para criar sua conta.'
-        : 'Preencha o formulário e comece a fidelizar seus clientes!',
+        : 'Preencha com seus dados para começar a fidelizar seus clientes!',
 );
 
 const formPanelRef = ref(null);
@@ -201,6 +206,23 @@ const focusRegisterForm = () => {
                             {{ panelSubtitle }}
                         </p>
                     </header>
+
+                    <InputError class="mb-3" :message="oauthError" />
+
+                    <OAuthGoogleButton
+                        v-if="oauthGoogleEnabled"
+                        class="mb-3"
+                        intent="register"
+                        :redirect="redirect"
+                        :is-customer="isCustomerSignup"
+                    />
+
+                    <p
+                        v-if="oauthGoogleEnabled"
+                        class="oauth-divider text-center text-muted small mb-3"
+                    >
+                        ou cadastre-se com e-mail
+                    </p>
 
                     <StepSignupForm
                         ref="signupFormRef"

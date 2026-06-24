@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\BarbershopMembership;
-use App\Models\BarbershopPlatformPlan;
 use App\Models\User;
 use App\Rules\UniqueTaxDocument;
 use App\Services\BarbershopPlatformCheckoutService;
@@ -15,50 +14,52 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class RegisteredUserController extends Controller
+class OAuthRegistrationController extends Controller
 {
     use RedirectsAfterAuth;
 
-    /**
-     * Display the registration view.
-     */
-    public function create(Request $request, SocialAuthService $socialAuth): Response
+    public function create(Request $request, SocialAuthService $socialAuth): Response|RedirectResponse
     {
-        $platformPlan = null;
-
-        if (! $this->isCustomerSignup($request) && Schema::hasTable('barbershop_platform_plans')) {
-            $platformPlan = BarbershopPlatformPlan::current()->toPublicArray();
+        if (! $socialAuth->isGoogleEnabled()) {
+            return redirect()->route('register');
         }
 
-        return Inertia::render('Auth/Register', [
-            'redirect' => $request->query('redirect'),
-            'isCustomerSignup' => $this->isCustomerSignup($request),
-            'platformPlan' => $platformPlan,
-            'oauthGoogleEnabled' => $socialAuth->isGoogleEnabled(),
+        $oauth = $request->session()->get('oauth.registration');
+
+        if (! is_array($oauth) || ! isset($oauth['provider'], $oauth['provider_id'], $oauth['email'])) {
+            return redirect()
+                ->route('register')
+                ->withErrors(['email' => __('auth.oauth_session_expired')]);
+        }
+
+        return Inertia::render('Auth/OAuthCompleteRegistration', [
+            'oauthUser' => [
+                'name' => $oauth['name'] ?? '',
+                'email' => $oauth['email'],
+            ],
+            'isCustomerSignup' => (bool) ($oauth['is_customer'] ?? false),
+            'redirect' => $oauth['redirect'] ?? null,
         ]);
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
-        $isCustomerSignup = $this->isCustomerSignup($request);
+        $oauth = $request->session()->get('oauth.registration');
+
+        if (! is_array($oauth) || ! isset($oauth['provider'], $oauth['provider_id'], $oauth['email'])) {
+            return redirect()
+                ->route('register')
+                ->withErrors(['email' => __('auth.oauth_session_expired')]);
+        }
+
+        $isCustomerSignup = (bool) ($oauth['is_customer'] ?? false);
 
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ];
 
         if ($isCustomerSignup) {
@@ -77,6 +78,16 @@ class RegisteredUserController extends Controller
 
         $validated = $request->validate($rules);
 
+        $email = strtolower((string) $oauth['email']);
+
+        if (User::query()->where('email', $email)->exists()) {
+            $request->session()->forget('oauth.registration');
+
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => __('auth.oauth_account_exists_use_password')]);
+        }
+
         $taxDocument = TaxDocument::normalize(
             $isCustomerSignup ? $validated['cpf'] : $validated['cpf_cnpj'],
         );
@@ -85,12 +96,16 @@ class RegisteredUserController extends Controller
             $user = User::create([
                 'name' => $validated['name'],
                 'username' => null,
-                'email' => $validated['email'],
+                'email' => $email,
                 'tax_document' => $taxDocument,
-                'password' => Hash::make($validated['password']),
+                'password' => null,
+                'oauth_provider' => $oauth['provider'],
+                'oauth_id' => $oauth['provider_id'],
+                'email_verified_at' => now(),
                 'is_barbershop' => false,
             ]);
 
+            $request->merge(['redirect' => $oauth['redirect'] ?? null]);
             $this->attachCustomerToBarbershop($user, $request);
         } else {
             $username = app(UsernameGenerator::class)->uniqueFrom(
@@ -101,14 +116,19 @@ class RegisteredUserController extends Controller
             $user = User::create([
                 'name' => $validated['name'],
                 'username' => $username,
-                'email' => $validated['email'],
+                'email' => $email,
                 'tax_document' => $taxDocument,
-                'password' => Hash::make($validated['password']),
+                'password' => null,
+                'oauth_provider' => $oauth['provider'],
+                'oauth_id' => $oauth['provider_id'],
+                'email_verified_at' => now(),
                 'is_barbershop' => true,
             ]);
 
             app(BarbershopPlatformCheckoutService::class)->ensurePendingSubscription($user);
         }
+
+        $request->session()->forget('oauth.registration');
 
         event(new Registered($user));
 
@@ -123,24 +143,9 @@ class RegisteredUserController extends Controller
             return redirect()->route('register.celebration');
         }
 
+        $request->merge(['redirect' => $oauth['redirect'] ?? null]);
+
         return redirect($this->redirectAfterAuth($request));
-    }
-
-    public function celebration(Request $request): Response
-    {
-        abort_unless($request->user() !== null, 403);
-
-        $redirectTo = $request->session()->pull(
-            'registration.redirect_to',
-            route('platform.subscribe', absolute: false),
-        );
-
-        return Inertia::render('Auth/Register', [
-            'redirect' => null,
-            'isCustomerSignup' => false,
-            'celebrateRegistration' => true,
-            'redirectTo' => $redirectTo,
-        ]);
     }
 
     private function attachCustomerToBarbershop(User $user, Request $request): void

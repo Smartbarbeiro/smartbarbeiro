@@ -5,9 +5,11 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\OAuthRegistrationController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +19,12 @@ Route::middleware('guest')->group(function () {
 
     Route::post('registrar', [RegisteredUserController::class, 'store']);
 
+    Route::get('registrar/oauth', [OAuthRegistrationController::class, 'create'])
+        ->name('register.oauth.complete');
+
+    Route::post('registrar/oauth', [OAuthRegistrationController::class, 'store'])
+        ->name('register.oauth.complete.store');
+
     Route::get('register', function () {
         $query = request()->getQueryString();
 
@@ -24,6 +32,12 @@ Route::middleware('guest')->group(function () {
     });
 
     Route::post('register', [RegisteredUserController::class, 'store']);
+
+    Route::get('auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])
+        ->name('auth.social.redirect');
+
+    Route::get('auth/{provider}/callback', [SocialAuthController::class, 'callback'])
+        ->name('auth.social.callback');
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

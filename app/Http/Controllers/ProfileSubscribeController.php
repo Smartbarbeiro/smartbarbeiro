@@ -79,9 +79,8 @@ class ProfileSubscribeController extends Controller
                 payerEmail: $subscriber->email,
                 externalReference: $subscription->external_reference,
                 backUrl: $backUrl,
-                preapprovalPlanId: $plan->mercadopago_preapproval_plan_id,
-                amount: $plan->mercadopago_preapproval_plan_id ? null : (float) $plan->monthly_amount,
-                currencyId: $plan->mercadopago_preapproval_plan_id ? null : $plan->currency_id,
+                amount: (float) $plan->monthly_amount,
+                currencyId: $plan->currency_id,
             );
         } catch (MPApiException $exception) {
             return back()->withErrors([

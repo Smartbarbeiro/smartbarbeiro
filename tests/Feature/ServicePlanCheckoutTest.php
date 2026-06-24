@@ -45,7 +45,7 @@ class ServicePlanCheckoutTest extends TestCase
 
         $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
-            $mock->shouldReceive('assertSandboxTestBuyer')->andReturnNull();
+            $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
             $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
             $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/checkout-guest');
@@ -201,7 +201,7 @@ class ServicePlanCheckoutTest extends TestCase
 
         $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
-            $mock->shouldReceive('assertSandboxTestBuyer')->andReturnNull();
+            $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
             $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
             $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/checkout');

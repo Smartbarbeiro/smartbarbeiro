@@ -59,26 +59,75 @@ class MercadoPagoServiceTest extends TestCase
     }
 
     #[Test]
-    public function test_assert_sandbox_test_buyer_rejects_real_email_in_test_mode(): void
+    public function test_assert_sandbox_checkout_users_rejects_real_email_for_test_seller(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.mercadopago.com/users/me' => \Illuminate\Support\Facades\Http::response([
+                'tags' => ['test_user'],
+            ]),
+        ]);
 
         $service = app(MercadoPagoService::class);
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage(__('messages.mercadopago_test_buyer_required'));
 
-        $service->assertSandboxTestBuyer('real@gmail.com');
+        $service->assertSandboxCheckoutUsers('real@gmail.com');
     }
 
     #[Test]
-    public function test_assert_sandbox_test_buyer_allows_test_user_email(): void
+    public function test_assert_sandbox_checkout_users_allows_real_email_for_real_seller(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);
 
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.mercadopago.com/users/me' => \Illuminate\Support\Facades\Http::response([
+                'tags' => ['normal'],
+            ]),
+        ]);
+
         $service = app(MercadoPagoService::class);
 
-        $service->assertSandboxTestBuyer('test_user_123@testuser.com');
+        $service->assertSandboxCheckoutUsers('oauth-user@gmail.com');
+
+        $this->assertTrue(true);
+    }
+
+    #[Test]
+    public function test_assert_sandbox_checkout_users_rejects_test_email_for_real_seller(): void
+    {
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.mercadopago.com/users/me' => \Illuminate\Support\Facades\Http::response([
+                'tags' => ['normal'],
+            ]),
+        ]);
+
+        $service = app(MercadoPagoService::class);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage(__('messages.mercadopago_real_buyer_required'));
+
+        $service->assertSandboxCheckoutUsers('test_user_123@testuser.com');
+    }
+
+    #[Test]
+    public function test_assert_sandbox_checkout_users_allows_test_email_for_test_seller(): void
+    {
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.mercadopago.com/users/me' => \Illuminate\Support\Facades\Http::response([
+                'tags' => ['test_user'],
+            ]),
+        ]);
+
+        $service = app(MercadoPagoService::class);
+
+        $service->assertSandboxCheckoutUsers('test_user_123@testuser.com');
 
         $this->assertTrue(true);
     }

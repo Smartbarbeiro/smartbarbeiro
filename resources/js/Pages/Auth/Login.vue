@@ -2,8 +2,9 @@
 import Checkbox from '@/Components/Checkbox.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
+import OAuthGoogleButton from '@/Components/OAuthGoogleButton.vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
@@ -16,6 +17,10 @@ const props = defineProps({
     redirect: {
         type: String,
         default: null,
+    },
+    oauthGoogleEnabled: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -31,6 +36,11 @@ const form = useForm({
     remember: false,
     ...(barbershopRedirect.value ? { redirect: barbershopRedirect.value } : {}),
 });
+
+const page = usePage();
+const oauthError = computed(
+    () => page.props.errors?.email ?? form.errors.email ?? null,
+);
 
 const submit = () => {
     form.post(route('login'), {
@@ -61,6 +71,22 @@ const submit = () => {
                     >
                         {{ status }}
                     </div>
+
+                    <InputError class="mb-3" :message="oauthError" />
+
+                    <OAuthGoogleButton
+                        v-if="oauthGoogleEnabled"
+                        class="mb-3"
+                        intent="login"
+                        :redirect="barbershopRedirect"
+                    />
+
+                    <p
+                        v-if="oauthGoogleEnabled"
+                        class="oauth-divider text-center text-muted small mb-3"
+                    >
+                        ou entre com e-mail
+                    </p>
 
                     <form class="login-panel__form" @submit.prevent="submit">
                         <div class="mb-3">

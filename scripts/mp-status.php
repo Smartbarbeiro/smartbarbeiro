@@ -48,8 +48,15 @@ if ($token) {
 
     if ($http->successful()) {
         $body = $http->json();
+        $tags = $body['tags'] ?? [];
         echo 'mp_user_id: '.($body['id'] ?? 'unknown').PHP_EOL;
+        echo 'mp_email: '.($body['email'] ?? 'unknown').PHP_EOL;
+        echo 'mp_is_test_seller: '.(in_array('test_user', $tags, true) ? 'yes' : 'no').PHP_EOL;
         echo 'mp_site_id: '.($body['site_id'] ?? 'unknown').PHP_EOL;
+
+        if ($mp->usesTestCredentials() && ! in_array('test_user', $tags, true)) {
+            echo 'note: real seller account — OAuth / Google sign-up with your real email is the correct checkout path.'.PHP_EOL;
+        }
     } elseif (is_array($http->json()) && isset($http->json()['message'])) {
         echo 'token_error: '.$http->json()['message'].PHP_EOL;
     }

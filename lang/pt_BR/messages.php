@@ -9,6 +9,8 @@ return [
     'mercadopago_https_back_url_required' => 'Configure MERCADOPAGO_BACK_URL com uma URL HTTPS pública (ex.: ngrok ou seu domínio) para habilitar o checkout.',
     'mercadopago_configure_token' => 'Configure MERCADOPAGO_ACCESS_TOKEN no arquivo .env para habilitar perfis pagos.',
     'mercadopago_test_buyer_required' => 'Em modo de teste do Mercado Pago, cadastre-se com um e-mail de comprador de teste (@testuser.com) do painel de desenvolvedores.',
+    'mercadopago_real_buyer_required' => 'Use sua conta real (ex.: login com Google) para assinar. E-mails @testuser.com só funcionam com credenciais de vendedor de teste no Mercado Pago.',
+    'mercadopago_test_seller_required' => 'Em modo de teste, configure MERCADOPAGO_ACCESS_TOKEN com as credenciais de produção (APP_USR) da conta Vendedor de teste criada no painel do Mercado Pago — não use o token da sua conta real.',
     'mercadopago_sandbox_users_required' => 'No modo de teste do Mercado Pago, vendedor e comprador precisam ser contas de teste criadas no painel de desenvolvedores da sua aplicação.',
     'subscription_cannot_be_cancelled' => 'Esta assinatura não pode ser cancelada.',
     'service_plan_invalid_package' => 'Selecione um pacote de serviço válido.',

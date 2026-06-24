@@ -2017,6 +2017,32 @@ li {
     text-align: center;
 }
 
+.oauth-google-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.oauth-google-btn__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: #fff;
+    color: #4285f4;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+.oauth-divider {
+    letter-spacing: 0.02em;
+}
+
 .register-panel .step-signup-form--plain {
     background: #ffffff;
     border: none;

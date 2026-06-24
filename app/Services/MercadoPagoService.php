@@ -111,6 +111,7 @@ class MercadoPagoService
         ?string $currencyId = null,
     ): PreApproval {
         $this->ensureConfigured();
+        $this->assertSandboxCheckoutUsers($payerEmail);
 
         $client = new PreApprovalClient;
 
@@ -230,15 +231,65 @@ class MercadoPagoService
 
     public function assertSandboxTestBuyer(string $payerEmail): void
     {
+        $this->assertSandboxCheckoutUsers($payerEmail);
+    }
+
+    public function assertSandboxTestCollector(): void
+    {
+        // Pairing is validated in assertSandboxCheckoutUsers().
+    }
+
+    public function assertSandboxCheckoutUsers(string $payerEmail): void
+    {
         if (! $this->usesTestCredentials()) {
             return;
         }
 
-        if (str_ends_with(strtolower($payerEmail), '@testuser.com')) {
-            return;
+        $collectorIsTest = $this->collectorIsTestUser();
+        $buyerIsTest = str_ends_with(strtolower($payerEmail), '@testuser.com');
+
+        if ($collectorIsTest && ! $buyerIsTest) {
+            throw new \InvalidArgumentException(__('messages.mercadopago_test_buyer_required'));
         }
 
-        throw new \InvalidArgumentException(__('messages.mercadopago_test_buyer_required'));
+        if (! $collectorIsTest && $buyerIsTest) {
+            throw new \InvalidArgumentException(__('messages.mercadopago_real_buyer_required'));
+        }
+    }
+
+    public function collectorIsTestUser(): bool
+    {
+        if ($this->collectorIsTestUser !== null) {
+            return $this->collectorIsTestUser;
+        }
+
+        if (! $this->usesTestCredentials()) {
+            return $this->collectorIsTestUser = false;
+        }
+
+        $response = \Illuminate\Support\Facades\Http::withOptions([
+            'verify' => $this->sslCertificatePath(),
+        ])
+            ->withToken((string) config('mercadopago.access_token'))
+            ->acceptJson()
+            ->get('https://api.mercadopago.com/users/me');
+
+        if (! $response->successful()) {
+            return $this->collectorIsTestUser = false;
+        }
+
+        $tags = $response->json('tags') ?? [];
+
+        return $this->collectorIsTestUser = in_array('test_user', $tags, true);
+    }
+
+    private ?bool $collectorIsTestUser = null;
+
+    private function sslCertificatePath(): ?string
+    {
+        $bundle = storage_path('certs/cacert.pem');
+
+        return is_file($bundle) ? $bundle : null;
     }
 
     /**

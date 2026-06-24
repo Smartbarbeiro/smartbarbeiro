@@ -13,13 +13,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'username', 'email', 'tax_document', 'password', 'profile_photo_path', 'background_photo_path', 'is_admin', 'is_barbershop', 'is_frozen'])]
-#[Hidden(['password', 'remember_token', 'profile_photo_path', 'background_photo_path'])]
+#[Fillable(['name', 'username', 'email', 'tax_document', 'password', 'oauth_provider', 'oauth_id', 'profile_photo_path', 'background_photo_path', 'is_admin', 'is_barbershop', 'is_frozen'])]
+#[Hidden(['password', 'remember_token', 'profile_photo_path', 'background_photo_path', 'oauth_provider', 'oauth_id'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * @var list<string>

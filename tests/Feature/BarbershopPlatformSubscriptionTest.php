@@ -59,9 +59,39 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             ->assertRedirect(route('platform.subscribe', absolute: false));
     }
 
-    public function test_platform_checkout_rejects_real_email_when_using_test_credentials(): void
+    public function test_platform_checkout_rejects_test_email_when_collector_is_real(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.mercadopago.com/users/me' => \Illuminate\Support\Facades\Http::response([
+                'tags' => ['normal'],
+            ]),
+        ]);
+
+        $barbershop = User::factory()->create(['email' => 'buyer@testuser.com']);
+        $barbershop->platformSubscription()->update([
+            'status' => BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($barbershop)
+            ->from(route('platform.subscribe'))
+            ->post(route('platform.subscribe.store'))
+            ->assertRedirect(route('platform.subscribe'))
+            ->assertSessionHasErrors([
+                'subscribe' => __('messages.mercadopago_real_buyer_required'),
+            ]);
+    }
+
+    public function test_platform_checkout_rejects_real_email_when_collector_is_test_seller(): void
+    {
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
+
+        \Illuminate\Support\Facades\Http::fake([
+            'https://api.mercadopago.com/users/me' => \Illuminate\Support\Facades\Http::response([
+                'tags' => ['test_user'],
+            ]),
+        ]);
 
         $barbershop = User::factory()->create(['email' => 'real@gmail.com']);
         $barbershop->platformSubscription()->update([
@@ -93,7 +123,7 @@ class BarbershopPlatformSubscriptionTest extends TestCase
 
         $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
-            $mock->shouldReceive('assertSandboxTestBuyer')->andReturnNull();
+            $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
             $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
             $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/platform-checkout');

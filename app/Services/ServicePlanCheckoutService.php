@@ -50,7 +50,7 @@ class ServicePlanCheckoutService
             ]);
         }
 
-        $this->mercadoPago->assertSandboxTestBuyer($subscriber->email);
+        $this->mercadoPago->assertSandboxCheckoutUsers($subscriber->email);
 
         $backUrl = route('service-plan.subscribe.return', $barbershop->username);
 
