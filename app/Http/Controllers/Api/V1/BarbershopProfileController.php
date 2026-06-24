@@ -32,6 +32,7 @@ class BarbershopProfileController extends Controller
             ],
             'service_plans' => $servicePlanService->publicPlansPayload($barbershop),
             'mercadopago_configured' => app(MercadoPagoService::class)->isConfigured(),
+            'payment_config' => app(MercadoPagoService::class)->mobilePaymentConfig(),
         ]);
     }
 }

@@ -28,4 +28,21 @@ return [
     */
     'back_url' => env('MERCADOPAGO_BACK_URL', env('APP_URL')),
 
+    'merchant_name' => env('MERCADOPAGO_MERCHANT_NAME', env('APP_NAME', 'Smart Barbeiro')),
+
+    /*
+    | Native wallet payments (mobile app via @capgo/capacitor-pay).
+    | Apple Pay: create a Merchant ID in Apple Developer and register with Mercado Pago.
+    | Google Pay: configure your business profile in Google Pay Business Console.
+    */
+    'apple_pay_merchant_id' => env('MERCADOPAGO_APPLE_PAY_MERCHANT_ID'),
+
+    'google_pay_merchant_id' => env('MERCADOPAGO_GOOGLE_PAY_MERCHANT_ID'),
+
+    'google_pay_gateway' => env('MERCADOPAGO_GOOGLE_PAY_GATEWAY', 'example'),
+
+    'google_pay_gateway_merchant_id' => env('MERCADOPAGO_GOOGLE_PAY_GATEWAY_MERCHANT_ID'),
+
+    'google_pay_environment' => env('MERCADOPAGO_GOOGLE_PAY_ENVIRONMENT', 'test'),
+
 ];

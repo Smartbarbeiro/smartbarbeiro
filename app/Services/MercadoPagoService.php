@@ -101,6 +101,43 @@ class MercadoPagoService
         ]);
     }
 
+    public function createAuthorizedSubscription(
+        string $reason,
+        string $payerEmail,
+        string $externalReference,
+        string $backUrl,
+        string $cardTokenId,
+        float $amount,
+        string $currencyId,
+    ): PreApproval {
+        $this->ensureConfigured();
+        $this->assertSandboxCheckoutUsers($payerEmail);
+
+        $client = new PreApprovalClient;
+
+        $payload = [
+            'reason' => mb_substr($reason, 0, 200),
+            'payer_email' => $payerEmail,
+            'external_reference' => $externalReference,
+            'back_url' => $backUrl,
+            'card_token_id' => $cardTokenId,
+            'status' => 'authorized',
+            'auto_recurring' => $this->buildAutoRecurringPayload($amount, $currencyId),
+        ];
+
+        try {
+            return $client->create($payload);
+        } catch (MPApiException $exception) {
+            $this->logApiException($exception, [
+                'operation' => 'create_authorized_preapproval',
+                'external_reference' => $externalReference,
+                'payload' => $this->redactPayloadForLog($payload),
+            ]);
+
+            throw $exception;
+        }
+    }
+
     public function createSubscriptionCheckout(
         string $reason,
         string $payerEmail,
@@ -222,6 +259,34 @@ class MercadoPagoService
     public function isConfigured(): bool
     {
         return filled(config('mercadopago.access_token'));
+    }
+
+    public function publicKey(): ?string
+    {
+        $key = config('mercadopago.public_key');
+
+        return filled($key) ? (string) $key : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function mobilePaymentConfig(): ?array
+    {
+        if (! $this->isConfigured() || ! $this->publicKey()) {
+            return null;
+        }
+
+        return [
+            'public_key' => $this->publicKey(),
+            'currency_id' => config('mercadopago.currency_id', 'BRL'),
+            'merchant_name' => (string) config('mercadopago.merchant_name'),
+            'apple_pay_merchant_id' => config('mercadopago.apple_pay_merchant_id'),
+            'google_pay_merchant_id' => config('mercadopago.google_pay_merchant_id'),
+            'google_pay_gateway' => config('mercadopago.google_pay_gateway', 'example'),
+            'google_pay_gateway_merchant_id' => config('mercadopago.google_pay_gateway_merchant_id'),
+            'google_pay_environment' => config('mercadopago.google_pay_environment', 'test'),
+        ];
     }
 
     public function usesTestCredentials(): bool

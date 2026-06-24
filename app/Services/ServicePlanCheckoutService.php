@@ -14,6 +14,7 @@ class ServicePlanCheckoutService
     public function __construct(
         private BarbershopServicePlanService $servicePlanService,
         private MercadoPagoService $mercadoPago,
+        private MercadoPagoWalletTokenService $walletTokenService,
     ) {}
 
     /**
@@ -75,6 +76,83 @@ class ServicePlanCheckoutService
         return [
             'subscription' => $subscription,
             'checkout_url' => $this->mercadoPago->checkoutUrl($preapproval),
+        ];
+    }
+
+    /**
+     * @return array{subscription: ServicePlanSubscription, status: string}
+     *
+     * @throws MPApiException
+     */
+    public function completeNativeCheckout(
+        User $barbershop,
+        User $subscriber,
+        string $packageType,
+        array $addonIds,
+        string $paymentType,
+        ?string $cardTokenId = null,
+        ?string $walletType = null,
+        ?string $walletToken = null,
+    ): array {
+        if (! $this->mercadoPago->isConfigured()) {
+            throw new \InvalidArgumentException(__('messages.payments_not_configured'));
+        }
+
+        $selection = $this->servicePlanService->validateCheckoutSelection(
+            $barbershop,
+            $packageType,
+            $addonIds,
+        );
+
+        $subscription = $this->savePendingSelection(
+            $barbershop,
+            $subscriber,
+            $packageType,
+            $addonIds,
+        );
+
+        if (! $subscription->external_reference) {
+            $subscription->update([
+                'external_reference' => $this->externalReference($barbershop, $subscriber),
+            ]);
+        }
+
+        $resolvedToken = match ($paymentType) {
+            'card_token' => $cardTokenId,
+            'wallet' => $walletType && $walletToken
+                ? $this->walletTokenService->resolveCardTokenId($walletType, $walletToken)
+                : null,
+            default => null,
+        };
+
+        if (! is_string($resolvedToken) || $resolvedToken === '') {
+            throw new \InvalidArgumentException(__('messages.wallet_token_invalid'));
+        }
+
+        $this->mercadoPago->assertSandboxCheckoutUsers($subscriber->email);
+
+        $backUrl = route('service-plan.subscribe.return', $barbershop->username);
+
+        $preapproval = $this->mercadoPago->createAuthorizedSubscription(
+            reason: $selection['reason'],
+            payerEmail: $subscriber->email,
+            externalReference: $subscription->external_reference,
+            backUrl: $backUrl,
+            cardTokenId: $resolvedToken,
+            amount: (float) $selection['monthly_total'],
+            currencyId: $subscription->currency_id,
+        );
+
+        $subscription->update([
+            'mercadopago_preapproval_id' => $preapproval->id,
+            'status' => $this->mercadoPago->mapPreApprovalStatus($preapproval->status),
+        ]);
+
+        $this->ensureMembership($subscription);
+
+        return [
+            'subscription' => $subscription->fresh(),
+            'status' => $subscription->status,
         ];
     }
 
