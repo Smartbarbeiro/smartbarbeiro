@@ -106,6 +106,15 @@ const statusClass = (user) => {
                                         >
                                             Admin
                                         </span>
+                                        <span
+                                            v-if="
+                                                user.is_barbershop &&
+                                                user.platform_subscription_exempt
+                                            "
+                                            class="badge bg-success ms-1"
+                                        >
+                                            Plano gratuito
+                                        </span>
                                     </p>
                                     <p class="text-secondary small mb-0">
                                         {{ user.email }}

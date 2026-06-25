@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'username', 'email', 'tax_document', 'password', 'oauth_provider', 'oauth_id', 'profile_photo_path', 'background_photo_path', 'is_admin', 'is_barbershop', 'is_frozen'])]
+#[Fillable(['name', 'username', 'email', 'tax_document', 'password', 'oauth_provider', 'oauth_id', 'profile_photo_path', 'background_photo_path', 'is_admin', 'is_barbershop', 'is_frozen', 'platform_subscription_exempt'])]
 #[Hidden(['password', 'remember_token', 'profile_photo_path', 'background_photo_path', 'oauth_provider', 'oauth_id'])]
 class User extends Authenticatable
 {
@@ -43,7 +43,13 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'is_barbershop' => 'boolean',
             'is_frozen' => 'boolean',
+            'platform_subscription_exempt' => 'boolean',
         ];
+    }
+
+    public function isExemptFromPlatformSubscription(): bool
+    {
+        return (bool) ($this->platform_subscription_exempt ?? false);
     }
 
     public function isFrozen(): bool
@@ -136,6 +142,10 @@ class User extends Authenticatable
     public function hasActivePlatformSubscription(): bool
     {
         if (! $this->isBarbershopAccount()) {
+            return true;
+        }
+
+        if ($this->isExemptFromPlatformSubscription()) {
             return true;
         }
 

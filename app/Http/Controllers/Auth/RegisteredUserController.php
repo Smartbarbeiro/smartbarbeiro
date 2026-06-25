@@ -115,10 +115,11 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         if (! $isCustomerSignup) {
-            $request->session()->put(
-                'registration.redirect_to',
-                route('platform.subscribe', absolute: false),
-            );
+            $redirectTo = $user->hasActivePlatformSubscription()
+                ? route('dashboard', absolute: false)
+                : route('platform.subscribe', absolute: false);
+
+            $request->session()->put('registration.redirect_to', $redirectTo);
 
             return redirect()->route('register.celebration');
         }
@@ -134,6 +135,10 @@ class RegisteredUserController extends Controller
             'registration.redirect_to',
             route('platform.subscribe', absolute: false),
         );
+
+        if ($request->user()->hasActivePlatformSubscription()) {
+            $redirectTo = route('dashboard', absolute: false);
+        }
 
         return Inertia::render('Auth/Register', [
             'redirect' => null,

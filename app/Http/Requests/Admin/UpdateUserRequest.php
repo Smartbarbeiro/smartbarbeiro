@@ -36,6 +36,7 @@ class UpdateUserRequest extends FormRequest
             'password' => ['nullable', 'confirmed', Password::defaults()],
             'is_admin' => ['sometimes', 'boolean'],
             'is_frozen' => ['sometimes', 'boolean'],
+            'platform_subscription_exempt' => ['sometimes', 'boolean'],
         ];
 
         if ($target->isBarbershop()) {

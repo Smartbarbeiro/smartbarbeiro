@@ -38,6 +38,8 @@ const form = useForm({
     password_confirmation: '',
     is_admin: props.managedUser.is_admin,
     is_frozen: props.managedUser.is_frozen,
+    platform_subscription_exempt:
+        props.managedUser.platform_subscription_exempt ?? false,
 });
 
 const confirmingDeletion = ref(false);
@@ -284,6 +286,34 @@ const qrProfileUrl = computed(() => {
                         />
                     </div>
                     <InputError class="mt-2 mb-3" :message="form.errors.is_frozen" />
+
+                    <div
+                        v-if="managedUser.is_barbershop_account"
+                        class="border rounded-3 p-3 mb-3"
+                    >
+                        <div class="form-check mb-0">
+                            <input
+                                id="platform_subscription_exempt"
+                                v-model="form.platform_subscription_exempt"
+                                type="checkbox"
+                                class="form-check-input"
+                            />
+                            <InputLabel
+                                for="platform_subscription_exempt"
+                                value="Isentar do plano da plataforma"
+                                class="form-check-label"
+                            />
+                        </div>
+                        <p class="form-text mb-0 mt-2">
+                            Permite que esta barbearia use o perfil público sem
+                            pagar a assinatura mensal da plataforma no Mercado
+                            Pago.
+                        </p>
+                        <InputError
+                            class="mt-2 mb-0"
+                            :message="form.errors.platform_subscription_exempt"
+                        />
+                    </div>
 
                     <PrimaryButton :disabled="form.processing">
                         Salvar alterações

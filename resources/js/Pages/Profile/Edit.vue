@@ -55,6 +55,10 @@ defineProps({
         type: Object,
         default: null,
     },
+    platformSubscriptionExempt: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 onMounted(() => {
@@ -84,6 +88,16 @@ onMounted(() => {
                     :barbershop-memberships="barbershopMemberships"
                     :acrylic-qr-order="acrylicQrOrder"
                 />
+            </div>
+
+            <div
+                v-if="isBarbershop && platformSubscriptionExempt"
+                class="alert alert-info mb-0"
+                role="status"
+            >
+                Sua conta foi isenta do plano da plataforma pelo administrador.
+                Seu perfil público permanece ativo sem a assinatura mensal no
+                Mercado Pago.
             </div>
 
             <div v-if="isBarbershop && servicePlans" class="app-card p-4">

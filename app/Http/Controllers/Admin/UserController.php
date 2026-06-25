@@ -129,6 +129,9 @@ class UserController extends Controller
             'is_admin' => $user->isAdmin(),
             'is_barbershop' => $user->isBarbershop(),
             'is_frozen' => $user->isFrozen(),
+            'platform_subscription_exempt' => $user->isBarbershopAccount()
+                ? $user->isExemptFromPlatformSubscription()
+                : null,
             'profile_photo_url' => $user->profile_photo_url,
             'profile_url' => $user->profileUrl(),
             'created_at' => $user->created_at->translatedFormat('j M Y'),
@@ -161,7 +164,11 @@ class UserController extends Controller
                 'email' => $user->email,
                 'is_admin' => $user->isAdmin(),
                 'is_barbershop' => $user->isBarbershop(),
+                'is_barbershop_account' => $user->isBarbershopAccount(),
                 'is_frozen' => $user->isFrozen(),
+                'platform_subscription_exempt' => $user->isBarbershopAccount()
+                    ? $user->isExemptFromPlatformSubscription()
+                    : null,
                 'profile_photo_url' => $user->profile_photo_url,
                 'profile_url' => $user->profileUrl(),
                 'storage_path' => 'storage/app/users/'.$user->id,
@@ -214,10 +221,17 @@ class UserController extends Controller
             if ($user->is_admin) {
                 $user->is_barbershop = false;
                 $user->username = null;
+                $user->platform_subscription_exempt = false;
             }
 
             if ($request->user()->can('freeze', $user)) {
                 $user->is_frozen = $request->boolean('is_frozen');
+            }
+
+            if ($user->isBarbershopAccount() && $request->has('platform_subscription_exempt')) {
+                $user->platform_subscription_exempt = $request->boolean(
+                    'platform_subscription_exempt',
+                );
             }
         }
 

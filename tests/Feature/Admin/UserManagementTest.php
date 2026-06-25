@@ -120,6 +120,66 @@ class UserManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_exempt_barbershop_from_platform_subscription(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $barbershop = User::factory()->create();
+
+        $barbershop->platformSubscription()->update([
+            'status' => \App\Models\BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $barbershop), [
+                'name' => $barbershop->name,
+                'username' => $barbershop->username,
+                'email' => $barbershop->email,
+                'is_admin' => false,
+                'platform_subscription_exempt' => true,
+            ])
+            ->assertRedirect(route('admin.users.edit', $barbershop));
+
+        $barbershop->refresh();
+
+        $this->assertTrue($barbershop->isExemptFromPlatformSubscription());
+        $this->assertTrue($barbershop->hasActivePlatformSubscription());
+        $this->assertTrue($barbershop->hasPublicProfile());
+    }
+
+    public function test_admin_update_without_exempt_field_preserves_existing_exemption(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $barbershop = User::factory()->create([
+            'platform_subscription_exempt' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->patch(route('admin.users.update', $barbershop), [
+                'name' => 'Nome atualizado',
+                'username' => $barbershop->username,
+                'email' => $barbershop->email,
+                'is_admin' => false,
+            ])
+            ->assertRedirect(route('admin.users.edit', $barbershop));
+
+        $this->assertTrue($barbershop->fresh()->isExemptFromPlatformSubscription());
+    }
+
+    public function test_exempt_barbershop_can_access_dashboard_without_platform_payment(): void
+    {
+        $barbershop = User::factory()->create([
+            'platform_subscription_exempt' => true,
+        ]);
+
+        $barbershop->platformSubscription()->update([
+            'status' => \App\Models\BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($barbershop)
+            ->get(route('dashboard'))
+            ->assertOk();
+    }
+
     public function test_admin_cannot_delete_themselves(): void
     {
         $admin = User::factory()->admin()->create();

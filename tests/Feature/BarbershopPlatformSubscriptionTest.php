@@ -59,6 +59,47 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             ->assertRedirect(route('platform.subscribe', absolute: false));
     }
 
+    public function test_exempt_barbershop_public_profile_is_visible_without_paid_subscription(): void
+    {
+        $barbershop = User::factory()->create([
+            'platform_subscription_exempt' => true,
+        ]);
+
+        $barbershop->platformSubscription()->update([
+            'status' => BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
+
+        $this->get(route('profile.public', $barbershop->username))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Profile/Public'));
+    }
+
+    public function test_exempt_barbershop_sees_platform_exemption_notice_on_profile_edit(): void
+    {
+        $barbershop = User::factory()->create([
+            'platform_subscription_exempt' => true,
+        ]);
+
+        $this->actingAs($barbershop)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Profile/Edit')
+                ->where('platformSubscriptionExempt', true));
+    }
+
+    public function test_unpaid_barbershop_public_profile_returns_not_found(): void
+    {
+        $barbershop = User::factory()->create();
+
+        $barbershop->platformSubscription()->update([
+            'status' => BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
+
+        $this->get(route('profile.public', $barbershop->username))
+            ->assertNotFound();
+    }
+
     public function test_platform_checkout_rejects_test_email_when_collector_is_real(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);

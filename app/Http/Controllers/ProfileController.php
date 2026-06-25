@@ -82,6 +82,7 @@ class ProfileController extends Controller
                     'packages' => $servicePlanService->packagesPayload($user),
                     'addons' => $servicePlanService->addonsPayload($user),
                 ],
+                'platformSubscriptionExempt' => $user->isExemptFromPlatformSubscription(),
             ];
         }
 
