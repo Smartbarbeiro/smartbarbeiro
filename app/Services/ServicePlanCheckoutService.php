@@ -6,21 +6,18 @@ use App\Models\BarbershopMembership;
 use App\Models\ServicePlanSubscription;
 use App\Models\User;
 use Illuminate\Support\Str;
-use MercadoPago\Exceptions\MPApiException;
-use MercadoPago\Resources\PreApproval;
+use Stripe\Exception\ApiErrorException;
 
 class ServicePlanCheckoutService
 {
     public function __construct(
         private BarbershopServicePlanService $servicePlanService,
-        private MercadoPagoService $mercadoPago,
-        private MercadoPagoWalletTokenService $walletTokenService,
+        private StripeServicePlanService $stripe,
+        private ServicePlanSubscriptionSyncService $syncService,
     ) {}
 
     /**
      * @return array{subscription: ServicePlanSubscription, checkout_url: string}
-     *
-     * @throws MPApiException
      */
     public function startCheckout(
         User $barbershop,
@@ -28,7 +25,7 @@ class ServicePlanCheckoutService
         string $packageType,
         array $addonIds,
     ): array {
-        if (! $this->mercadoPago->isConfigured()) {
+        if (! $this->stripe->isConfigured()) {
             throw new \InvalidArgumentException(__('messages.payments_not_configured'));
         }
 
@@ -45,108 +42,97 @@ class ServicePlanCheckoutService
             $addonIds,
         );
 
-        if (! $subscription->external_reference) {
-            $subscription->update([
-                'external_reference' => $this->externalReference($barbershop, $subscriber),
-            ]);
-        }
+        $successUrl = route('service-plan.subscribe.return', $barbershop->username).'?session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl = route('profile.public', $barbershop->username);
 
-        $this->mercadoPago->assertSandboxCheckoutUsers($subscriber->email);
-
-        $backUrl = route('service-plan.subscribe.return', $barbershop->username);
-
-        $preapproval = $this->mercadoPago->createSubscriptionCheckout(
-            reason: $selection['reason'],
-            payerEmail: $subscriber->email,
-            externalReference: $subscription->external_reference,
-            backUrl: $backUrl,
-            amount: (float) $selection['monthly_total'],
-            currencyId: $subscription->currency_id,
+        $checkoutUrl = $this->stripe->createWebCheckoutSession(
+            $subscription,
+            $subscriber,
+            $selection,
+            $successUrl,
+            $cancelUrl,
         );
-
-        $subscription->update([
-            'mercadopago_preapproval_id' => $preapproval->id,
-            'status' => $this->mercadoPago->mapPreApprovalStatus($preapproval->status),
-        ]);
-
-        if (! $this->mercadoPago->checkoutUrl($preapproval)) {
-            throw new \RuntimeException(__('messages.mercadopago_no_checkout_url'));
-        }
 
         return [
             'subscription' => $subscription,
-            'checkout_url' => $this->mercadoPago->checkoutUrl($preapproval),
+            'checkout_url' => $checkoutUrl,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     customer_id: string,
+     *     customer_ephemeral_key_secret: string,
+     *     payment_intent_client_secret: string,
+     *     subscription_id: string,
+     *     status: string
+     * }
+     */
+    public function prepareMobileCheckout(
+        User $barbershop,
+        User $subscriber,
+        string $packageType,
+        array $addonIds,
+    ): array {
+        if (! $this->stripe->isConfigured()) {
+            throw new \InvalidArgumentException(__('messages.payments_not_configured'));
+        }
+
+        $selection = $this->servicePlanService->validateCheckoutSelection(
+            $barbershop,
+            $packageType,
+            $addonIds,
+        );
+
+        $subscription = $this->savePendingSelection(
+            $barbershop,
+            $subscriber,
+            $packageType,
+            $addonIds,
+        );
+
+        $prepared = $this->stripe->prepareMobileSubscription($subscription, $subscriber, $selection);
+
+        return [
+            ...$prepared,
+            'status' => 'requires_payment',
         ];
     }
 
     /**
      * @return array{subscription: ServicePlanSubscription, status: string}
-     *
-     * @throws MPApiException
      */
-    public function completeNativeCheckout(
+    public function confirmMobileCheckout(
         User $barbershop,
         User $subscriber,
-        string $packageType,
-        array $addonIds,
-        string $paymentType,
-        ?string $cardTokenId = null,
-        ?string $walletType = null,
-        ?string $walletToken = null,
+        string $stripeSubscriptionId,
     ): array {
-        if (! $this->mercadoPago->isConfigured()) {
+        if (! $this->stripe->isConfigured()) {
             throw new \InvalidArgumentException(__('messages.payments_not_configured'));
         }
 
-        $selection = $this->servicePlanService->validateCheckoutSelection(
-            $barbershop,
-            $packageType,
-            $addonIds,
-        );
+        $subscription = ServicePlanSubscription::query()
+            ->where('creator_user_id', $barbershop->id)
+            ->where('subscriber_user_id', $subscriber->id)
+            ->where('stripe_subscription_id', $stripeSubscriptionId)
+            ->first();
 
-        $subscription = $this->savePendingSelection(
-            $barbershop,
-            $subscriber,
-            $packageType,
-            $addonIds,
-        );
-
-        if (! $subscription->external_reference) {
-            $subscription->update([
-                'external_reference' => $this->externalReference($barbershop, $subscriber),
-            ]);
+        if (! $subscription) {
+            throw new \InvalidArgumentException(__('messages.stripe_subscription_not_found'));
         }
 
-        $resolvedToken = match ($paymentType) {
-            'card_token' => $cardTokenId,
-            'wallet' => $walletType && $walletToken
-                ? $this->walletTokenService->resolveCardTokenId($walletType, $walletToken)
-                : null,
-            default => null,
-        };
-
-        if (! is_string($resolvedToken) || $resolvedToken === '') {
-            throw new \InvalidArgumentException(__('messages.wallet_token_invalid'));
+        try {
+            $stripeSubscription = $this->stripe->retrieveSubscription($stripeSubscriptionId);
+        } catch (ApiErrorException $exception) {
+            throw new \InvalidArgumentException($this->stripe->apiExceptionMessage($exception));
         }
 
-        $this->mercadoPago->assertSandboxCheckoutUsers($subscriber->email);
+        $subscription = $this->syncService->syncFromStripeSubscription($stripeSubscription)
+            ?? $subscription;
 
-        $backUrl = route('service-plan.subscribe.return', $barbershop->username);
-
-        $preapproval = $this->mercadoPago->createAuthorizedSubscription(
-            reason: $selection['reason'],
-            payerEmail: $subscriber->email,
-            externalReference: $subscription->external_reference,
-            backUrl: $backUrl,
-            cardTokenId: $resolvedToken,
-            amount: (float) $selection['monthly_total'],
-            currencyId: $subscription->currency_id,
-        );
-
-        $subscription->update([
-            'mercadopago_preapproval_id' => $preapproval->id,
-            'status' => $this->mercadoPago->mapPreApprovalStatus($preapproval->status),
-        ]);
+        if (! $subscription->isActive()) {
+            throw new \InvalidArgumentException(__('messages.stripe_subscription_not_active'));
+        }
 
         $this->ensureMembership($subscription);
 
@@ -191,7 +177,7 @@ class ServicePlanCheckoutService
                 'package_type' => $selection['package']->type,
                 'selected_addon_ids' => $selection['addons']->pluck('id')->all(),
                 'monthly_total' => $selection['monthly_total'],
-                'currency_id' => config('mercadopago.currency_id', 'BRL'),
+                'currency_id' => strtoupper((string) config('stripe.currency', 'brl')),
                 'payer_email' => $subscriber->email,
                 'external_reference' => $this->externalReference($barbershop, $subscriber),
                 'status' => ServicePlanSubscription::STATUS_PENDING,

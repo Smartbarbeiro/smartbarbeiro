@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\ServicePlanSubscription;
-use App\Services\MercadoPagoService;
 use App\Services\ServicePlanSubscriptionCancellationService;
+use App\Services\StripeServicePlanService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use MercadoPago\Exceptions\MPApiException;
+use Stripe\Exception\ApiErrorException;
 
 class ServicePlanSubscriptionController extends Controller
 {
@@ -15,15 +15,15 @@ class ServicePlanSubscriptionController extends Controller
         ServicePlanSubscription $servicePlanSubscription,
         Request $request,
         ServicePlanSubscriptionCancellationService $cancellationService,
-        MercadoPagoService $mercadoPago,
+        StripeServicePlanService $stripe,
     ): RedirectResponse {
         $this->authorize('cancel', $servicePlanSubscription);
 
         try {
             $cancellationService->cancel($servicePlanSubscription, $request->user());
-        } catch (MPApiException $exception) {
+        } catch (ApiErrorException $exception) {
             return back()->withErrors([
-                'cancel' => $mercadoPago->apiExceptionMessage($exception),
+                'cancel' => $stripe->apiExceptionMessage($exception),
             ]);
         } catch (\InvalidArgumentException $exception) {
             return back()->withErrors([

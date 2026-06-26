@@ -14,6 +14,7 @@ use App\Http\Controllers\CepLookupController;
 use App\Http\Controllers\ServicePlanSubscribeController;
 use App\Http\Controllers\ServicePlanSubscriptionController;
 use App\Http\Controllers\MercadoPagoWebhookController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfileSubscribeController;
 use App\Http\Controllers\ProfileSubscriptionController;
@@ -28,6 +29,9 @@ use Inertia\Inertia;
 
 Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class)
     ->name('webhooks.mercadopago');
+
+Route::post('/webhooks/stripe', StripeWebhookController::class)
+    ->name('webhooks.stripe');
 
 Route::get('/barbearias/{username}', [PublicProfileController::class, 'show'])
     ->name('profile.public');

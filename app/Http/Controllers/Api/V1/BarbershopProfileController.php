@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\BarbershopServicePlanService;
-use App\Services\MercadoPagoService;
+use App\Services\StripeServicePlanService;
 use Illuminate\Http\JsonResponse;
 
 class BarbershopProfileController extends Controller
@@ -22,6 +22,8 @@ class BarbershopProfileController extends Controller
             abort(404);
         }
 
+        $stripe = app(StripeServicePlanService::class);
+
         return response()->json([
             'profile' => [
                 'name' => $barbershop->name,
@@ -31,8 +33,8 @@ class BarbershopProfileController extends Controller
                 'member_since' => $barbershop->created_at->translatedFormat('F Y'),
             ],
             'service_plans' => $servicePlanService->publicPlansPayload($barbershop),
-            'mercadopago_configured' => app(MercadoPagoService::class)->isConfigured(),
-            'payment_config' => app(MercadoPagoService::class)->mobilePaymentConfig(),
+            'stripe_configured' => $stripe->isConfigured(),
+            'payment_config' => $stripe->mobilePaymentConfig(),
         ]);
     }
 }

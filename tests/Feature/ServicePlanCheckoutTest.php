@@ -7,10 +7,10 @@ use App\Models\BarbershopServicePackage;
 use App\Models\BarbershopMembership;
 use App\Models\ServicePlanSubscription;
 use App\Models\User;
-use App\Services\MercadoPagoService;
+use App\Services\StripeServicePlanService;
 use App\Services\ServicePlanSubscriptionSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use MercadoPago\Resources\PreApproval;
+use Stripe\Subscription;
 use Tests\Support\TestTaxDocuments;
 use Tests\TestCase;
 
@@ -36,19 +36,15 @@ class ServicePlanCheckoutTest extends TestCase
             ->where('type', BarbershopServicePackage::TYPE_CUT)
             ->update(['monthly_price' => 99, 'is_enabled' => true]);
 
-        config(['mercadopago.access_token' => 'TEST-fake-token']);
+        config([
+            'stripe.secret' => 'sk_test_fake',
+            'stripe.key' => 'pk_test_fake',
+        ]);
 
-        $preapproval = new PreApproval;
-        $preapproval->id = 'mp-preapproval-guest';
-        $preapproval->status = 'pending';
-        $preapproval->init_point = 'https://mercadopago.test/checkout-guest';
-
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
+        $this->mock(StripeServicePlanService::class, function ($mock) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
-            $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
-            $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
-            $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
-            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/checkout-guest');
+            $mock->shouldReceive('findOrCreateCustomer')->andReturn('cus_test');
+            $mock->shouldReceive('createWebCheckoutSession')->once()->andReturn('https://stripe.test/checkout-guest');
         });
 
         $this->from(route('profile.public', $barbershop->username))
@@ -61,7 +57,7 @@ class ServicePlanCheckoutTest extends TestCase
                 'package_type' => 'cut',
                 'addon_ids' => [],
             ])
-            ->assertRedirect('https://mercadopago.test/checkout-guest');
+            ->assertRedirect('https://stripe.test/checkout-guest');
 
         $customer = User::query()->where('email', 'cliente@example.com')->first();
 
@@ -90,7 +86,7 @@ class ServicePlanCheckoutTest extends TestCase
             ->where('type', BarbershopServicePackage::TYPE_CUT)
             ->update(['monthly_price' => 99, 'is_enabled' => true]);
 
-        config(['mercadopago.access_token' => 'TEST-fake-token']);
+        config(['stripe.secret' => 'TEST-fake-token']);
 
         $this->from(route('profile.public', $barbershop->username))
             ->post(route('service-plan.subscribe.register', $barbershop->username), [
@@ -108,7 +104,7 @@ class ServicePlanCheckoutTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_guest_can_register_without_mercadopago_and_save_pending_plan(): void
+    public function test_guest_can_register_without_stripe_and_save_pending_plan(): void
     {
         $barbershop = User::factory()->create();
 
@@ -116,7 +112,7 @@ class ServicePlanCheckoutTest extends TestCase
             ->where('type', BarbershopServicePackage::TYPE_CUT)
             ->update(['monthly_price' => 99, 'is_enabled' => true]);
 
-        config(['mercadopago.access_token' => null]);
+        config(['stripe.secret' => null, 'stripe.key' => null]);
 
         $this->from(route('profile.public', $barbershop->username))
             ->post(route('service-plan.subscribe.register', $barbershop->username), [
@@ -146,7 +142,7 @@ class ServicePlanCheckoutTest extends TestCase
             'subscriber_user_id' => $customer->id,
             'package_type' => 'cut',
             'status' => ServicePlanSubscription::STATUS_PENDING,
-            'mercadopago_preapproval_id' => null,
+            'stripe_subscription_id' => null,
         ]);
 
         $this->actingAs($customer)
@@ -163,7 +159,7 @@ class ServicePlanCheckoutTest extends TestCase
         $barbershop = User::factory()->create();
         $customer = User::factory()->customer()->create();
 
-        config(['mercadopago.access_token' => 'TEST-fake-token']);
+        config(['stripe.secret' => 'TEST-fake-token']);
 
         $this->actingAs($customer)
             ->from(route('profile.public', $barbershop->username))
@@ -192,19 +188,15 @@ class ServicePlanCheckoutTest extends TestCase
             'sort_order' => 0,
         ]);
 
-        config(['mercadopago.access_token' => 'TEST-fake-token']);
+        config([
+            'stripe.secret' => 'sk_test_fake',
+            'stripe.key' => 'pk_test_fake',
+        ]);
 
-        $preapproval = new PreApproval;
-        $preapproval->id = 'mp-preapproval-1';
-        $preapproval->status = 'pending';
-        $preapproval->init_point = 'https://mercadopago.test/checkout';
-
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
+        $this->mock(StripeServicePlanService::class, function ($mock) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
-            $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
-            $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
-            $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
-            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/checkout');
+            $mock->shouldReceive('findOrCreateCustomer')->andReturn('cus_test');
+            $mock->shouldReceive('createWebCheckoutSession')->once()->andReturn('https://stripe.test/checkout');
         });
 
         $this->actingAs($customer)
@@ -212,7 +204,7 @@ class ServicePlanCheckoutTest extends TestCase
                 'package_type' => 'cut',
                 'addon_ids' => [$addon->id],
             ])
-            ->assertRedirect('https://mercadopago.test/checkout');
+            ->assertRedirect('https://stripe.test/checkout');
 
         $this->assertDatabaseHas('service_plan_subscriptions', [
             'creator_user_id' => $barbershop->id,
@@ -220,7 +212,7 @@ class ServicePlanCheckoutTest extends TestCase
             'package_type' => 'cut',
             'monthly_total' => 114,
             'status' => ServicePlanSubscription::STATUS_PENDING,
-            'mercadopago_preapproval_id' => 'mp-preapproval-1',
+            'stripe_subscription_id' => null,
         ]);
     }
 
@@ -239,22 +231,25 @@ class ServicePlanCheckoutTest extends TestCase
             'payer_email' => $customer->email,
             'external_reference' => 'service-plan-test-ref',
             'status' => ServicePlanSubscription::STATUS_PENDING,
-            'mercadopago_preapproval_id' => 'mp-preapproval-2',
+            'stripe_subscription_id' => 'sub_test_sync',
+            'status' => ServicePlanSubscription::STATUS_PENDING,
         ]);
 
-        $preapproval = new PreApproval;
-        $preapproval->id = 'mp-preapproval-2';
-        $preapproval->external_reference = 'service-plan-test-ref';
-        $preapproval->status = 'authorized';
-        $preapproval->payer_email = $customer->email;
-        $preapproval->next_payment_date = null;
+        $stripeSubscription = Subscription::constructFrom([
+            'id' => 'sub_test_sync',
+            'status' => 'active',
+            'metadata' => [
+                'service_plan_subscription_id' => (string) $subscription->id,
+                'external_reference' => 'service-plan-test-ref',
+            ],
+            'current_period_end' => now()->addMonth()->timestamp,
+        ]);
 
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
-            $mock->shouldReceive('getPreApproval')->andReturn($preapproval);
-            $mock->shouldReceive('mapPreApprovalStatus')->andReturn('authorized');
+        $this->mock(StripeServicePlanService::class, function ($mock) use ($stripeSubscription) {
+            $mock->shouldReceive('mapSubscriptionStatus')->andReturn(ServicePlanSubscription::STATUS_AUTHORIZED);
         });
 
-        app(ServicePlanSubscriptionSyncService::class)->syncByMercadoPagoId('mp-preapproval-2');
+        app(ServicePlanSubscriptionSyncService::class)->syncFromStripeSubscription($stripeSubscription);
 
         $this->assertDatabaseHas('service_plan_subscriptions', [
             'id' => $subscription->id,

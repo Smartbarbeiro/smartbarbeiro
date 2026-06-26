@@ -18,7 +18,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
 
-        Route::post('/barbearias/{username}/service-plans/checkout', [ServicePlanController::class, 'checkout']);
+        Route::post('/barbearias/{username}/service-plans/checkout/prepare', [ServicePlanController::class, 'prepareCheckout']);
+        Route::post('/barbearias/{username}/service-plans/checkout/confirm', [ServicePlanController::class, 'confirmCheckout']);
         Route::post('/barbearias/{username}/membership', [ServicePlanController::class, 'membership']);
     });
 });

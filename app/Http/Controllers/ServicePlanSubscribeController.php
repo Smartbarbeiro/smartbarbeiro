@@ -6,9 +6,9 @@ use App\Models\BarbershopMembership;
 use App\Models\ServicePlanSubscription;
 use App\Models\User;
 use App\Rules\UniqueTaxDocument;
-use App\Services\MercadoPagoService;
 use App\Services\ServicePlanCheckoutService;
 use App\Services\ServicePlanSubscriptionSyncService;
+use App\Services\StripeServicePlanService;
 use App\Support\TaxDocument;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
-use MercadoPago\Exceptions\MPApiException;
+use Stripe\Exception\ApiErrorException;
 
 class ServicePlanSubscribeController extends Controller
 {
@@ -26,7 +26,7 @@ class ServicePlanSubscribeController extends Controller
         string $username,
         Request $request,
         ServicePlanCheckoutService $checkoutService,
-        MercadoPagoService $mercadoPago,
+        StripeServicePlanService $stripe,
     ): RedirectResponse {
         $barbershop = User::query()
             ->where('username', $username)
@@ -40,7 +40,7 @@ class ServicePlanSubscribeController extends Controller
             'addon_ids.*' => ['integer'],
         ]);
 
-        if (! $mercadoPago->isConfigured()) {
+        if (! $stripe->isConfigured()) {
             return back()->withErrors([
                 'checkout' => __('messages.payments_not_configured'),
             ]);
@@ -57,9 +57,9 @@ class ServicePlanSubscribeController extends Controller
             return back()->withErrors([
                 'checkout' => $exception->getMessage(),
             ]);
-        } catch (MPApiException $exception) {
+        } catch (ApiErrorException $exception) {
             return back()->withErrors([
-                'checkout' => $mercadoPago->apiExceptionMessage($exception),
+                'checkout' => $stripe->apiExceptionMessage($exception),
             ]);
         } catch (\RuntimeException $exception) {
             return back()->withErrors([
@@ -74,7 +74,7 @@ class ServicePlanSubscribeController extends Controller
         string $username,
         Request $request,
         ServicePlanCheckoutService $checkoutService,
-        MercadoPagoService $mercadoPago,
+        StripeServicePlanService $stripe,
     ): RedirectResponse {
         if ($request->user()) {
             return redirect()->route('profile.public', $username);
@@ -114,7 +114,7 @@ class ServicePlanSubscribeController extends Controller
 
         Auth::login($user);
 
-        if (! $mercadoPago->isConfigured()) {
+        if (! $stripe->isConfigured()) {
             try {
                 $checkoutService->savePendingSelection(
                     $barbershop,
@@ -144,9 +144,9 @@ class ServicePlanSubscribeController extends Controller
             return back()->withErrors([
                 'checkout' => $exception->getMessage(),
             ]);
-        } catch (MPApiException $exception) {
+        } catch (ApiErrorException $exception) {
             return back()->withErrors([
-                'checkout' => $mercadoPago->apiExceptionMessage($exception),
+                'checkout' => $stripe->apiExceptionMessage($exception),
             ]);
         } catch (\RuntimeException $exception) {
             return back()->withErrors([
@@ -174,10 +174,10 @@ class ServicePlanSubscribeController extends Controller
             ->latest()
             ->first();
 
-        if ($subscription?->mercadopago_preapproval_id) {
+        if ($request->filled('session_id')) {
             try {
-                $syncService->syncByMercadoPagoId($subscription->mercadopago_preapproval_id);
-                $subscription->refresh();
+                $syncService->syncByCheckoutSessionId($request->string('session_id')->toString());
+                $subscription?->refresh();
             } catch (\Throwable) {
                 // Webhook will reconcile; show return page with current status.
             }

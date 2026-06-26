@@ -2,34 +2,34 @@
 
 namespace App\Services;
 
+use App\Models\BarbershopMembership;
 use App\Models\ServicePlanSubscription;
-use MercadoPago\Resources\PreApproval;
+use Stripe\Checkout\Session;
+use Stripe\Subscription;
 
 class ServicePlanSubscriptionSyncService
 {
     public function __construct(
-        private MercadoPagoService $mercadoPago,
-        private ServicePlanCheckoutService $checkoutService,
+        private StripeServicePlanService $stripe,
     ) {}
 
-    public function syncFromPreApproval(PreApproval $preapproval): ?ServicePlanSubscription
+    public function syncFromStripeSubscription(Subscription $stripeSubscription): ?ServicePlanSubscription
     {
-        $subscription = ServicePlanSubscription::query()
-            ->where('external_reference', $preapproval->external_reference)
-            ->when($preapproval->id, fn ($query) => $query->orWhere('mercadopago_preapproval_id', $preapproval->id))
-            ->first();
+        $subscription = $this->findLocalSubscription($stripeSubscription);
 
         if (! $subscription) {
             return null;
         }
 
-        $status = $this->mercadoPago->mapPreApprovalStatus($preapproval->status);
+        $status = $this->stripe->mapSubscriptionStatus($stripeSubscription->status);
 
         $subscription->fill([
-            'mercadopago_preapproval_id' => $preapproval->id ?? $subscription->mercadopago_preapproval_id,
+            'stripe_subscription_id' => $stripeSubscription->id ?? $subscription->stripe_subscription_id,
             'status' => $status,
-            'payer_email' => $preapproval->payer_email ?? $subscription->payer_email,
-            'next_payment_date' => $preapproval->next_payment_date,
+            'payer_email' => $stripeSubscription->metadata['payer_email'] ?? $subscription->payer_email,
+            'next_payment_date' => isset($stripeSubscription->current_period_end)
+                ? now()->createFromTimestamp($stripeSubscription->current_period_end)
+                : $subscription->next_payment_date,
         ]);
 
         if ($status === ServicePlanSubscription::STATUS_CANCELLED && ! $subscription->cancelled_at) {
@@ -38,15 +38,91 @@ class ServicePlanSubscriptionSyncService
 
         $subscription->save();
 
-        $this->checkoutService->ensureMembership($subscription);
+        $this->ensureMembership($subscription);
 
         return $subscription;
     }
 
-    public function syncByMercadoPagoId(string $preapprovalId): ?ServicePlanSubscription
+    public function syncByStripeId(string $stripeSubscriptionId): ?ServicePlanSubscription
     {
-        $preapproval = $this->mercadoPago->getPreApproval($preapprovalId);
+        $stripeSubscription = $this->stripe->retrieveSubscription($stripeSubscriptionId);
 
-        return $this->syncFromPreApproval($preapproval);
+        return $this->syncFromStripeSubscription($stripeSubscription);
+    }
+
+    public function syncByCheckoutSessionId(string $sessionId): ?ServicePlanSubscription
+    {
+        $session = $this->stripe->client()->checkout->sessions->retrieve($sessionId, [
+            'expand' => ['subscription'],
+        ]);
+
+        if (! $session->subscription) {
+            return null;
+        }
+
+        $stripeSubscription = $session->subscription instanceof Subscription
+            ? $session->subscription
+            : $this->stripe->retrieveSubscription((string) $session->subscription);
+
+        $subscription = $this->findLocalSubscription($stripeSubscription, $session);
+
+        if ($subscription && ! $subscription->stripe_subscription_id) {
+            $subscription->update(['stripe_subscription_id' => $stripeSubscription->id]);
+        }
+
+        return $this->syncFromStripeSubscription($stripeSubscription);
+    }
+
+    private function findLocalSubscription(Subscription $stripeSubscription, ?Session $session = null): ?ServicePlanSubscription
+    {
+        $metadata = $stripeSubscription->metadata?->toArray() ?? [];
+
+        if (filled($metadata['service_plan_subscription_id'] ?? null)) {
+            $subscription = ServicePlanSubscription::query()->find($metadata['service_plan_subscription_id']);
+
+            if ($subscription) {
+                return $subscription;
+            }
+        }
+
+        if (filled($metadata['external_reference'] ?? null)) {
+            $subscription = ServicePlanSubscription::query()
+                ->where('external_reference', $metadata['external_reference'])
+                ->first();
+
+            if ($subscription) {
+                return $subscription;
+            }
+        }
+
+        if ($session && filled($session->metadata['service_plan_subscription_id'] ?? null)) {
+            return ServicePlanSubscription::query()->find($session->metadata['service_plan_subscription_id']);
+        }
+
+        if ($session && filled($session->metadata['external_reference'] ?? null)) {
+            return ServicePlanSubscription::query()
+                ->where('external_reference', $session->metadata['external_reference'])
+                ->first();
+        }
+
+        if (filled($stripeSubscription->id)) {
+            return ServicePlanSubscription::query()
+                ->where('stripe_subscription_id', $stripeSubscription->id)
+                ->first();
+        }
+
+        return null;
+    }
+
+    private function ensureMembership(ServicePlanSubscription $subscription): void
+    {
+        if (! $subscription->isActive()) {
+            return;
+        }
+
+        BarbershopMembership::firstOrCreate([
+            'barbershop_user_id' => $subscription->creator_user_id,
+            'member_user_id' => $subscription->subscriber_user_id,
+        ]);
     }
 }

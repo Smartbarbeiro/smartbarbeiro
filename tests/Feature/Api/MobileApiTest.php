@@ -45,7 +45,7 @@ class MobileApiTest extends TestCase
 
         $profile->assertOk()
             ->assertJsonPath('profile.username', $barbershop->username)
-            ->assertJsonStructure(['service_plans', 'mercadopago_configured']);
+            ->assertJsonStructure(['service_plans', 'stripe_configured']);
     }
 
     public function test_client_can_register_with_barbershop(): void

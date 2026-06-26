@@ -1456,6 +1456,8 @@ li {
     display: block;
     font-weight: 700;
     letter-spacing: 0.04em;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
     padding: 16px 32px;
     text-transform: uppercase;
     width: 100%;
@@ -1513,6 +1515,10 @@ li {
 .plan-builder .plan-checkout {
     max-width: 620px;
     margin: 0 auto;
+}
+
+.plan-builder .section-header {
+    margin-top: 1.5rem;
 }
 
 .plan-builder .back-button {
@@ -1623,6 +1629,14 @@ li {
 
 .plan-builder .plan-payment-row-spaced {
     padding-top: 20px;
+}
+
+.plan-builder .step-signup-form--plain {
+    border: none;
+}
+
+.plan-builder .step-signup-form--plain .step-signup-section {
+    border: none;
 }
 
 /* Marketing landing (home, login) — index.html */

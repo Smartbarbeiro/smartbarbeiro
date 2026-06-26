@@ -24,6 +24,7 @@ class ServicePlanSubscription extends Model
         'currency_id',
         'payer_email',
         'mercadopago_preapproval_id',
+        'stripe_subscription_id',
         'external_reference',
         'status',
         'next_payment_date',
