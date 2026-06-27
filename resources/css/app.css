@@ -665,7 +665,7 @@ a:hover {
     inset: 0;
     background:
         linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.88)),
-        url('/images/barbeiro.svg') center / cover no-repeat;
+        url('/images/barbeiro.jpg') center / cover no-repeat;
     filter: grayscale(100%);
     z-index: 0;
 }
@@ -2063,7 +2063,7 @@ li {
 .marketing-hero-1 {
     background: radial-gradient(circle, #4a4a4a 0%, #1a1a1a 100%);
     background-color: #000000;
-    background-image: url('/images/barbeiro.svg');
+    background-image: url('/images/barbeiro.jpg');
     background-position: right center;
     background-size: auto 100%;
     background-repeat: no-repeat;
@@ -2511,7 +2511,7 @@ li {
 
 .marketing-hero-3 {
     background-color: #000000;
-    background-image: url('/images/celular-mock.svg');
+    background-image: url('/images/celular-mock.png');
     background-position: right center;
     background-size: auto 100%;
     background-repeat: no-repeat;
@@ -2542,7 +2542,7 @@ li {
     letter-spacing: 0.08em;
     text-shadow: 0 4px 4px rgba(0, 0, 0, 0.5);
     color: #ffffff;
-    background-image: url('/images/line.svg');
+    background-image: url('/images/line.png');
     background-position: 0 0.9em;
     background-size: 518px 9px;
     background-repeat: repeat-x;
@@ -2622,6 +2622,12 @@ li {
 .marketing-feature-card:hover {
     transform: translateY(-10px);
     box-shadow: 0 10px 30px rgba(0, 13, 255, 0.3);
+}
+
+.marketing-feature-icon {
+    display: block;
+    margin-inline: auto;
+    margin-bottom: 1rem;
 }
 
 .marketing-feature-card h3 {
