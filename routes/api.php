@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BarbershopProfileController;
+use App\Http\Controllers\Api\V1\BarbershopSearchController;
 use App\Http\Controllers\Api\V1\ServicePlanController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/google', [AuthController::class, 'googleLogin']);
     Route::post('/auth/google/register', [AuthController::class, 'googleRegister']);
 
+    Route::get('/barbearias/search', [BarbershopSearchController::class, 'index']);
     Route::get('/barbearias/{username}', [BarbershopProfileController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
