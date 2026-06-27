@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ServicePlanSubscription extends Model
 {
@@ -49,6 +50,11 @@ class ServicePlanSubscription extends Model
     public function subscriber(): BelongsTo
     {
         return $this->belongsTo(User::class, 'subscriber_user_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(ServicePlanSubscriptionPayment::class);
     }
 
     public function isActive(): bool

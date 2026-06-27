@@ -9,7 +9,7 @@ import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
     profile: {
@@ -41,6 +41,10 @@ const props = defineProps({
         default: null,
     },
     mercadopagoConfigured: {
+        type: Boolean,
+        default: false,
+    },
+    stripeConfigured: {
         type: Boolean,
         default: false,
     },
@@ -136,7 +140,8 @@ const showMobileAppPromo = computed(
         ),
 );
 
-const planCheckoutActive = ref(false);
+const planCheckoutStep = ref(null);
+const planCheckoutActive = computed(() => Boolean(planCheckoutStep.value));
 const ownerQrExpanded = ref(false);
 const preferredDayPickerOpen = ref(false);
 
@@ -152,33 +157,27 @@ const preferredDayPickerCloseable = computed(
     () => !props.needsPreferredHaircutDay,
 );
 
-const scrollToPlanSection = () => {
-    if (window.location.hash !== '#plano') {
+const scrollToCheckoutSection = () => {
+    const hash = window.location.hash;
+
+    if (hash !== '#plano' && hash !== '#pagamento') {
         return;
     }
 
+    const targetId = hash === '#pagamento' ? 'pagamento' : 'plano';
+
     document
-        .getElementById('plano')
+        .getElementById(targetId)
         ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
 onMounted(() => {
-    scrollToPlanSection();
-    window.addEventListener('hashchange', scrollToPlanSection);
+    scrollToCheckoutSection();
+    window.addEventListener('hashchange', scrollToCheckoutSection);
 });
 
 onUnmounted(() => {
-    window.removeEventListener('hashchange', scrollToPlanSection);
-});
-
-watch(planCheckoutActive, (active) => {
-    if (!active || props.isOwner) {
-        return;
-    }
-
-    const url = `${window.location.pathname}#plano`;
-    window.history.replaceState(null, '', url);
-    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    window.removeEventListener('hashchange', scrollToCheckoutSection);
 });
 </script>
 
@@ -373,10 +372,11 @@ watch(planCheckoutActive, (active) => {
                         :is-authenticated="isAuthenticated"
                         :is-owner="isOwner"
                         :mercadopago-configured="mercadopagoConfigured"
+                        :stripe-configured="stripeConfigured"
                         :has-active-service-plan-subscription="hasActiveServicePlanSubscription"
                         :pending-service-plan-subscription="pendingServicePlanSubscription"
                         :has-signed-up="hasSignedUp"
-                        @checkout-step-change="planCheckoutActive = $event"
+                        @checkout-step-change="planCheckoutStep = $event"
                     />
                 </div>
             </section>

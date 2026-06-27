@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
+import ServicePlanPaymentHistory from '@/Components/ServicePlanPaymentHistory.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -144,6 +145,11 @@ const statusClass = (status) => {
                         />
                     </div>
                 </div>
+
+                <ServicePlanPaymentHistory
+                    v-if="subscription.kind === 'service_plan'"
+                    :payment-history="subscription.payment_history ?? []"
+                />
             </div>
         </div>
     </AuthenticatedLayout>

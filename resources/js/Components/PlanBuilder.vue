@@ -2,8 +2,10 @@
 import InputError from '@/Components/InputError.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import StepSignupForm from '@/Components/StepSignupForm.vue';
-import { Link, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+
+const page = usePage();
 
 const props = defineProps({
     servicePlans: {
@@ -30,7 +32,7 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
-    mercadopagoConfigured: {
+    stripeConfigured: {
         type: Boolean,
         default: false,
     },
@@ -53,7 +55,7 @@ const emit = defineEmits(['checkout-step-change']);
 const selectedPackageType = ref(props.servicePlans.packages[0]?.type ?? null);
 const selectedAddonIds = ref([]);
 const showAddons = ref(false);
-const showSummary = ref(false);
+const checkoutStep = ref(null);
 const paymentMethod = ref(null);
 
 const pixImageUrl = '/images/pix.svg';
@@ -176,11 +178,11 @@ const buildPlan = () => {
     }
 
     paymentMethod.value = null;
-    showSummary.value = true;
+    checkoutStep.value = 'summary';
 };
 
 const openPendingCheckout = () => {
-    if (!props.pendingServicePlanSubscription || !props.mercadopagoConfigured) {
+    if (!props.pendingServicePlanSubscription) {
         return;
     }
 
@@ -190,7 +192,31 @@ const openPendingCheckout = () => {
         ...(props.pendingServicePlanSubscription.selected_addon_ids ?? []),
     ];
     paymentMethod.value = null;
-    showSummary.value = true;
+    checkoutStep.value = 'payment';
+};
+
+const restorePendingCheckout = () => {
+    if (
+        props.isOwner ||
+        !props.isAuthenticated ||
+        props.hasActiveServicePlanSubscription ||
+        !props.pendingServicePlanSubscription
+    ) {
+        return;
+    }
+
+    openPendingCheckout();
+};
+
+const goToPayment = () => {
+    checkoutStep.value = 'payment';
+};
+
+const backToSummary = () => {
+    paymentMethod.value = null;
+    checkoutForm.clearErrors();
+    guestRegisterForm.clearErrors();
+    checkoutStep.value = 'summary';
 };
 
 const confirmCheckoutPayment = () => {
@@ -208,7 +234,7 @@ const confirmSubscription = (packageType = selectedPackageType.value, addonIds =
         return;
     }
 
-    if (!props.mercadopagoConfigured) {
+    if (!props.stripeConfigured) {
         return;
     }
 
@@ -239,7 +265,6 @@ const confirmPendingPayment = () => {
 const planBuilderSubmitLabel = computed(() => {
     if (
         props.pendingServicePlanSubscription &&
-        props.mercadopagoConfigured &&
         props.isAuthenticated &&
         !props.isOwner
     ) {
@@ -252,7 +277,6 @@ const planBuilderSubmitLabel = computed(() => {
 const handlePlanSubmit = () => {
     if (
         props.pendingServicePlanSubscription &&
-        props.mercadopagoConfigured &&
         props.isAuthenticated &&
         !props.isOwner
     ) {
@@ -266,11 +290,58 @@ const handlePlanSubmit = () => {
 
 const isGuest = computed(() => !props.isAuthenticated && !props.isOwner);
 
+const checkoutError = computed(
+    () =>
+        checkoutForm.errors.checkout ??
+        page.props.errors?.checkout ??
+        guestRegisterForm.errors.checkout ??
+        null,
+);
+
 const editPlan = () => {
-    showSummary.value = false;
+    checkoutStep.value = null;
     paymentMethod.value = null;
     checkoutForm.clearErrors();
     guestRegisterForm.clearErrors();
+};
+
+const scrollToCheckoutHash = (hash) => {
+    const targetId = hash === '#pagamento' ? 'pagamento' : 'plano';
+
+    document
+        .getElementById(targetId)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const syncCheckoutHash = (step) => {
+    const hash = step === 'payment' ? '#pagamento' : step ? '#plano' : '';
+    const url = `${window.location.pathname}${window.location.search}${hash}`;
+
+    if (window.location.hash !== hash) {
+        window.history.replaceState(null, '', url);
+    }
+
+    if (hash) {
+        scrollToCheckoutHash(hash);
+    }
+};
+
+const handleCheckoutHashChange = () => {
+    if (!checkoutStep.value) {
+        return;
+    }
+
+    if (window.location.hash === '#pagamento' && checkoutStep.value === 'summary') {
+        checkoutStep.value = 'payment';
+        return;
+    }
+
+    if (
+        window.location.hash === '#plano' &&
+        checkoutStep.value === 'payment'
+    ) {
+        backToSummary();
+    }
 };
 
 const submitGuestRegistration = () => {
@@ -289,8 +360,25 @@ const submitGuestRegistration = () => {
     );
 };
 
-watch(showSummary, (active) => {
-    emit('checkout-step-change', active);
+watch(checkoutStep, (step) => {
+    emit('checkout-step-change', step);
+    syncCheckoutHash(step);
+});
+
+onMounted(() => {
+    window.addEventListener('hashchange', handleCheckoutHashChange);
+    restorePendingCheckout();
+});
+
+watch(
+    () => props.pendingServicePlanSubscription,
+    () => {
+        restorePendingCheckout();
+    },
+);
+
+onUnmounted(() => {
+    window.removeEventListener('hashchange', handleCheckoutHashChange);
 });
 </script>
 
@@ -315,7 +403,7 @@ watch(showSummary, (active) => {
         </div>
 
         <form class="plan-form" @submit.prevent="handlePlanSubmit">
-            <template v-if="!showSummary || isOwner">
+            <template v-if="!checkoutStep || isOwner">
                 <fieldset>
                     <legend class="visually-hidden">Escolha seu plano mensal</legend>
                     <div class="row g-3 justify-content-center">
@@ -386,13 +474,15 @@ watch(showSummary, (active) => {
                 <button
                     v-if="availableAddons.length > 0 && !showAddons"
                     type="button"
-                    class="btn-optionals"
+                    class="btn-optionals og-btn og-btn--secondary"
                     @click="showAddons = true"
                 >
-                    <span class="btn-optionals-icon" aria-hidden="true">
-                        <i class="bi bi-plus-lg"></i>
+                    <span class="og-btn__label">
+                        <span class="btn-optionals-icon" aria-hidden="true">
+                            <i class="bi bi-plus-lg"></i>
+                        </span>
+                        ADICIONAR OPCIONAIS
                     </span>
-                    ADICIONAR OPCIONAIS
                 </button>
 
                 <div
@@ -423,20 +513,20 @@ watch(showSummary, (active) => {
 
                 <button
                     type="submit"
-                    class="btn btn-plan-submit"
+                    class="btn btn-plan-submit og-btn og-btn--primary"
                     :disabled="hasActiveServicePlanSubscription"
                 >
-                    {{ planBuilderSubmitLabel }}
+                    <span class="og-btn__label">{{ planBuilderSubmitLabel }}</span>
                 </button>
 
-                <p v-if="isGuest && !showSummary" class="plan-guest-login mt-3 mb-0">
+                <p v-if="isGuest && !checkoutStep" class="plan-guest-login mt-3 mb-0">
                     Já tem uma conta,
                     <Link :href="loginUrl">entre aqui</Link>
                 </p>
             </template>
 
             <div
-                v-if="showSummary && selectedPackage"
+                v-if="checkoutStep === 'summary' && selectedPackage"
                 :class="
                     isOwner
                         ? 'alert alert-info mb-3 mt-3 text-start'
@@ -448,12 +538,14 @@ watch(showSummary, (active) => {
                     <div class="section-header mb-4">
                         <button
                             type="button"
-                            class="back-button border-0"
+                            class="back-button border-0 og-btn og-btn--neutral"
                             :disabled="checkoutForm.processing"
                             @click="editPlan"
                         >
-                            <i class="bi bi-arrow-left" aria-hidden="true"></i>
-                            Voltar
+                            <span class="og-btn__label">
+                                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                                Voltar
+                            </span>
                         </button>
                     </div>
 
@@ -506,7 +598,62 @@ watch(showSummary, (active) => {
                         </p>
                     </div>
 
-                    <fieldset class="mt-4">
+                    <div class="row g-3 justify-content-center mt-4">
+                        <div class="col-12 col-md-6">
+                            <button
+                                type="button"
+                                class="btn btn-plan-submit og-btn og-btn--primary w-100"
+                                @click="goToPayment"
+                            >
+                                <span class="og-btn__label">
+                                    CONTINUAR PARA PAGAMENTO
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                v-if="checkoutStep === 'payment' && selectedPackage"
+                id="pagamento"
+                :class="
+                    isOwner
+                        ? 'alert alert-info mb-3 mt-3 text-start'
+                        : 'plan-checkout plan-payment text-start'
+                "
+                :role="isOwner ? 'alert' : undefined"
+            >
+                <div :class="{ 'plan-checkout text-start': isOwner }">
+                    <div class="section-header mb-4">
+                        <button
+                            type="button"
+                            class="back-button border-0 og-btn og-btn--neutral"
+                            :disabled="
+                                checkoutForm.processing ||
+                                guestRegisterForm.processing
+                            "
+                            @click="backToSummary"
+                        >
+                            <span class="og-btn__label">
+                                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                                Voltar
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="carrinho-total mb-4">
+                        <p class="h6 fw-bold mb-1">Total do plano</p>
+                        <p class="h5 fw-bold mb-0">
+                            {{ formattedTotal }}/mês
+                        </p>
+                    </div>
+
+                    <p class="h6 fw-bold mb-3">
+                        Método de Pagamento:
+                    </p>
+
+                    <fieldset>
                         <legend class="visually-hidden">
                             Método de pagamento
                         </legend>
@@ -560,13 +707,10 @@ watch(showSummary, (active) => {
                         </div>
                     </fieldset>
 
-                    <InputError
-                        class="mt-3 mb-0"
-                        :message="checkoutForm.errors.checkout"
-                    />
+                    <InputError class="mt-3 mb-0" :message="checkoutError" />
 
                     <p
-                        v-if="!isOwner && !mercadopagoConfigured && (isGuest || isAuthenticated)"
+                        v-if="!isOwner && !stripeConfigured && (isGuest || isAuthenticated)"
                         class="small text-warning mt-4 mb-0"
                     >
                         Pagamentos indisponíveis no momento. Volte aqui para
@@ -587,10 +731,7 @@ watch(showSummary, (active) => {
                             @submit="submitGuestRegistration"
                         />
 
-                        <InputError
-                            class="mt-3 mb-0"
-                            :message="guestRegisterForm.errors.checkout"
-                        />
+                        <InputError class="mt-3 mb-0" :message="checkoutError" />
 
                         <p class="plan-guest-login mt-3 mb-0">
                             Já tem uma conta,
@@ -605,7 +746,7 @@ watch(showSummary, (active) => {
                         <div
                             v-if="
                                 isAuthenticated &&
-                                mercadopagoConfigured &&
+                                stripeConfigured &&
                                 !isOwner &&
                                 paymentMethod
                             "
@@ -613,18 +754,20 @@ watch(showSummary, (active) => {
                         >
                             <button
                                 type="button"
-                                class="btn btn-plan-submit w-100"
+                                class="btn btn-plan-submit og-btn og-btn--primary w-100"
                                 :disabled="
                                     checkoutForm.processing ||
                                     hasActiveServicePlanSubscription
                                 "
                                 @click="confirmCheckoutPayment"
                             >
-                                {{
-                                    checkoutForm.processing
-                                        ? 'REDIRECIONANDO...'
-                                        : 'CONFIRMAR PAGAMENTO'
-                                }}
+                                <span class="og-btn__label">
+                                    {{
+                                        checkoutForm.processing
+                                            ? 'REDIRECIONANDO...'
+                                            : 'CONFIRMAR PAGAMENTO'
+                                    }}
+                                </span>
                             </button>
                         </div>
 
@@ -634,10 +777,10 @@ watch(showSummary, (active) => {
                         >
                             <button
                                 type="button"
-                                class="btn btn-plan-submit w-100"
+                                class="btn btn-plan-submit og-btn og-btn--primary w-100"
                                 disabled
                             >
-                                CONFIRMAR PAGAMENTO
+                                <span class="og-btn__label">CONFIRMAR PAGAMENTO</span>
                             </button>
                         </div>
                     </div>

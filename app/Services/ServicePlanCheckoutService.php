@@ -43,7 +43,7 @@ class ServicePlanCheckoutService
         );
 
         $successUrl = route('service-plan.subscribe.return', $barbershop->username).'?session_id={CHECKOUT_SESSION_ID}';
-        $cancelUrl = route('profile.public', $barbershop->username);
+        $cancelUrl = route('profile.public', $barbershop->username).'#pagamento';
 
         $checkoutUrl = $this->stripe->createWebCheckoutSession(
             $subscription,

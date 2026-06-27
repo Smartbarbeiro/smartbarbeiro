@@ -124,7 +124,7 @@ class ServicePlanCheckoutTest extends TestCase
                 'package_type' => 'cut',
                 'addon_ids' => [],
             ])
-            ->assertRedirect(route('profile.public', $barbershop->username))
+            ->assertRedirect(route('profile.public', $barbershop->username).'#pagamento')
             ->assertSessionHas('status', 'service-plan-signup-pending');
 
         $customer = User::query()->where('email', 'sem-pagamento@example.com')->first();

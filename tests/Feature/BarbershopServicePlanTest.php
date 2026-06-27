@@ -120,7 +120,25 @@ class BarbershopServicePlanTest extends TestCase
                 ->has('mobileApp', fn ($mobileApp) => $mobileApp
                     ->has('name')
                     ->has('play_store_url')
-                    ->has('app_store_url')));
+                    ->has('app_store_url'))
+                ->where('stripeConfigured', false));
+    }
+
+    public function test_public_profile_uses_stripe_for_service_plan_checkout(): void
+    {
+        $barbershop = User::factory()->create();
+
+        config([
+            'stripe.secret' => 'sk_test_fake',
+            'stripe.key' => 'pk_test_fake',
+            'mercadopago.access_token' => 'TEST-fake-token',
+        ]);
+
+        $this->get(route('profile.public', $barbershop->username))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('stripeConfigured', true)
+                ->where('mercadopagoConfigured', true));
     }
 
     public function test_customer_cannot_update_service_plans(): void

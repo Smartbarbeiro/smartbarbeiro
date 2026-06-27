@@ -29,6 +29,14 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    title: {
+        type: String,
+        default: 'Cadastrar',
+    },
+    subtitle: {
+        type: String,
+        default: 'Preencha as informações',
+    },
 });
 
 const emit = defineEmits(['submit']);
@@ -246,8 +254,8 @@ defineExpose({
         :class="{ 'step-signup-form--plain': plain }"
     >
         <header v-if="!hideHeader" class="step-signup-form__header">
-            <h1 class="step-signup-form__title">Cadastrar</h1>
-            <p class="step-signup-form__subtitle">Preencha as informações</p>
+            <h1 class="step-signup-form__title">{{ title }}</h1>
+            <p class="step-signup-form__subtitle">{{ subtitle }}</p>
         </header>
 
         <form class="step-signup-form__body" @submit.prevent>

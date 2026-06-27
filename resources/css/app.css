@@ -1377,6 +1377,9 @@ li {
 }
 
 .plan-builder {
+    --plan-builder-blue: #000dff;
+    --plan-builder-blue-dark: #0009cc;
+    --plan-builder-blue-glow: rgba(0, 13, 255, 0.42);
     text-align: center;
     padding-bottom: 2rem;
 }
@@ -1470,13 +1473,253 @@ li {
     background: #ffdf11;
 }
 
+.plan-builder .og-btn {
+    border: 0;
+    cursor: pointer;
+    outline: 1px solid transparent;
+    outline-offset: 2px;
+    padding: 0;
+    position: relative;
+    transition: 150ms all;
+}
+
+.plan-builder .og-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.plan-builder .og-btn::before {
+    border-radius: inherit;
+    content: '';
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+.plan-builder .og-btn::after {
+    border-radius: inherit;
+    content: '';
+    height: calc(100% - 2px);
+    left: 1px;
+    position: absolute;
+    top: 1px;
+    width: calc(100% - 2px);
+}
+
+.plan-builder .og-btn__label {
+    align-items: center;
+    border-radius: inherit;
+    display: flex;
+    flex-grow: 1;
+    gap: inherit;
+    justify-content: center;
+    position: relative;
+    text-align: center;
+    transition: 150ms all;
+    z-index: 5;
+}
+
+.plan-builder .og-btn__label::before {
+    border-radius: inherit;
+    bottom: 0;
+    content: '';
+    left: 0;
+    opacity: 0.07;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: 150ms all;
+}
+
+.plan-builder .og-btn:hover .og-btn__label::before {
+    opacity: 0.14;
+}
+
+.plan-builder .og-btn:focus-visible {
+    outline: 1px solid rgba(0, 13, 255, 0.45);
+    outline-offset: 2px;
+}
+
+.plan-builder .og-btn:active .og-btn__label::before {
+    opacity: 0.14;
+}
+
+.plan-builder .og-btn--primary {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.12) 0%,
+            rgba(255, 255, 255, 0) 100%
+        ),
+        var(--plan-builder-blue);
+    box-shadow: 0 0 0 1px #0009cc, 0 1px 2px 0 rgba(0, 9, 120, 0.5);
+}
+
+.plan-builder .og-btn--primary::before {
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.16) 16%,
+        rgba(255, 255, 255, 0) 100%
+    );
+}
+
+.plan-builder .og-btn--primary::after {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.12) 0%,
+            rgba(255, 255, 255, 0) 100%
+        ),
+        var(--plan-builder-blue);
+}
+
+.plan-builder .og-btn--primary:active,
+.plan-builder .og-btn--primary:active::after {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.16) 100%
+        ),
+        var(--plan-builder-blue-dark);
+}
+
+.plan-builder .og-btn--primary:active .og-btn__label::before {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.16) 100%
+        ),
+        var(--plan-builder-blue-dark);
+}
+
+.plan-builder .og-btn--secondary {
+    background: #fff;
+    box-shadow: 0 0 0 1px rgba(18, 55, 105, 0.08),
+        0 1px 2px 0 rgba(164, 172, 185, 0.24);
+}
+
+.plan-builder .og-btn--secondary::after {
+    background: transparent;
+}
+
+.plan-builder .og-btn--secondary .og-btn__label {
+    color: #36394a;
+}
+
+.plan-builder .og-btn--secondary:hover {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(193, 199, 208, 0.08) 100%
+        ),
+        #fff;
+    box-shadow: 0 0 0 1px rgba(18, 55, 105, 0.08),
+        0 1px 2px 0 rgba(164, 172, 185, 0.24),
+        0 3px 6px 0 rgba(164, 172, 185, 0.24);
+}
+
+.plan-builder .og-btn--secondary:hover .og-btn__label::before {
+    background: transparent;
+}
+
+.plan-builder .og-btn--secondary:active {
+    background: linear-gradient(
+            180deg,
+            rgba(193, 199, 208, 0.08) 0%,
+            rgba(255, 255, 255, 0.08) 100%
+        ),
+        #fff;
+}
+
+.plan-builder .og-btn--secondary:active .og-btn__label::before {
+    opacity: 0;
+}
+
+.plan-builder .og-btn--neutral {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.16) 0%,
+            rgba(255, 255, 255, 0) 100%
+        ),
+        #d9d9d9;
+    box-shadow: 0 0 0 1px #c4c4c4, 0 1px 2px 0 rgba(94, 94, 94, 0.25);
+}
+
+.plan-builder .og-btn--neutral::before {
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.2) 16%,
+        rgba(255, 255, 255, 0) 100%
+    );
+}
+
+.plan-builder .og-btn--neutral::after {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.09) 0%,
+            rgba(255, 255, 255, 0) 100%
+        ),
+        #d9d9d9;
+}
+
+.plan-builder .og-btn--neutral .og-btn__label {
+    color: #5e5e5e;
+}
+
+.plan-builder .og-btn--neutral:hover:not(:disabled)::after {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.14) 0%,
+            rgba(255, 255, 255, 0) 100%
+        ),
+        #cfcfcf;
+}
+
+.plan-builder .og-btn--primary .og-btn__label {
+    color: #fff;
+}
+
+.plan-builder .og-btn--primary .og-btn__label::before {
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 255, 255, 0) 100%
+    );
+}
+
+.plan-builder .btn-optionals.og-btn--secondary {
+    background: #f2f2f2;
+    box-shadow: 0 0 0 1px #e0e0e0, 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+}
+
+.plan-builder .btn-optionals.og-btn--secondary::after {
+    background: #f2f2f2;
+}
+
+.plan-builder .btn-optionals.og-btn--secondary:hover {
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(193, 199, 208, 0.08) 100%
+        ),
+        #e8e8e8;
+    box-shadow: 0 0 0 1px #d8d8d8, 0 1px 2px 0 rgba(0, 0, 0, 0.1),
+        0 3px 6px 0 rgba(0, 0, 0, 0.08);
+}
+
+.plan-builder .btn-optionals.og-btn--secondary:active {
+    background: linear-gradient(
+            180deg,
+            rgba(193, 199, 208, 0.08) 0%,
+            rgba(255, 255, 255, 0.08) 100%
+        ),
+        #e8e8e8;
+}
+
 .plan-builder .btn-optionals {
     align-items: center;
-    background: #f2f2f2;
-    border: 0;
     border-radius: 12px;
     color: #111;
-    cursor: pointer;
     display: flex;
     font-size: 1rem;
     font-weight: 700;
@@ -1484,16 +1727,26 @@ li {
     justify-content: center;
     letter-spacing: 0.02em;
     margin: 24px 0;
-    padding: 18px 24px;
     text-transform: uppercase;
     width: 100%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plan-builder .btn-optionals .og-btn__label {
+    gap: 12px;
+    padding: 18px 24px;
+    width: 100%;
 }
 
 .plan-builder .btn-optionals:hover {
-    background: #e8e8e8;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: transparent;
+}
+
+.plan-builder .btn-optionals .og-btn__label::before {
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 255, 255, 0) 100%
+    );
 }
 
 .plan-builder .btn-optionals-icon {
@@ -1518,18 +1771,43 @@ li {
 }
 
 .plan-builder .btn-plan-submit {
-    background: #000dff !important;
-    border: 0;
+    align-items: center;
     border-radius: 200px;
-    color: #fff !important;
-    display: block;
+    color: #fff;
+    display: inline-flex;
     font-weight: 700;
+    justify-content: center;
     letter-spacing: 0.04em;
+    line-height: 1.2;
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
-    padding: 16px 32px;
+    min-height: 3.25rem;
+    text-align: center;
     text-transform: uppercase;
+    white-space: nowrap;
     width: 100%;
+}
+
+.plan-builder .btn-plan-submit .og-btn__label {
+    color: #fff;
+    font-weight: 700;
+    min-height: 3.25rem;
+    padding: 0.875rem 2rem;
+    width: 100%;
+}
+
+.plan-builder .btn-plan-submit .og-btn__label::before {
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 255, 255, 0) 100%
+    );
+}
+
+.plan-builder .plan-checkout .btn-plan-submit,
+.plan-builder .plan-payment .btn-plan-submit {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .plan-builder .plan-addons-panel {
@@ -1581,6 +1859,14 @@ li {
 }
 
 /* Checkout step (pagamento.html) */
+.plan-builder .plan-payment {
+    scroll-margin-top: calc(var(--topbar-height) + 1.5rem);
+}
+
+.plan-builder #pagamento {
+    scroll-margin-top: calc(var(--topbar-height) + 1.5rem);
+}
+
 .plan-builder .plan-checkout {
     max-width: 620px;
     margin: 0 auto;
@@ -1591,16 +1877,20 @@ li {
 }
 
 .plan-builder .back-button {
-    background-color: #d9d9d9;
     border-radius: 5px;
-    color: #5e5e5e;
-    cursor: pointer;
     font-weight: 700;
+    margin: 0;
+}
+
+.plan-builder .back-button .og-btn__label {
+    color: #5e5e5e;
+    font-weight: 700;
+    gap: 0.35rem;
     padding: 10px 20px;
 }
 
 .plan-builder .back-button:hover:not(:disabled) {
-    background-color: #cfcfcf;
+    background: transparent;
 }
 
 .plan-builder .back-button:disabled {
@@ -1673,6 +1963,7 @@ li {
     padding: 20px;
     text-align: left;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
 }
 
 .plan-builder .card-pagamento:hover {
@@ -1692,8 +1983,9 @@ li {
 .plan-builder .service-pix {
     display: block;
     height: auto;
+    margin-inline: auto;
     max-width: 100%;
-    width: 310px;
+    width: min(310px, 100%);
 }
 
 .plan-builder .plan-payment-row-spaced {
@@ -1718,7 +2010,7 @@ li {
     font-family: 'Kadwa', serif;
 }
 
-.marketing-page header {
+.marketing-page > header {
     position: fixed;
     top: 0;
     left: 0;

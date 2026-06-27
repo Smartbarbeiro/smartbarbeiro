@@ -68,6 +68,13 @@ return [
         'cancelled' => 'Cancelada',
     ],
 
+    'service_plan_payment_status' => [
+        'paid' => 'Confirmado',
+        'pending' => 'Pendente',
+        'failed' => 'Falhou',
+        'overdue' => 'Em atraso',
+    ],
+
     'acrylic_qr_status' => [
         'pending' => 'Aguardando impressão',
         'printed' => 'Impresso',

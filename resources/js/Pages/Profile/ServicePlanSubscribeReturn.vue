@@ -32,7 +32,7 @@ defineProps({
                 </span>
             </p>
             <p v-else class="text-warning mb-3">
-                Estamos confirmando seu pagamento com o Mercado Pago. Se você
+                Estamos confirmando seu pagamento com a Stripe. Se você
                 concluiu o checkout, o plano será ativado em breve.
             </p>
 

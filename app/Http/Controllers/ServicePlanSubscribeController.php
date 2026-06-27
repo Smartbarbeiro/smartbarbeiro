@@ -41,9 +41,10 @@ class ServicePlanSubscribeController extends Controller
         ]);
 
         if (! $stripe->isConfigured()) {
-            return back()->withErrors([
-                'checkout' => __('messages.payments_not_configured'),
-            ]);
+            return $this->redirectToServicePlanPayment($username)
+                ->withErrors([
+                    'checkout' => __('messages.payments_not_configured'),
+                ]);
         }
 
         try {
@@ -54,17 +55,20 @@ class ServicePlanSubscribeController extends Controller
                 $validated['addon_ids'] ?? [],
             );
         } catch (\InvalidArgumentException $exception) {
-            return back()->withErrors([
-                'checkout' => $exception->getMessage(),
-            ]);
+            return $this->redirectToServicePlanPayment($username)
+                ->withErrors([
+                    'checkout' => $exception->getMessage(),
+                ]);
         } catch (ApiErrorException $exception) {
-            return back()->withErrors([
-                'checkout' => $stripe->apiExceptionMessage($exception),
-            ]);
+            return $this->redirectToServicePlanPayment($username)
+                ->withErrors([
+                    'checkout' => $stripe->apiExceptionMessage($exception),
+                ]);
         } catch (\RuntimeException $exception) {
-            return back()->withErrors([
-                'checkout' => $exception->getMessage(),
-            ]);
+            return $this->redirectToServicePlanPayment($username)
+                ->withErrors([
+                    'checkout' => $exception->getMessage(),
+                ]);
         }
 
         return redirect()->away($checkout['checkout_url']);
@@ -123,13 +127,13 @@ class ServicePlanSubscribeController extends Controller
                     $validated['addon_ids'] ?? [],
                 );
             } catch (\InvalidArgumentException $exception) {
-                return back()->withErrors([
-                    'checkout' => $exception->getMessage(),
-                ]);
+                return $this->redirectToServicePlanPayment($username)
+                    ->withErrors([
+                        'checkout' => $exception->getMessage(),
+                    ]);
             }
 
-            return redirect()
-                ->route('profile.public', $username)
+            return $this->redirectToServicePlanPayment($username)
                 ->with('status', 'service-plan-signup-pending');
         }
 
@@ -141,20 +145,69 @@ class ServicePlanSubscribeController extends Controller
                 $validated['addon_ids'] ?? [],
             );
         } catch (\InvalidArgumentException $exception) {
-            return back()->withErrors([
-                'checkout' => $exception->getMessage(),
-            ]);
+            return $this->registeredCheckoutFailure(
+                $checkoutService,
+                $barbershop,
+                $user,
+                $validated['package_type'],
+                $validated['addon_ids'] ?? [],
+                $username,
+                $exception->getMessage(),
+            );
         } catch (ApiErrorException $exception) {
-            return back()->withErrors([
-                'checkout' => $stripe->apiExceptionMessage($exception),
-            ]);
+            return $this->registeredCheckoutFailure(
+                $checkoutService,
+                $barbershop,
+                $user,
+                $validated['package_type'],
+                $validated['addon_ids'] ?? [],
+                $username,
+                $stripe->apiExceptionMessage($exception),
+            );
         } catch (\RuntimeException $exception) {
-            return back()->withErrors([
-                'checkout' => $exception->getMessage(),
-            ]);
+            return $this->registeredCheckoutFailure(
+                $checkoutService,
+                $barbershop,
+                $user,
+                $validated['package_type'],
+                $validated['addon_ids'] ?? [],
+                $username,
+                $exception->getMessage(),
+            );
         }
 
         return redirect()->away($checkout['checkout_url']);
+    }
+
+    private function redirectToServicePlanPayment(string $username): RedirectResponse
+    {
+        return redirect()->to(route('profile.public', $username).'#pagamento');
+    }
+
+    private function registeredCheckoutFailure(
+        ServicePlanCheckoutService $checkoutService,
+        User $barbershop,
+        User $user,
+        string $packageType,
+        array $addonIds,
+        string $username,
+        string $message,
+    ): RedirectResponse {
+        try {
+            $checkoutService->savePendingSelection(
+                $barbershop,
+                $user,
+                $packageType,
+                $addonIds,
+            );
+        } catch (\InvalidArgumentException) {
+            // Keep the original checkout error below.
+        }
+
+        return $this->redirectToServicePlanPayment($username)
+            ->withErrors([
+                'checkout' => $message,
+            ]);
     }
 
     public function return(

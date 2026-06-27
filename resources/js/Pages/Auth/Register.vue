@@ -139,7 +139,7 @@ const panelTitle = 'Cadastre-se';
 const panelSubtitle = computed(() =>
     props.isCustomerSignup
         ? 'Preencha o formulário para criar sua conta.'
-        : 'Preencha com seus dados para começar a fidelizar seus clientes!',
+        : 'Preencha com seus dados para começar a fidelizar seus clientes !',
 );
 
 const formPanelRef = ref(null);

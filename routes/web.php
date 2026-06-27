@@ -13,6 +13,7 @@ use App\Http\Controllers\ClientHaircutPhotoController;
 use App\Http\Controllers\CepLookupController;
 use App\Http\Controllers\ServicePlanSubscribeController;
 use App\Http\Controllers\ServicePlanSubscriptionController;
+use App\Http\Controllers\ServicePlanSubscriptionPaymentController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\ProfileController;
@@ -158,6 +159,8 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
         ->name('subscriptions.destroy');
     Route::delete('/service-plan-subscriptions/{servicePlanSubscription}', [ServicePlanSubscriptionController::class, 'destroy'])
         ->name('service-plan-subscriptions.destroy');
+    Route::get('/service-plan-payments/{payment}/nota-fiscal', [ServicePlanSubscriptionPaymentController::class, 'downloadNotaFiscal'])
+        ->name('service-plan-payments.nota-fiscal');
 
     Route::get('/cortes', [ClientHaircutPhotoController::class, 'index'])
         ->name('haircuts.index');

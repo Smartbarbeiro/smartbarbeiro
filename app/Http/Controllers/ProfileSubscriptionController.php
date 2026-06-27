@@ -6,6 +6,7 @@ use App\Models\ProfileSubscription;
 use App\Models\ServicePlanSubscription;
 use App\Services\MercadoPagoService;
 use App\Services\ProfileSubscriptionCancellationService;
+use App\Services\ServicePlanSubscriptionPaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,7 @@ use MercadoPago\Exceptions\MPApiException;
 
 class ProfileSubscriptionController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, ServicePlanSubscriptionPaymentService $paymentService): Response
     {
         $profileSubscriptions = $request->user()
             ->profileSubscriptions()
@@ -35,14 +36,17 @@ class ProfileSubscriptionController extends Controller
             ->with('creator:id,name,username')
             ->latest()
             ->get()
-            ->map(fn (ServicePlanSubscription $subscription) => [
-                ...$subscription->toSummaryArray(),
-                'creator' => [
-                    'name' => $subscription->creator->name,
-                    'username' => $subscription->creator->username,
-                    'profile_url' => $subscription->creator->profileUrl(),
-                ],
-            ]);
+            ->map(function (ServicePlanSubscription $subscription) use ($paymentService) {
+                return [
+                    ...$subscription->toSummaryArray(),
+                    'creator' => [
+                        'name' => $subscription->creator->name,
+                        'username' => $subscription->creator->username,
+                        'profile_url' => $subscription->creator->profileUrl(),
+                    ],
+                    'payment_history' => $paymentService->paymentHistoryPayload($subscription),
+                ];
+            });
 
         $subscriptions = $profileSubscriptions
             ->concat($servicePlanSubscriptions)
