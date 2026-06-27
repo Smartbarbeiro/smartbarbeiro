@@ -7,6 +7,7 @@ return [
     'throttle' => 'Muitas tentativas de login. Tente novamente em :seconds segundos.',
     'frozen' => 'Sua conta foi suspensa. Entre em contato com o suporte.',
     'oauth_failed' => 'Não foi possível entrar com o Google. Tente novamente.',
+    'oauth_register_failed' => 'Não foi possível entrar com o Google. Utilize o formulário abaixo.',
     'oauth_no_account' => 'Não encontramos uma conta com este Google. Cadastre-se primeiro.',
     'oauth_email_required' => 'O Google não retornou um e-mail. Use outra conta ou cadastre-se com e-mail e senha.',
     'oauth_account_exists_use_password' => 'Já existe uma conta com este e-mail. Entre com sua senha ou use o Google na tela de login.',

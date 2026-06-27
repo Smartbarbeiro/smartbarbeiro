@@ -111,6 +111,39 @@ class SocialAuthTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_failed_google_register_redirects_with_register_specific_error(): void
+    {
+        $provider = Mockery::mock('Laravel\Socialite\Contracts\Provider');
+        $provider->shouldReceive('user')->andThrow(new \Exception('OAuth failed'));
+
+        Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+        $this->withSession(['oauth.intent' => 'register'])
+            ->get(route('auth.social.callback', ['provider' => 'google']))
+            ->assertRedirect(route('register', absolute: false))
+            ->assertSessionHasErrors([
+                'oauth_google' => __('auth.oauth_register_failed'),
+            ]);
+
+        $this->assertGuest();
+    }
+
+    public function test_register_page_receives_google_oauth_error(): void
+    {
+        $provider = Mockery::mock('Laravel\Socialite\Contracts\Provider');
+        $provider->shouldReceive('user')->andThrow(new \Exception('OAuth failed'));
+
+        Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+        $this->withSession(['oauth.intent' => 'register'])
+            ->get(route('auth.social.callback', ['provider' => 'google']));
+
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('errors.oauth_google', __('auth.oauth_register_failed')));
+    }
+
     private function mockSocialiteUser(string $id, string $email, string $name): void
     {
         $socialiteUser = Mockery::mock(SocialiteUser::class);

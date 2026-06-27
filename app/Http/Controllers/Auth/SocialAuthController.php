@@ -51,12 +51,15 @@ class SocialAuthController extends Controller
             $message = match (true) {
                 str_contains($exception->getMessage(), 'Invalid state') => __('auth.oauth_session_expired'),
                 str_contains(strtolower($exception->getMessage()), 'redirect_uri_mismatch') => __('auth.oauth_redirect_mismatch'),
+                $intent === 'register' => __('auth.oauth_register_failed'),
                 default => __('auth.oauth_failed'),
             };
 
             return redirect()
                 ->route($intent === 'register' ? 'register' : 'login')
-                ->withErrors(['email' => $message]);
+                ->withErrors([
+                    $intent === 'register' ? 'oauth_google' : 'email' => $message,
+                ]);
         }
 
         $user = $socialAuth->findOrLinkUser($provider, $socialUser);
@@ -87,7 +90,7 @@ class SocialAuthController extends Controller
         if ($email === '') {
             return redirect()
                 ->route('register')
-                ->withErrors(['email' => __('auth.oauth_email_required')]);
+                ->withErrors(['oauth_google' => __('auth.oauth_email_required')]);
         }
 
         if (User::query()->where('email', $email)->exists()) {

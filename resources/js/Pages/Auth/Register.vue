@@ -47,7 +47,10 @@ const form = useForm({
 });
 
 const page = usePage();
-const oauthError = computed(() => page.props.errors?.email ?? null);
+const oauthError = computed(() => page.props.errors?.oauth_google ?? null);
+const showGoogleSignup = computed(
+    () => props.oauthGoogleEnabled && !oauthError.value,
+);
 
 const steps = computed(() => {
     const fields = [
@@ -207,32 +210,41 @@ const focusRegisterForm = () => {
                         </p>
                     </header>
 
-                    <InputError class="mb-3" :message="oauthError" />
+                    <div class="register-panel__body">
+                        <InputError class="mb-3" :message="oauthError" />
 
-                    <OAuthGoogleButton
-                        v-if="oauthGoogleEnabled"
-                        class="mb-3"
-                        intent="register"
-                        :redirect="redirect"
-                        :is-customer="isCustomerSignup"
-                    />
+                        <p
+                            v-if="showGoogleSignup"
+                            class="oauth-divider text-center text-muted small mb-3"
+                        >
+                            cadastre-se com sua conta google
+                        </p>
 
-                    <p
-                        v-if="oauthGoogleEnabled"
-                        class="oauth-divider text-center text-muted small mb-3"
-                    >
-                        ou cadastre-se com e-mail
-                    </p>
+                        <OAuthGoogleButton
+                            v-if="showGoogleSignup"
+                            class="mb-3"
+                            intent="register"
+                            :redirect="redirect"
+                            :is-customer="isCustomerSignup"
+                        />
 
-                    <StepSignupForm
-                        ref="signupFormRef"
-                        :form="form"
-                        :steps="steps"
-                        :processing="form.processing"
-                        plain
-                        hide-header
-                        @submit="submit"
-                    />
+                        <p
+                            v-if="showGoogleSignup"
+                            class="oauth-divider text-center text-muted small mb-3"
+                        >
+                            ou cadastre-se com e-mail
+                        </p>
+
+                        <StepSignupForm
+                            ref="signupFormRef"
+                            :form="form"
+                            :steps="steps"
+                            :processing="form.processing"
+                            plain
+                            hide-header
+                            @submit="submit"
+                        />
+                    </div>
                 </div>
             </div>
         </section>
