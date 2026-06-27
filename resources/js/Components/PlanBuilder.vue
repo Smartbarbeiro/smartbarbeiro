@@ -500,7 +500,7 @@ watch(showSummary, (active) => {
                         </ul>
                     </div>
 
-                    <div class="carrinho-total mt-3">
+                    <div class="carrinho-total">
                         <p class="h5 fw-bold mb-0">
                             Total: {{ formattedTotal }}/mês
                         </p>

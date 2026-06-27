@@ -109,6 +109,13 @@ const onFieldInput = (step, event) => {
         return;
     }
 
+    if (step.key === 'username') {
+        value = value.replace(/\s+/g, '_');
+        props.form[step.key] = value;
+        event.target.value = value;
+        return;
+    }
+
     props.form[step.key] = value;
 };
 

@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BarbershopPublicLayout from '@/Layouts/BarbershopPublicLayout.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
+import MobileAppPromo from '@/Components/MobileAppPromo.vue';
 import PlanBuilder from '@/Components/PlanBuilder.vue';
 import PreferredHaircutDayPicker from '@/Components/PreferredHaircutDayPicker.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
@@ -79,6 +80,14 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    mobileApp: {
+        type: Object,
+        default: () => ({
+            name: 'Smart Barbeiro',
+            play_store_url: null,
+            app_store_url: null,
+        }),
+    },
 });
 
 const isAuthenticated = computed(() => !!usePage().props.auth.user);
@@ -115,6 +124,16 @@ const showProfileSubscribePaywall = computed(
 
 const layoutComponent = computed(() =>
     isAuthenticated.value ? AuthenticatedLayout : BarbershopPublicLayout,
+);
+
+const showMobileAppPromo = computed(
+    () =>
+        props.servicePlans.packages.length > 0 &&
+        !props.isOwner &&
+        Boolean(
+            props.mobileApp?.play_store_url ||
+                props.mobileApp?.app_store_url,
+        ),
 );
 
 const planCheckoutActive = ref(false);
@@ -286,10 +305,17 @@ watch(planCheckoutActive, (active) => {
                 </div>
             </section>
 
+            <MobileAppPromo
+                v-if="showMobileAppPromo"
+                :mobile-app="mobileApp"
+                :with-topbar-offset="isAuthenticated"
+            />
+
             <section
                 v-if="servicePlans.packages.length > 0"
                 id="plano"
                 class="plan-builder"
+                :class="{ 'plan-builder--mobile-app-promo': showMobileAppPromo }"
             >
                 <div
                     class="container"

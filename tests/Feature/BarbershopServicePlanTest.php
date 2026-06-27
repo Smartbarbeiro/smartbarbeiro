@@ -116,7 +116,11 @@ class BarbershopServicePlanTest extends TestCase
                 ->has('servicePlans.packages', 1)
                 ->where('servicePlans.packages.0.type', 'cut')
                 ->has('servicePlans.addons', 1)
-                ->where('servicePlans.addons.0.name', 'Hidratação'));
+                ->where('servicePlans.addons.0.name', 'Hidratação')
+                ->has('mobileApp', fn ($mobileApp) => $mobileApp
+                    ->has('name')
+                    ->has('play_store_url')
+                    ->has('app_store_url')));
     }
 
     public function test_customer_cannot_update_service_plans(): void

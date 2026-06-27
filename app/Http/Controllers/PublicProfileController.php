@@ -93,6 +93,11 @@ class PublicProfileController extends Controller
             'needsPreferredHaircutDay' => $needsPreferredHaircutDay,
             'preferredHaircutDay' => $membership?->preferred_haircut_day,
             'servicePlans' => $servicePlanService->publicPlansPayload($user),
+            'mobileApp' => [
+                'name' => config('mobile_app.name'),
+                'play_store_url' => config('mobile_app.play_store_url'),
+                'app_store_url' => config('mobile_app.app_store_url'),
+            ],
         ]);
     }
 }
