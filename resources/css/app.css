@@ -364,19 +364,12 @@ a:hover {
     align-items: center;
     justify-content: flex-start;
     flex-shrink: 0;
+    width: 100%;
     height: var(--topbar-height);
     min-height: var(--topbar-height);
     padding: 0 1rem;
     border-bottom: 1px solid var(--sidebar-border);
     text-decoration: none;
-}
-
-.sidebar-logo .app-logo {
-    filter: brightness(0) invert(1);
-    width: auto;
-    max-width: 9.5rem;
-    height: auto;
-    max-height: 3.5rem;
 }
 
 .sidebar-nav-top {
@@ -408,16 +401,31 @@ a:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 9.5rem;
+    max-width: 100%;
     text-decoration: none;
 }
 
-.app-topbar-logo .app-logo-md {
-    width: auto;
-    height: 4.5rem;
-    max-height: 4.5rem;
+.app-topbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
 }
 
-.app-topbar-heading {
+.app-topbar-primary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.app-topbar-actions {
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.app-topbar-title {
     flex: 1;
     min-width: 0;
 }
@@ -449,27 +457,22 @@ a:hover {
 
 .app-logo {
     display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
     object-fit: contain;
-    filter: brightness(0);
 }
 
 .app-logo-sm {
-    width: 40px;
-    height: 40px;
+    max-width: 40px;
 }
 
 .app-logo-md {
-    width: 140px;
     max-width: 100%;
-    height: auto;
-    max-height: 56px;
 }
 
 .app-logo-lg {
-    width: 200px;
-    max-width: 100%;
-    height: auto;
-    max-height: 72px;
+    max-width: 200px;
 }
 
 .sidebar-nav {
@@ -628,10 +631,6 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-}
-
-.app-topbar .app-logo {
-    filter: brightness(0) invert(1);
 }
 
 .app-content {
@@ -891,6 +890,8 @@ a:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    max-width: 9.5rem;
 }
 
 .avatar-circle {
@@ -1245,6 +1246,46 @@ li {
 
     .app-topbar {
         left: 0;
+        min-height: auto;
+        padding: 0;
+        background: transparent;
+        border-bottom: none;
+    }
+
+    .app-topbar-inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+    }
+
+    .app-topbar-primary {
+        justify-content: space-between;
+        width: 100%;
+        padding: 0.75rem 1.25rem;
+        background: #000000;
+    }
+
+    .app-topbar-avatar-btn .avatar-md {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.875rem;
+    }
+
+    .app-topbar-avatar-btn .avatar-md.avatar-has-photo {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+
+    .app-main:not(:has(.app-topbar-title)) .app-topbar-primary {
+        border-bottom: 1px solid var(--topbar-border);
+    }
+
+    .app-topbar-title {
+        flex: unset;
+        width: 100%;
+        padding: 0.85rem 1.25rem;
+        background: var(--topbar-bg);
+        border-bottom: 1px solid var(--topbar-border);
     }
 
     .app-main {
@@ -1252,8 +1293,22 @@ li {
         width: 100%;
     }
 
+    .app-main:has(.app-topbar-title) .app-content {
+        padding-top: calc(8.25rem + 1.25rem);
+    }
+
+    .app-main:not(:has(.app-topbar-title)) .app-content {
+        padding-top: calc(4.5rem + 1.25rem);
+    }
+
     .app-content {
         padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+@media (min-width: 992px) {
+    .app-topbar-primary {
+        display: contents;
     }
 }
 
@@ -2341,13 +2396,10 @@ li {
 
 .marketing-brand .app-logo,
 .marketing-footer-logo {
-    filter: none;
-    max-height: 50px;
-    width: auto;
+    max-width: 9.5rem;
 }
 
 .marketing-footer-logo {
-    max-height: 60px;
     margin-bottom: 0.75rem;
 }
 

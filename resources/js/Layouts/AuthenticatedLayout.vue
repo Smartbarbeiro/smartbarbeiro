@@ -262,69 +262,71 @@ const mobileNavItems = computed(() => {
 
         <div class="app-main">
             <header class="app-topbar">
-                <div class="d-flex align-items-center w-100 gap-3 gap-lg-4">
-                    <Link
-                        :href="homeHref"
-                        class="app-topbar-logo shrink-0 d-lg-none"
-                        title="Smart Barbeiro"
-                    >
-                        <ApplicationLogo size="md" />
-                    </Link>
-
-                    <div class="app-topbar-heading d-flex align-items-center gap-3 min-w-0">
-                        <div class="dropdown shrink-0">
-                            <button
-                                class="app-topbar-avatar-btn border-0 bg-transparent p-0"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                :aria-label="`Conta de ${user?.name ?? 'usuário'}`"
-                            >
-                                <ProfileAvatar
-                                    :name="user?.name ?? 'Usuário'"
-                                    :photo-url="user?.profile_photo_url"
-                                    size="md"
-                                />
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-dark">
-                                <li class="px-3 py-2 border-bottom border-secondary-subtle">
-                                    <div class="fw-semibold">{{ user?.name }}</div>
-                                    <div class="small text-secondary">{{ user?.email }}</div>
-                                </li>
-                                <li>
-                                    <Link :href="route('profile.edit')" class="dropdown-item">
-                                        <i class="bi bi-person me-2"></i>Perfil
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link :href="route('subscriptions.index')" class="dropdown-item">
-                                        <i class="bi bi-credit-card me-2"></i>{{
-                                            user?.is_barbershop
-                                                ? 'Clientes'
-                                                : 'Minhas assinaturas'
-                                        }}
-                                    </Link>
-                                </li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li>
-                                    <Link
-                                        :href="route('logout')"
-                                        method="post"
-                                        as="button"
-                                        class="dropdown-item"
-                                    >
-                                        <i class="bi bi-box-arrow-right me-2"></i>Sair
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div
-                            v-if="$slots.header"
-                            class="app-topbar-title min-w-0"
+                <div class="app-topbar-inner">
+                    <div class="app-topbar-primary">
+                        <Link
+                            :href="homeHref"
+                            class="app-topbar-logo d-lg-none"
+                            title="Smart Barbeiro"
                         >
-                            <slot name="header" />
+                            <ApplicationLogo size="md" />
+                        </Link>
+
+                        <div class="app-topbar-actions">
+                            <div class="dropdown">
+                                <button
+                                    class="app-topbar-avatar-btn border-0 bg-transparent p-0"
+                                    type="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    :aria-label="`Conta de ${user?.name ?? 'usuário'}`"
+                                >
+                                    <ProfileAvatar
+                                        :name="user?.name ?? 'Usuário'"
+                                        :photo-url="user?.profile_photo_url"
+                                        size="md"
+                                    />
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark">
+                                    <li class="px-3 py-2 border-bottom border-secondary-subtle">
+                                        <div class="fw-semibold">{{ user?.name }}</div>
+                                        <div class="small text-secondary">{{ user?.email }}</div>
+                                    </li>
+                                    <li>
+                                        <Link :href="route('profile.edit')" class="dropdown-item">
+                                            <i class="bi bi-person me-2"></i>Perfil
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link :href="route('subscriptions.index')" class="dropdown-item">
+                                            <i class="bi bi-credit-card me-2"></i>{{
+                                                user?.is_barbershop
+                                                    ? 'Clientes'
+                                                    : 'Minhas assinaturas'
+                                            }}
+                                        </Link>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li>
+                                        <Link
+                                            :href="route('logout')"
+                                            method="post"
+                                            as="button"
+                                            class="dropdown-item"
+                                        >
+                                            <i class="bi bi-box-arrow-right me-2"></i>Sair
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
+                    </div>
+
+                    <div
+                        v-if="$slots.header"
+                        class="app-topbar-title min-w-0"
+                    >
+                        <slot name="header" />
                     </div>
                 </div>
             </header>

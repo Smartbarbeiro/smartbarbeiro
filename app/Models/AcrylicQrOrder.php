@@ -45,6 +45,11 @@ class AcrylicQrOrder extends Model
         ];
     }
 
+    public function isActive(): bool
+    {
+        return in_array($this->status, self::activeStatuses(), true);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

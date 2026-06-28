@@ -27,7 +27,8 @@ class BarbershopProfileQrPdfService
             throw new InvalidArgumentException('Esta barbearia não possui perfil público.');
         }
 
-        $qrCodeDataUri = $this->buildQrCodeDataUri($profileUrl);
+        $qrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 420, margin: 12);
+        $miniQrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 220, margin: 8);
         $filename ??= sprintf(
             'qrcode-%s.pdf',
             $barbershop->username ?? $barbershop->id,
@@ -38,6 +39,7 @@ class BarbershopProfileQrPdfService
             'username' => $barbershop->username,
             'profileUrl' => $profileUrl,
             'qrCodeDataUri' => $qrCodeDataUri,
+            'miniQrCodeDataUri' => $miniQrCodeDataUri,
             'recipient' => $this->recipientPayload($acrylicQrOrder),
         ])
             ->setPaper('a4', 'portrait')
@@ -60,15 +62,15 @@ class BarbershopProfileQrPdfService
         ];
     }
 
-    private function buildQrCodeDataUri(string $profileUrl): string
+    private function buildQrCodeDataUri(string $profileUrl, int $size = 420, int $margin = 12): string
     {
         $builder = new Builder(
             writer: new SvgWriter,
             data: $profileUrl,
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::Medium,
-            size: 420,
-            margin: 12,
+            size: $size,
+            margin: $margin,
         );
 
         return $builder->build()->getDataUri();

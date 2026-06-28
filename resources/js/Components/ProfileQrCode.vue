@@ -68,6 +68,16 @@ const orderForm = useForm({
     state: '',
 });
 
+const activeAcrylicOrder = computed(() => {
+    const order = props.acrylicOrder;
+
+    if (!order || order.status === 'shipped') {
+        return null;
+    }
+
+    return order;
+});
+
 const acrylicStatusClass = (status) => {
     if (status === 'pending') {
         return 'badge bg-secondary';
@@ -265,26 +275,26 @@ watch(
                 </SecondaryButton>
 
                 <SecondaryButton
-                    v-if="showAcrylicOrder && !acrylicOrder"
+                    v-if="showAcrylicOrder && !activeAcrylicOrder"
                     type="button"
                     @click="openOrderModal"
                 >
-                    Pedir QR acrílico físico
+                    Pedir qr-code físico
                 </SecondaryButton>
 
                 <div
-                    v-else-if="showAcrylicOrder && acrylicOrder"
+                    v-else-if="showAcrylicOrder && activeAcrylicOrder"
                     class="small"
                     style="max-width: 16rem"
                 >
                     <span
                         class="badge"
-                        :class="acrylicStatusClass(acrylicOrder.status)"
+                        :class="acrylicStatusClass(activeAcrylicOrder.status)"
                     >
-                        {{ acrylicOrder.status_label }}
+                        {{ activeAcrylicOrder.status_label }}
                     </span>
                     <p class="text-secondary mb-0 mt-2">
-                        Pedido em {{ new Date(acrylicOrder.created_at).toLocaleDateString('pt-BR') }}.
+                        Pedido em {{ new Date(activeAcrylicOrder.created_at).toLocaleDateString('pt-BR') }}.
                     </p>
                 </div>
 
@@ -298,7 +308,7 @@ watch(
         <Modal :show="showOrderModal" max-width="lg" @close="closeOrderModal">
             <form @submit.prevent="submitOrder">
                 <div class="modal-header border-secondary">
-                    <h2 class="modal-title h5">Pedir QR acrílico físico</h2>
+                    <h2 class="modal-title h5">Pedir qr-code físico</h2>
                     <button
                         type="button"
                         class="btn-close btn-close-white"

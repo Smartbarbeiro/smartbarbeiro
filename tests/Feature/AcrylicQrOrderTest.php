@@ -62,6 +62,47 @@ class AcrylicQrOrderTest extends TestCase
             ->assertSessionHasErrors('recipient_name');
     }
 
+    public function test_active_order_payload_is_null_when_latest_order_is_shipped(): void
+    {
+        $barbershop = User::factory()->create();
+
+        AcrylicQrOrder::query()->create([
+            'user_id' => $barbershop->id,
+            'status' => AcrylicQrOrder::STATUS_SHIPPED,
+            'shipped_at' => now(),
+            ...$this->validOrderPayload(),
+        ]);
+
+        $this->assertNull(
+            app(\App\Services\AcrylicQrOrderService::class)->activeOrderPayloadFor($barbershop),
+        );
+    }
+
+    public function test_barbershop_can_request_new_order_after_previous_is_shipped(): void
+    {
+        $barbershop = User::factory()->create();
+
+        AcrylicQrOrder::query()->create([
+            'user_id' => $barbershop->id,
+            'status' => AcrylicQrOrder::STATUS_SHIPPED,
+            'shipped_at' => now(),
+            ...$this->validOrderPayload(),
+        ]);
+
+        $this->actingAs($barbershop)
+            ->from(route('dashboard'))
+            ->post(route('profile.acrylic-qr-orders.store'), $this->validOrderPayload())
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('status', 'acrylic-qr-order-created');
+
+        $this->assertDatabaseHas('acrylic_qr_orders', [
+            'user_id' => $barbershop->id,
+            'status' => AcrylicQrOrder::STATUS_PENDING,
+        ]);
+
+        $this->assertDatabaseCount('acrylic_qr_orders', 2);
+    }
+
     public function test_admin_can_mark_order_printed_and_shipped(): void
     {
         $admin = User::factory()->admin()->create();

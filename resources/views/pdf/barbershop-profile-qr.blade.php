@@ -14,26 +14,40 @@
 
             html,
             body {
-                background-color: #000000;
-                color: #ffffff;
+                background-color: #ffffff;
+                color: #000000;
                 font-family: DejaVu Sans, sans-serif;
                 margin: 0;
-                min-height: 100%;
-                padding: 48px 40px;
+                padding: 0;
             }
 
-            .sheet {
+            .layout {
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+            .layout td {
+                padding: 0;
+                vertical-align: top;
+            }
+
+            .sheet-top {
+                background-color: #000000;
+                color: #ffffff;
+                padding: 48px 40px 28px;
+            }
+
+            .sheet-bottom {
+                background-color: #ffffff;
+                color: #000000;
+                padding: 24px 32px 40px;
+            }
+
+            .content {
                 margin: 0 auto;
                 max-width: 520px;
                 text-align: center;
-            }
-
-            .brand {
-                color: #ffffff;
-                font-size: 12px;
-                letter-spacing: 0.08em;
-                margin: 0 0 24px;
-                text-transform: uppercase;
+                width: 100%;
             }
 
             h1 {
@@ -54,7 +68,7 @@
                 border: 2px solid #ffffff;
                 border-radius: 16px;
                 display: inline-block;
-                margin: 0 auto 24px;
+                margin: 0 auto;
                 padding: 18px;
             }
 
@@ -68,81 +82,179 @@
                 color: #ffffff;
                 font-size: 13px;
                 line-height: 1.5;
-                margin: 0 0 18px;
+                margin: 24px 0 0;
                 word-break: break-all;
             }
 
             .hint {
-                color: #ffffff;
+                color: #dddddd;
                 font-size: 12px;
                 line-height: 1.5;
-                margin: 0;
+                margin: 18px 0 0;
             }
 
             .recipient {
-                border: 1px solid #ffffff;
+                border: 1px solid #cccccc;
                 border-radius: 12px;
-                color: #ffffff;
-                margin: 40px auto 0;
+                color: #000000;
+                margin: 36px auto 0;
                 max-width: 420px;
                 padding: 16px 18px;
                 text-align: left;
             }
 
             .recipient__title {
-                color: #ffffff;
+                color: #000000;
                 font-size: 14px;
                 font-weight: 700;
                 margin: 0 0 10px;
                 text-transform: uppercase;
             }
 
-            .recipient__line {
-                color: #ffffff;
-                font-size: 13px;
-                line-height: 1.5;
+            .recipient__contact {
+                border-collapse: collapse;
                 margin: 0 0 6px;
+                width: 100%;
             }
 
-            .recipient__line:last-child {
-                margin-bottom: 0;
+            .recipient__contact td {
+                color: #000000;
+                font-size: 13px;
+                line-height: 1.5;
+                padding: 0;
+                vertical-align: top;
+            }
+
+            .recipient__contact-name {
+                text-align: left;
+                width: 55%;
+            }
+
+            .recipient__contact-phone {
+                text-align: right;
+                width: 45%;
+            }
+
+            .recipient__line {
+                color: #000000;
+                font-size: 13px;
+                line-height: 1.5;
+                margin: 0;
+            }
+
+            .mini-qr-row {
+                margin: 32px auto 0;
+                max-width: 480px;
+                text-align: center;
+                width: 100%;
+            }
+
+            .mini-qr-row table {
+                border-collapse: collapse;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            .mini-qr-copy {
+                padding: 10px 8px;
+                text-align: center;
+                vertical-align: top;
+                width: 33.33%;
+            }
+
+            .mini-qr-cut {
+                border: 1px dashed #888888;
+                display: inline-block;
+                padding: 12px 10px 10px;
+            }
+
+            .mini-qr-label {
+                color: #000000;
+                font-size: 11px;
+                font-weight: 700;
+                letter-spacing: 0.04em;
+                margin: 0 0 10px;
+                text-transform: uppercase;
+            }
+
+            .mini-qr-frame {
+                background: #ffffff;
+                border: 1px solid #bbbbbb;
+                display: inline-block;
+                padding: 8px;
+            }
+
+            .mini-qr-frame img {
+                display: block;
+                height: 120px;
+                width: 120px;
             }
         </style>
     </head>
     <body>
-        <div class="sheet">
-            <p class="brand">Smart Barbeiro</p>
+        <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+                <td bgcolor="#000000" class="sheet-top" style="background-color: #000000; color: #ffffff;">
+                    <div class="content">
+                        <h1>{{ $barbershopName }}</h1>
 
-            <h1>{{ $barbershopName }}</h1>
+                        @if ($username)
+                            <p class="username">{{ '@'.$username }}</p>
+                        @endif
 
-            @if ($username)
-                <p class="username">{{ '@'.$username }}</p>
-            @endif
+                        <div class="qr-frame">
+                            <img src="{{ $qrCodeDataUri }}" alt="QR code do perfil" />
+                        </div>
 
-            <div class="qr-frame">
-                <img src="{{ $qrCodeDataUri }}" alt="QR code do perfil" />
-            </div>
+                        <p class="profile-url">{{ $profileUrl }}</p>
 
-            <p class="profile-url">{{ $profileUrl }}</p>
+                        <p class="hint">
+                            Escaneie o QR code para abrir o perfil público desta barbearia.
+                        </p>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td bgcolor="#ffffff" class="sheet-bottom" style="background-color: #ffffff; color: #000000;">
+                    <div class="content">
+                        @if ($recipient)
+                            <div class="recipient">
+                                <p class="recipient__title">Destinatário</p>
+                                <table class="recipient__contact" role="presentation">
+                                    <tr>
+                                        <td class="recipient__contact-name">
+                                            <strong>Nome:</strong> {{ $recipient['name'] }}
+                                        </td>
+                                        <td class="recipient__contact-phone">
+                                            <strong>Telefone:</strong> {{ $recipient['phone'] }}
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p class="recipient__line">
+                                    <strong>Endereço:</strong> {{ $recipient['address'] }}
+                                </p>
+                            </div>
+                        @endif
 
-            <p class="hint">
-                Escaneie o QR code para abrir o perfil público desta barbearia.
-            </p>
-
-            @if ($recipient)
-                <div class="recipient">
-                    <p class="recipient__title">Destinatário</p>
-                    <p class="recipient__line">
-                        <strong>Nome:</strong> {{ $recipient['name'] }}
-                    </p>
-                    <p class="recipient__line">
-                        <strong>Telefone:</strong> {{ $recipient['phone'] }}
-                    </p>
-                    <p class="recipient__line">
-                        <strong>Endereço:</strong> {{ $recipient['address'] }}
-                    </p>
-                </div>
-            @endif
-        </div>
+                        <div class="mini-qr-row">
+                            <table role="presentation">
+                                <tr>
+                                    @foreach (range(1, 3) as $copy)
+                                        <td class="mini-qr-copy">
+                                            <div class="mini-qr-cut">
+                                                <p class="mini-qr-label">Plano Mensal</p>
+                                                <div class="mini-qr-frame">
+                                                    <img src="{{ $miniQrCodeDataUri }}" alt="QR code Plano Mensal" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                    @endforeach
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </body>
 </html>

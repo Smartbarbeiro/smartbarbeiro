@@ -71,6 +71,7 @@ class BarbershopQrPdfTest extends TestCase
             'username' => $barbershop->username,
             'profileUrl' => $barbershop->profileUrl(),
             'qrCodeDataUri' => 'data:image/svg+xml;base64,test',
+            'miniQrCodeDataUri' => 'data:image/svg+xml;base64,mini',
             'recipient' => [
                 'name' => $order->recipient_name,
                 'phone' => $order->phone,
@@ -81,7 +82,30 @@ class BarbershopQrPdfTest extends TestCase
         $this->assertStringContainsString('Destinatário', $html);
         $this->assertStringContainsString('João Barbeiro', $html);
         $this->assertStringContainsString('(67) 99999-9999', $html);
+        $this->assertStringContainsString('recipient__contact-phone', $html);
+        $this->assertStringNotContainsString(
+            '<div class="sheet-bottom">'."\n".'                <p class="profile-url">',
+            $html,
+        );
+        $this->assertStringNotContainsString(
+            'sheet-bottom'."\n".'                    <div class="content">'."\n".'                        <p class="hint">',
+            $html,
+        );
+        $this->assertStringContainsString(
+            'Escaneie o QR code para abrir o perfil público desta barbearia.',
+            $html,
+        );
         $this->assertStringContainsString('Rua Example, 123', $html);
+        $this->assertStringContainsString('Plano Mensal', $html);
+        $this->assertStringContainsString('sheet-bottom', $html);
+        $this->assertStringContainsString('bgcolor="#ffffff"', $html);
+        $this->assertStringContainsString('bgcolor="#000000"', $html);
+        $this->assertStringContainsString('mini-qr-cut', $html);
+        $this->assertStringContainsString('border: 1px dashed #888888', $html);
+        $this->assertStringContainsString('background-color: #ffffff', $html);
+        $this->assertSame(3, substr_count($html, 'QR code Plano Mensal'));
+        $this->assertSame(3, substr_count($html, 'data:image/svg+xml;base64,mini'));
+        $this->assertStringContainsString('height: 120px', $html);
         $this->assertStringContainsString('background-color: #000000', $html);
         $this->assertStringContainsString('color: #ffffff', $html);
     }
