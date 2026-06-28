@@ -32,6 +32,35 @@ class SocialAuthService
         return $this->isProviderConfigured('google');
     }
 
+    public function resolveDisplayName(SocialiteUser $socialUser): string
+    {
+        $name = trim((string) ($socialUser->getName() ?? ''));
+
+        if ($name !== '') {
+            return $name;
+        }
+
+        $raw = $socialUser->getRaw();
+
+        if (is_array($raw)) {
+            $given = trim((string) ($raw['given_name'] ?? ''));
+            $family = trim((string) ($raw['family_name'] ?? ''));
+            $combined = trim($given.' '.$family);
+
+            if ($combined !== '') {
+                return $combined;
+            }
+        }
+
+        $nickname = trim((string) ($socialUser->getNickname() ?? ''));
+
+        if ($nickname !== '') {
+            return $nickname;
+        }
+
+        return __('auth.oauth_default_name');
+    }
+
     public function findOrLinkUser(string $provider, SocialiteUser $socialUser): ?User
     {
         $providerId = (string) $socialUser->getId();

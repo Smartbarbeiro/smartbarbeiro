@@ -41,6 +41,9 @@ const page = usePage();
 const oauthError = computed(
     () => page.props.errors?.email ?? form.errors.email ?? null,
 );
+const showGoogleLogin = computed(
+    () => props.oauthGoogleEnabled && !oauthError.value,
+);
 
 const submit = () => {
     form.post(route('login'), {
@@ -75,14 +78,14 @@ const submit = () => {
                     <InputError class="mb-3" :message="oauthError" />
 
                     <OAuthGoogleButton
-                        v-if="oauthGoogleEnabled"
+                        v-if="showGoogleLogin"
                         class="mb-3"
                         intent="login"
                         :redirect="barbershopRedirect"
                     />
 
                     <p
-                        v-if="oauthGoogleEnabled"
+                        v-if="showGoogleLogin"
                         class="oauth-divider text-center text-muted small mb-3"
                     >
                         ou entre com e-mail

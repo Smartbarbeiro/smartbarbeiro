@@ -136,7 +136,7 @@ const submit = () => {
                 v-else-if="barbershopMemberships.length > 0"
                 class="mt-3"
             >
-                <p class="small fw-medium mb-2">Suas barbearias</p>
+                <p class="small fw-medium mb-2">Sua Barbearia Preferida:</p>
                 <ul class="list-unstyled mb-0">
                     <li
                         v-for="membership in barbershopMemberships"

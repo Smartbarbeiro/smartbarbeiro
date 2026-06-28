@@ -102,7 +102,7 @@ class SocialAuthController extends Controller
         $request->session()->put('oauth.registration', [
             'provider' => $provider,
             'provider_id' => (string) $socialUser->getId(),
-            'name' => $socialUser->getName() ?? $socialUser->getNickname() ?? __('auth.oauth_default_name'),
+            'name' => $socialAuth->resolveDisplayName($socialUser),
             'email' => $email,
             'redirect' => $request->session()->pull('oauth.redirect'),
             'is_customer' => (bool) $request->session()->pull('oauth.is_customer'),

@@ -15,5 +15,6 @@ return [
     'oauth_redirect_mismatch' => 'O Google rejeitou o retorno OAuth. Confira no Google Cloud Console se a URI de redirect autorizada corresponde exatamente à URL que você está usando (ngrok ou localhost).',
     'oauth_use_google' => 'Esta conta usa login com Google. Clique em "Continuar com Google".',
     'oauth_default_name' => 'Usuário',
+    'oauth_name_required' => 'O Google não retornou seu nome. Tente novamente ou cadastre-se com e-mail e senha.',
 
 ];

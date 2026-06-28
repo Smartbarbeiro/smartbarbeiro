@@ -143,7 +143,7 @@ defineProps({
 
             <div v-else-if="!isBarbershop" class="mt-4">
                 <p class="small fw-medium text-secondary mb-2">
-                    Suas barbearias
+                    Sua Barbearia Preferida:
                 </p>
                 <p
                     v-if="barbershopMemberships.length === 0"

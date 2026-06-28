@@ -65,7 +65,28 @@ class SocialAuthTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Auth/OAuthCompleteRegistration')
-                ->where('oauthUser.email', 'new-oauth@example.com'));
+                ->where('oauthUser.email', 'new-oauth@example.com')
+                ->where('oauthUser.name', 'New OAuth User'));
+    }
+
+    public function test_oauth_registration_uses_name_from_session_not_request(): void
+    {
+        $this->withSession([
+            'oauth.registration' => [
+                'provider' => 'google',
+                'provider_id' => 'google-barbershop',
+                'name' => 'Nome vindo do Google',
+                'email' => 'barbearia-oauth@example.com',
+                'redirect' => null,
+                'is_customer' => false,
+            ],
+        ])->post(route('register.oauth.complete.store'), [
+            'cpf_cnpj' => TestTaxDocuments::CNPJ,
+            'username' => 'barbearia-oauth',
+        ])->assertRedirect(route('register.celebration', absolute: false));
+
+        $user = User::query()->where('email', 'barbearia-oauth@example.com')->first();
+        $this->assertSame('Nome vindo do Google', $user->name);
     }
 
     public function test_oauth_registration_creates_barbershop_account(): void
@@ -80,7 +101,6 @@ class SocialAuthTest extends TestCase
                 'is_customer' => false,
             ],
         ])->post(route('register.oauth.complete.store'), [
-            'name' => 'Barbearia OAuth',
             'cpf_cnpj' => TestTaxDocuments::CNPJ,
             'username' => 'barbearia-oauth',
         ])->assertRedirect(route('register.celebration', absolute: false));
@@ -92,6 +112,28 @@ class SocialAuthTest extends TestCase
         $this->assertTrue($user->isBarbershopAccount());
         $this->assertNull($user->password);
         $this->assertSame('google', $user->oauth_provider);
+    }
+
+    public function test_oauth_registration_creates_customer_account(): void
+    {
+        $this->withSession([
+            'oauth.registration' => [
+                'provider' => 'google',
+                'provider_id' => 'google-customer',
+                'name' => 'Cliente OAuth',
+                'email' => 'cliente-oauth@example.com',
+                'redirect' => null,
+                'is_customer' => true,
+            ],
+        ])->post(route('register.oauth.complete.store'), [
+            'cpf' => TestTaxDocuments::CPF,
+        ])->assertRedirect(route('dashboard', absolute: false));
+
+        $user = User::query()->where('email', 'cliente-oauth@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertFalse($user->isBarbershopAccount());
+        $this->assertSame('Cliente OAuth', $user->name);
+        $this->assertNull($user->password);
     }
 
     public function test_password_login_is_blocked_for_oauth_only_accounts(): void
@@ -109,6 +151,47 @@ class SocialAuthTest extends TestCase
         ])->assertSessionHasErrors('email');
 
         $this->assertGuest();
+    }
+
+    public function test_full_google_barbershop_registration_flow(): void
+    {
+        $this->mockSocialiteUser('google-flow', 'flow-oauth@example.com', 'Fulvio Catto');
+
+        $this->withSession(['oauth.intent' => 'register'])
+            ->get(route('auth.social.callback', ['provider' => 'google']))
+            ->assertRedirect(route('register.oauth.complete', absolute: false));
+
+        $this->get(route('register.oauth.complete'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Auth/OAuthCompleteRegistration')
+                ->where('oauthUser.name', 'Fulvio Catto')
+                ->where('oauthUser.email', 'flow-oauth@example.com')
+                ->where('isCustomerSignup', false));
+
+        $this->post(route('register.oauth.complete.store'), [
+            'cpf_cnpj' => TestTaxDocuments::CNPJ,
+            'username' => 'barbearia-flow',
+        ])->assertRedirect(route('register.celebration', absolute: false));
+
+        $this->assertAuthenticated();
+
+        $user = User::query()->where('email', 'flow-oauth@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertSame('Fulvio Catto', $user->name);
+        $this->assertSame('barbearia-flow', $user->username);
+        $this->assertTrue($user->isBarbershopAccount());
+    }
+
+    public function test_oauth_complete_page_redirects_without_session(): void
+    {
+        $this->get(route('register.oauth.complete'))
+            ->assertRedirect(route('register', absolute: false));
+
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->where('errors.oauth_google', __('auth.oauth_session_expired')));
     }
 
     public function test_failed_google_register_redirects_with_register_specific_error(): void

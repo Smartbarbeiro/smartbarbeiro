@@ -7,7 +7,7 @@ defineProps({
     },
 });
 
-const logoUrl = '/favicon-96x96.png';
+const logoUrl = '/images/logo.png';
 </script>
 
 <template>

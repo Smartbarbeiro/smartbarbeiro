@@ -2177,6 +2177,11 @@ li {
     margin-bottom: 1rem;
 }
 
+.register-panel .oauth-account-summary {
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 1.0625rem;
+}
+
 .register-plan-cards {
     flex: 1 1 18rem;
     max-width: 21rem;
@@ -2494,18 +2499,64 @@ li {
 
 .marketing-hero-2 {
     background-color: #363636;
-    min-height: 100vh;
+    min-height: calc(100vh - 90px);
+    justify-content: stretch;
+    align-items: stretch;
+    padding: 0;
+    width: 100%;
+}
+
+.marketing-hero-2__container {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+}
+
+.marketing-hero-2__row {
+    width: 100%;
+    margin: 0;
+    min-height: calc(100vh - 90px);
+}
+
+.marketing-hero-2__media,
+.marketing-hero-2__copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.marketing-hero-2__media {
+    align-items: center;
+    padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.marketing-hero-2__copy {
+    align-items: center;
+    padding: clamp(1.5rem, 4vw, 3rem);
+    text-align: center;
 }
 
 .marketing-hero-2-image {
     max-width: 100%;
+    width: auto;
     height: auto;
+    max-height: min(70vh, 640px);
     object-fit: contain;
 }
 
 @media (min-width: 992px) {
-    .marketing-hero-2-image {
-        height: 70%;
+    .marketing-hero-2__copy {
+        align-items: flex-start;
+        text-align: left;
+        padding-left: clamp(1.5rem, 5vw, 4rem);
+        padding-right: clamp(1.5rem, 4vw, 3rem);
+    }
+
+    .marketing-hero-2__media {
+        padding-right: clamp(1rem, 3vw, 2rem);
+        padding-left: clamp(1.5rem, 4vw, 3rem);
     }
 }
 

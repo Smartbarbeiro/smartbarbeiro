@@ -1,6 +1,5 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
+import StepSignupForm from '@/Components/StepSignupForm.vue';
 import MarketingLayout from '@/Layouts/MarketingLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -21,7 +20,6 @@ const props = defineProps({
 });
 
 const form = useForm({
-    name: props.oauthUser.name ?? '',
     cpf: '',
     cpf_cnpj: '',
     username: '',
@@ -34,8 +32,49 @@ const panelTitle = computed(() =>
 );
 
 const panelSubtitle = computed(() =>
-    'Informe os dados abaixo para finalizar sua conta com Google.',
+    props.isCustomerSignup
+        ? 'Informe seu CPF para finalizar sua conta com Google.'
+        : 'Informe o CPF/CNPJ e o nome da barbearia para finalizar com Google.',
 );
+
+const steps = computed(() => {
+    if (props.isCustomerSignup) {
+        return [
+            {
+                key: 'cpf',
+                type: 'text',
+                placeholder: 'DIGITE SEU CPF AQUI',
+                icon: 'bi bi-card-text',
+                autocomplete: 'off',
+                inputmode: 'numeric',
+                required: true,
+                emptyMessage: 'Informe seu CPF para continuar.',
+            },
+        ];
+    }
+
+    return [
+        {
+            key: 'cpf_cnpj',
+            type: 'text',
+            placeholder: 'DIGITE SEU CPF OU CNPJ AQUI',
+            icon: 'bi bi-card-text',
+            autocomplete: 'off',
+            inputmode: 'numeric',
+            required: true,
+            emptyMessage: 'Informe seu CPF ou CNPJ para continuar.',
+        },
+        {
+            key: 'username',
+            type: 'text',
+            placeholder: 'NOME DA BARBEARIA',
+            icon: 'bi bi-shop',
+            autocomplete: 'username',
+            required: true,
+            emptyMessage: 'Informe o nome da barbearia para continuar.',
+        },
+    ];
+});
 
 const submit = () => {
     form.post(route('register.oauth.complete.store'));
@@ -56,94 +95,20 @@ const submit = () => {
                         </p>
                     </header>
 
-                    <form class="login-panel__form" @submit.prevent="submit">
-                        <div class="mb-3">
-                            <InputLabel for="name" value="Nome" />
-                            <input
-                                id="name"
-                                v-model="form.name"
-                                type="text"
-                                class="form-control mt-1"
-                                required
-                                autocomplete="name"
-                            />
-                            <InputError class="mt-2" :message="form.errors.name" />
-                        </div>
+                    <div class="register-panel__body">
+                        <p class="oauth-account-summary text-center mb-3">
+                            Olá, <strong>{{ oauthUser.name }}</strong>
+                        </p>
 
-                        <div class="mb-3">
-                            <InputLabel for="email" value="E-mail" />
-                            <input
-                                id="email"
-                                :value="oauthUser.email"
-                                type="email"
-                                class="form-control mt-1"
-                                disabled
-                                readonly
-                            />
-                            <InputError class="mt-2" :message="form.errors.email" />
-                        </div>
-
-                        <div v-if="isCustomerSignup" class="mb-3">
-                            <InputLabel for="cpf" value="CPF" />
-                            <input
-                                id="cpf"
-                                v-model="form.cpf"
-                                type="text"
-                                class="form-control mt-1"
-                                required
-                                inputmode="numeric"
-                                autocomplete="off"
-                                placeholder="000.000.000-00"
-                            />
-                            <InputError class="mt-2" :message="form.errors.cpf" />
-                        </div>
-
-                        <template v-else>
-                            <div class="mb-3">
-                                <InputLabel for="cpf_cnpj" value="CPF ou CNPJ" />
-                                <input
-                                    id="cpf_cnpj"
-                                    v-model="form.cpf_cnpj"
-                                    type="text"
-                                    class="form-control mt-1"
-                                    required
-                                    inputmode="numeric"
-                                    autocomplete="off"
-                                />
-                                <InputError
-                                    class="mt-2"
-                                    :message="form.errors.cpf_cnpj"
-                                />
-                            </div>
-
-                            <div class="mb-3">
-                                <InputLabel
-                                    for="username"
-                                    value="Nome da barbearia (URL)"
-                                />
-                                <input
-                                    id="username"
-                                    v-model="form.username"
-                                    type="text"
-                                    class="form-control mt-1"
-                                    required
-                                    autocomplete="username"
-                                />
-                                <InputError
-                                    class="mt-2"
-                                    :message="form.errors.username"
-                                />
-                            </div>
-                        </template>
-
-                        <button
-                            type="submit"
-                            class="btn btn-dark btn-lg w-100 login-panel__submit"
-                            :disabled="form.processing"
-                        >
-                            Finalizar cadastro
-                        </button>
-                    </form>
+                        <StepSignupForm
+                            :form="form"
+                            :steps="steps"
+                            :processing="form.processing"
+                            plain
+                            hide-header
+                            @submit="submit"
+                        />
+                    </div>
                 </div>
             </div>
         </section>

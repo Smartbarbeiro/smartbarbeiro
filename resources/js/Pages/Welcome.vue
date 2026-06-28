@@ -44,19 +44,20 @@ defineProps({
             id="hero2"
             class="marketing-hero marketing-hero-2 overflow-hidden"
         >
-            <div class="container-fluid px-0">
-                <div class="row align-items-center g-0">
-                    <div class="col-lg-6 col-md-12 text-center ms-lg-auto">
+            <div class="container-fluid marketing-hero-2__container px-0">
+                <div class="row align-items-center g-0 marketing-hero-2__row">
+                    <div class="col-lg-6 col-12 marketing-hero-2__media">
                         <img
                             src="/images/cadeira.png"
                             alt="Cadeira de barbearia"
                             class="marketing-hero-2-image img-fluid"
                         >
                     </div>
-                    <div class="col-lg-3 col-md-12 text-center">
+                    <div class="col-lg-6 col-12 marketing-hero-2__copy">
                         <h2>O futuro da barbearia<br> está aqui.</h2>
                         <p>
-                            Descubra como a tecnologia pode transformar sua barbearia e fidelizar seus clientes.
+                            Descubra como a tecnologia pode transformar,<br>
+                            sua barbearia e fidelizar seus clientes.
                         </p>
                         <Link
                             v-if="canRegister"

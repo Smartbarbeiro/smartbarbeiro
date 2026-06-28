@@ -33,7 +33,7 @@ class OAuthRegistrationController extends Controller
         if (! is_array($oauth) || ! isset($oauth['provider'], $oauth['provider_id'], $oauth['email'])) {
             return redirect()
                 ->route('register')
-                ->withErrors(['email' => __('auth.oauth_session_expired')]);
+                ->withErrors(['oauth_google' => __('auth.oauth_session_expired')]);
         }
 
         return Inertia::render('Auth/OAuthCompleteRegistration', [
@@ -53,14 +53,22 @@ class OAuthRegistrationController extends Controller
         if (! is_array($oauth) || ! isset($oauth['provider'], $oauth['provider_id'], $oauth['email'])) {
             return redirect()
                 ->route('register')
-                ->withErrors(['email' => __('auth.oauth_session_expired')]);
+                ->withErrors(['oauth_google' => __('auth.oauth_session_expired')]);
         }
 
         $isCustomerSignup = (bool) ($oauth['is_customer'] ?? false);
 
-        $rules = [
-            'name' => 'required|string|max:255',
-        ];
+        $name = trim((string) ($oauth['name'] ?? ''));
+
+        if ($name === '') {
+            $request->session()->forget('oauth.registration');
+
+            return redirect()
+                ->route('register')
+                ->withErrors(['oauth_google' => __('auth.oauth_name_required')]);
+        }
+
+        $rules = [];
 
         if ($isCustomerSignup) {
             $rules['cpf'] = ['required', 'string', 'cpf', new UniqueTaxDocument];
@@ -94,7 +102,7 @@ class OAuthRegistrationController extends Controller
 
         if ($isCustomerSignup) {
             $user = User::create([
-                'name' => $validated['name'],
+                'name' => $name,
                 'username' => null,
                 'email' => $email,
                 'tax_document' => $taxDocument,
@@ -109,12 +117,12 @@ class OAuthRegistrationController extends Controller
             $this->attachCustomerToBarbershop($user, $request);
         } else {
             $username = app(UsernameGenerator::class)->uniqueFrom(
-                $validated['name'],
+                $name,
                 $validated['username'],
             );
 
             $user = User::create([
-                'name' => $validated['name'],
+                'name' => $name,
                 'username' => $username,
                 'email' => $email,
                 'tax_document' => $taxDocument,
