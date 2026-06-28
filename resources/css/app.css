@@ -1127,6 +1127,12 @@ li {
     flex-shrink: 0;
 }
 
+.barbershop-schedule-card__icon .service-plan-icon {
+    display: block;
+    height: 3.25rem;
+    width: auto;
+}
+
 .barbershop-schedule-card--today .barbershop-schedule-card__icon {
     width: 5.9rem;
     height: 5.9rem;

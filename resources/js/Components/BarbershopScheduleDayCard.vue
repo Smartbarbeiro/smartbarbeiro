@@ -1,4 +1,6 @@
 <script setup>
+import ServicePlanIcon from '@/Components/ServicePlanIcon.vue';
+
 defineProps({
     day: {
         type: Object,
@@ -17,7 +19,7 @@ defineProps({
         class="barbershop-schedule-card barbershop-schedule-card--today"
     >
         <span class="barbershop-schedule-card__icon" aria-hidden="true">
-            <i class="bi bi-person"></i>
+            <ServicePlanIcon variant="cut" />
         </span>
         <p class="barbershop-schedule-card__today-text mb-0">
             <strong>{{ day.expected_cuts }}</strong>
@@ -51,7 +53,7 @@ defineProps({
 
         <div class="barbershop-schedule-card__metric">
             <span class="barbershop-schedule-card__icon" aria-hidden="true">
-                <i class="bi bi-person"></i>
+                <ServicePlanIcon variant="cut" />
             </span>
             <p class="barbershop-schedule-card__metric-text mb-0">
                 <strong>{{ day.expected_cuts }}</strong>
@@ -61,7 +63,7 @@ defineProps({
 
         <div class="barbershop-schedule-card__metric">
             <span class="barbershop-schedule-card__icon" aria-hidden="true">
-                <i class="bi bi-person-badge"></i>
+                <ServicePlanIcon variant="cut_beard" />
             </span>
             <p class="barbershop-schedule-card__metric-text mb-0">
                 <strong>{{ day.expected_beards }}</strong>
