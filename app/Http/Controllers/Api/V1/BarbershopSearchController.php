@@ -40,7 +40,7 @@ class BarbershopSearchController extends Controller
             ->values();
 
         return response()->json([
-            'profile_base_url' => url('/barbearias/'),
+            'profile_base_url' => rtrim($request->getSchemeAndHttpHost(), '/').'/barbearias/',
             'results' => $results,
         ]);
     }

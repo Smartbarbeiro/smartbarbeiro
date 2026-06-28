@@ -1185,6 +1185,13 @@ li {
     }
 }
 
+/* Barbershop home dashboard: light background (schedule + empty state) */
+.app-content:has(.barbershop-dashboard),
+.app-content:has(.barbershop-empty-dashboard) {
+    background: #ffffff;
+    color: #111111;
+}
+
 @media (min-width: 992px) {
     .app-content .dashboard-content-card:not(.dashboard-content-card--nested),
     .app-content .dashboard-content-card.app-form-panel,
