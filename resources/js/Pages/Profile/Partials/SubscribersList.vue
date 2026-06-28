@@ -16,21 +16,14 @@ const statusClass = (status) => {
 
 <template>
     <section>
-        <header>
-            <h2 class="h5 fw-semibold mb-1">Assinantes</h2>
-            <p class="text-secondary small mb-0">
-                Pessoas que assinaram seu perfil pago (últimos 50).
-            </p>
-        </header>
-
         <div
             v-if="subscribers.length === 0"
-            class="border border-secondary-subtle border-dashed rounded p-4 text-center text-secondary small mt-3"
+            class="border border-secondary-subtle border-dashed rounded p-4 text-center text-secondary small"
         >
             Nenhum assinante ainda.
         </div>
 
-        <div v-else class="table-responsive mt-3">
+        <div v-else class="table-responsive">
             <table class="table table-dark table-hover table-dark-custom mb-0">
                 <thead>
                     <tr>

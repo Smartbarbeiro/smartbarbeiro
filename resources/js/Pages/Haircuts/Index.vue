@@ -1,5 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -88,7 +90,7 @@ const flashStatus = () => usePage().props.flash?.status;
         <Head title="Cortes" />
 
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Cortes</h1>
+            <DashboardPageHeader icon="haircuts" title="Cortes" />
         </template>
 
         <div class="d-flex flex-column gap-4">
@@ -108,14 +110,11 @@ const flashStatus = () => usePage().props.flash?.status;
                 Foto removida.
             </div>
 
-            <section class="app-card p-4">
-                <h2 class="h5 fw-semibold mb-2">Enviar foto do corte</h2>
-                <p class="text-secondary small mb-4">
-                    Salve fotos dos seus cortes para acompanhar o estilo ao longo
-                    do tempo. Escolha uma foto da galeria ou tire uma nova foto
-                    agora.
-                </p>
-
+            <DashboardContentCard
+                icon="upload"
+                title="Enviar foto do corte"
+                description="Salve fotos dos seus cortes para acompanhar o estilo ao longo do tempo."
+            >
                 <form class="haircut-upload-form" @submit.prevent="submit">
                     <div
                         v-if="previewUrl"
@@ -173,15 +172,27 @@ const flashStatus = () => usePage().props.flash?.status;
 
                     <InputError class="mt-3 mb-0" :message="form.errors.photo" />
                 </form>
-            </section>
+            </DashboardContentCard>
 
-            <section v-if="photos.length === 0" class="app-card p-4 text-center">
+            <DashboardContentCard
+                v-if="photos.length === 0"
+                icon="gallery"
+                title="Galeria de cortes"
+                description="Suas fotos aparecerão aqui depois do primeiro envio."
+                centered
+            >
                 <p class="text-secondary mb-0">
                     Você ainda não enviou fotos dos seus cortes.
                 </p>
-            </section>
+            </DashboardContentCard>
 
-            <section v-else class="haircut-gallery">
+            <DashboardContentCard
+                v-else
+                icon="gallery"
+                title="Galeria de cortes"
+                description="Histórico visual dos seus estilos anteriores."
+            >
+                <section class="haircut-gallery">
                 <div class="row g-3">
                     <div
                         v-for="photo in photos"
@@ -218,7 +229,8 @@ const flashStatus = () => usePage().props.flash?.status;
                         </article>
                     </div>
                 </div>
-            </section>
+                </section>
+            </DashboardContentCard>
         </div>
     </AuthenticatedLayout>
 </template>

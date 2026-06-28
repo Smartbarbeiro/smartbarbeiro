@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BarbershopPublicLayout from '@/Layouts/BarbershopPublicLayout.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import MobileAppPromo from '@/Components/MobileAppPromo.vue';
 import PlanBuilder from '@/Components/PlanBuilder.vue';
 import PreferredHaircutDayPicker from '@/Components/PreferredHaircutDayPicker.vue';
@@ -186,9 +187,10 @@ onUnmounted(() => {
         <Head :title="isOwner && isAuthenticated ? 'Sua Barbearia' : profile.name" />
 
         <template v-if="isAuthenticated" #header>
-            <h1 class="h4 mb-0 fw-semibold">
-                {{ isOwner ? 'Sua Barbearia' : profile.name }}
-            </h1>
+            <DashboardPageHeader
+                :icon="isOwner ? 'barbershop' : 'profile'"
+                :title="isOwner ? 'Sua Barbearia' : profile.name"
+            />
         </template>
 
         <div
@@ -314,7 +316,10 @@ onUnmounted(() => {
                 v-if="servicePlans.packages.length > 0"
                 id="plano"
                 class="plan-builder"
-                :class="{ 'plan-builder--mobile-app-promo': showMobileAppPromo }"
+                :class="{
+                    'plan-builder--mobile-app-promo': showMobileAppPromo,
+                    'plan-builder--in-app': isAuthenticated,
+                }"
             >
                 <div
                     class="container"

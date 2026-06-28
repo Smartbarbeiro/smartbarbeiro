@@ -40,17 +40,7 @@ const closeModal = () => {
 
 <template>
     <section>
-        <header>
-            <h2 class="h5 fw-semibold mb-1">Excluir conta</h2>
-
-            <p class="text-secondary small mb-0">
-                Ao excluir sua conta, todos os recursos e dados serão removidos
-                permanentemente. Antes de excluir, baixe qualquer dado que deseja
-                manter.
-            </p>
-        </header>
-
-        <DangerButton class="mt-4 btn-delete-account" @click="confirmUserDeletion">
+        <DangerButton class="btn-delete-account" @click="confirmUserDeletion">
             Excluir conta
         </DangerButton>
 

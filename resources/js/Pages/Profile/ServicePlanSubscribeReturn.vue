@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -19,10 +21,14 @@ defineProps({
         <Head title="Plano de serviço" />
 
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Status do plano</h1>
+            <DashboardPageHeader icon="status" title="Status do plano" />
         </template>
 
-        <div class="app-card p-4">
+        <DashboardContentCard
+            icon="service-plans"
+            title="Plano de serviço"
+            description="Confirmação do pagamento e ativação do plano na barbearia."
+        >
             <p v-if="subscription?.is_active" class="text-success mb-3">
                 Seu plano em {{ barbershop.name }} está ativo.
                 <span v-if="subscription.package_label">
@@ -46,6 +52,6 @@ defineProps({
             >
                 Ir para a barbearia
             </Link>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

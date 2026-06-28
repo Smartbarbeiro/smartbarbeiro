@@ -38,7 +38,7 @@ const toggleClients = (barbershopId) => {
     <div class="d-flex flex-column gap-4">
         <div
             v-if="barbershops.data.length === 0"
-            class="app-card p-4 text-center text-secondary small"
+            class="admin-table-surface p-4 text-center text-secondary small"
         >
             Nenhuma barbearia encontrada.
         </div>
@@ -46,7 +46,7 @@ const toggleClients = (barbershopId) => {
         <div
             v-for="barbershop in barbershops.data"
             :key="barbershop.id"
-            class="app-card p-0 overflow-hidden"
+            class="admin-table-surface overflow-hidden"
         >
             <AdminUsersTable
                 :users="[barbershop]"

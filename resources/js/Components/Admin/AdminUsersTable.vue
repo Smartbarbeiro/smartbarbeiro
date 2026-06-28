@@ -73,7 +73,7 @@ const statusClass = (user) => {
 </script>
 
 <template>
-    <div :class="nested ? '' : 'app-card p-0 overflow-hidden'">
+    <div :class="nested ? '' : 'admin-table-surface overflow-hidden'">
         <div class="table-responsive">
             <table class="table table-dark table-hover table-dark-custom mb-0">
                 <thead>

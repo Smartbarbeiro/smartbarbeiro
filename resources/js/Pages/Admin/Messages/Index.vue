@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -92,7 +94,7 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Mensagens</h1>
+            <DashboardPageHeader icon="broadcast" title="Mensagens" />
         </template>
 
         <div class="d-flex flex-column gap-4">
@@ -105,15 +107,11 @@ const submit = () => {
                 aviso fixo na tela ao entrar no app.
             </div>
 
-            <div class="app-card p-4 app-form-panel">
-                <header class="mb-4">
-                    <h2 class="h5 fw-semibold mb-1">Enviar mensagem</h2>
-                    <p class="text-secondary small mb-0">
-                        Envie avisos para barbearias e clientes por e-mail e como
-                        pop-up fixo na tela.
-                    </p>
-                </header>
-
+            <DashboardContentCard
+                icon="broadcast"
+                title="Enviar mensagem"
+                description="Envie avisos para barbearias e clientes por e-mail e como pop-up fixo na tela."
+            >
                 <form @submit.prevent="submit">
                     <div class="mb-3">
                         <InputLabel for="subject" value="Assunto" />
@@ -243,14 +241,15 @@ const submit = () => {
                     <PrimaryButton :disabled="form.processing">
                         Enviar mensagem
                     </PrimaryButton>
+
                 </form>
-            </div>
+            </DashboardContentCard>
 
-            <div class="app-card p-4">
-                <header class="mb-3">
-                    <h2 class="h5 fw-semibold mb-1">Mensagens enviadas</h2>
-                </header>
-
+            <DashboardContentCard
+                icon="messages"
+                title="Mensagens enviadas"
+                description="Histórico de avisos enviados para barbearias e clientes."
+            >
                 <div
                     v-if="sentMessages.length === 0"
                     class="border border-secondary-subtle border-dashed rounded p-4 text-center text-secondary small"
@@ -291,7 +290,7 @@ const submit = () => {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </DashboardContentCard>
         </div>
     </AuthenticatedLayout>
 </template>

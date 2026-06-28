@@ -1,6 +1,7 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
@@ -32,15 +33,23 @@ const startCheckout = () => {
         <Head title="Assinar plataforma" />
 
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Assine o plano da plataforma</h1>
+            <DashboardPageHeader
+                icon="platform-plan"
+                title="Assine o plano da plataforma"
+            />
         </template>
 
-        <div class="app-card p-4 mx-auto" style="max-width: 32rem">
-            <p class="text-muted small mb-1">Plano mensal</p>
+        <DashboardContentCard
+            icon="platform-plan"
+            title="Plano da plataforma"
+            description="Assine o plano mensal para manter seu perfil público ativo."
+            card-class="mx-auto dashboard-content-card--narrow"
+        >
+            <p class="text-secondary small mb-1">Plano mensal</p>
             <h2 class="h3 fw-semibold mb-2">{{ plan.title }}</h2>
             <p class="display-6 fw-bold mb-3">{{ plan.formatted_price }}</p>
 
-            <p v-if="plan.description" class="text-muted mb-4">
+            <p v-if="plan.description" class="text-secondary mb-4">
                 {{ plan.description }}
             </p>
 
@@ -64,6 +73,6 @@ const startCheckout = () => {
             >
                 Assinar com Mercado Pago
             </PrimaryButton>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

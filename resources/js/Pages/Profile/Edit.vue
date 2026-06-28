@@ -1,5 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import BarbershopPaymentStatusCard from './Partials/BarbershopPaymentStatusCard.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import ManageServicePlansForm from './Partials/ManageServicePlansForm.vue';
@@ -75,11 +77,16 @@ onMounted(() => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Perfil</h1>
+            <DashboardPageHeader icon="profile" title="Perfil" />
         </template>
 
         <div class="d-flex flex-column gap-4 profile-edit-stack">
-            <div class="app-card p-4 app-card-profile-info">
+            <DashboardContentCard
+                icon="profile-info"
+                title="Informações do perfil"
+                description="Atualize nome, e-mail, foto e dados da sua conta."
+                card-class="app-card-profile-info"
+            >
                 <UpdateProfileInformationForm
                     :must-verify-email="mustVerifyEmail"
                     :status="status"
@@ -88,7 +95,7 @@ onMounted(() => {
                     :barbershop-memberships="barbershopMemberships"
                     :acrylic-qr-order="acrylicQrOrder"
                 />
-            </div>
+            </DashboardContentCard>
 
             <div
                 v-if="isBarbershop && platformSubscriptionExempt"
@@ -100,29 +107,46 @@ onMounted(() => {
                 Mercado Pago.
             </div>
 
-            <div v-if="isBarbershop && servicePlans" class="app-card p-4">
+            <DashboardContentCard
+                v-if="isBarbershop && servicePlans"
+                icon="service-plans"
+                title="Planos de serviço"
+                description="Monte pacotes e opcionais para seus clientes assinarem."
+            >
                 <ManageServicePlansForm :service-plans="servicePlans" />
-            </div>
+            </DashboardContentCard>
 
-            <div v-if="isBarbershop" class="app-card p-4">
+            <DashboardContentCard
+                v-if="isBarbershop"
+                icon="payment"
+                title="Status do pagamento"
+                description="Acompanhe Mercado Pago e assinaturas do perfil pago."
+            >
                 <BarbershopPaymentStatusCard
                     :subscription-plan="subscriptionPlan"
                     :subscribe-url="subscribeUrl"
                     :mercadopago-configured="mercadopagoConfigured"
                     :active-subscribers-count="activeSubscribersCount"
                 />
-            </div>
+            </DashboardContentCard>
 
-            <div
+            <DashboardContentCard
                 v-if="isBarbershop && (subscribers.length > 0 || subscriptionPlan?.is_enabled)"
-                class="app-card p-4"
+                icon="subscribers"
+                title="Assinantes"
+                description="Clientes com plano de assinatura ativo no seu perfil."
             >
                 <SubscribersList :subscribers="subscribers" />
-            </div>
+            </DashboardContentCard>
 
-            <div class="app-card p-4 app-form-panel">
+            <DashboardContentCard
+                icon="delete-account"
+                title="Excluir conta"
+                description="Remova permanentemente sua conta e todos os dados."
+                card-class="app-form-panel"
+            >
                 <DeleteUserForm />
-            </div>
+            </DashboardContentCard>
         </div>
     </AuthenticatedLayout>
 </template>

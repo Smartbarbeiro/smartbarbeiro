@@ -1,6 +1,8 @@
 <script setup>
 import AdminBarbershopGroups from '@/Components/Admin/AdminBarbershopGroups.vue';
 import AdminUsersTable from '@/Components/Admin/AdminUsersTable.vue';
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import Modal from '@/Components/Modal.vue';
@@ -83,7 +85,7 @@ const toggleFreeze = (user) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Painel de controle</h1>
+            <DashboardPageHeader icon="admin" title="Painel de controle" />
         </template>
 
         <div class="d-flex flex-column gap-4">
@@ -110,66 +112,68 @@ const toggleFreeze = (user) => {
                 Conta descongelada.
             </div>
 
-            <div class="app-card p-4">
-                <p class="small text-secondary mb-1">Contas de barbearia</p>
-                <p class="h3 fw-semibold mb-0">{{ barbershopAccountsCount }}</p>
-            </div>
+            <DashboardContentCard>
+                <div class="d-flex flex-column gap-4">
+                    <div>
+                        <p class="small text-secondary mb-1">Contas de barbearia</p>
+                        <p class="h3 fw-semibold mb-0">{{ barbershopAccountsCount }}</p>
+                    </div>
 
-            <div class="app-card p-4">
-                <form
-                    @submit.prevent="submitSearch"
-                    class="row g-3 align-items-end"
-                >
-                    <div class="col-md flex-grow-1">
-                        <InputLabel for="search" value="Buscar usuários" />
-                        <TextInput
-                            id="search"
-                            v-model="searchForm.search"
-                            type="search"
-                            class="mt-1 w-100"
-                            placeholder="Nome, usuário ou e-mail"
+                    <form
+                        @submit.prevent="submitSearch"
+                        class="row g-3 align-items-end"
+                    >
+                        <div class="col-md flex-grow-1">
+                            <InputLabel for="search" value="Buscar usuários" />
+                            <TextInput
+                                id="search"
+                                v-model="searchForm.search"
+                                type="search"
+                                class="mt-1 w-100"
+                                placeholder="Nome, usuário ou e-mail"
+                            />
+                        </div>
+                        <div class="col-md-auto">
+                            <PrimaryButton :disabled="searchForm.processing">
+                                Buscar
+                            </PrimaryButton>
+                        </div>
+                    </form>
+
+                    <div>
+                        <h2 class="h6 fw-semibold mb-3">Administradores</h2>
+                        <AdminUsersTable
+                            :users="admins"
+                            empty-message="Nenhum administrador encontrado."
+                            :freeze-processing="freezeForm.processing"
+                            @delete="confirmDelete"
+                            @freeze="toggleFreeze"
                         />
                     </div>
-                    <div class="col-md-auto">
-                        <PrimaryButton :disabled="searchForm.processing">
-                            Buscar
-                        </PrimaryButton>
+
+                    <div>
+                        <h2 class="h6 fw-semibold mb-3">Barbearias e clientes</h2>
+                        <AdminBarbershopGroups
+                            :barbershops="barbershops"
+                            :freeze-processing="freezeForm.processing"
+                            @delete="confirmDelete"
+                            @freeze="toggleFreeze"
+                        />
                     </div>
-                </form>
-            </div>
 
-            <div>
-                <h2 class="h6 fw-semibold mb-3">Administradores</h2>
-                <AdminUsersTable
-                    :users="admins"
-                    empty-message="Nenhum administrador encontrado."
-                    :freeze-processing="freezeForm.processing"
-                    @delete="confirmDelete"
-                    @freeze="toggleFreeze"
-                />
-            </div>
-
-            <div>
-                <h2 class="h6 fw-semibold mb-3">Barbearias e clientes</h2>
-                <AdminBarbershopGroups
-                    :barbershops="barbershops"
-                    :freeze-processing="freezeForm.processing"
-                    @delete="confirmDelete"
-                    @freeze="toggleFreeze"
-                />
-            </div>
-
-            <div>
-                <h2 class="h6 fw-semibold mb-3">Clientes sem barbearia</h2>
-                <AdminUsersTable
-                    :users="unassignedClients.data"
-                    :pagination="unassignedClients"
-                    empty-message="Nenhum cliente sem barbearia encontrado."
-                    :freeze-processing="freezeForm.processing"
-                    @delete="confirmDelete"
-                    @freeze="toggleFreeze"
-                />
-            </div>
+                    <div>
+                        <h2 class="h6 fw-semibold mb-3">Clientes sem barbearia</h2>
+                        <AdminUsersTable
+                            :users="unassignedClients.data"
+                            :pagination="unassignedClients"
+                            empty-message="Nenhum cliente sem barbearia encontrado."
+                            :freeze-processing="freezeForm.processing"
+                            @delete="confirmDelete"
+                            @freeze="toggleFreeze"
+                        />
+                    </div>
+                </div>
+            </DashboardContentCard>
         </div>
 
         <Modal :show="!!userToDelete" @close="closeDeleteModal">

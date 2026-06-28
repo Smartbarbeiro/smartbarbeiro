@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -15,11 +17,15 @@ defineProps({
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Mensagem</h1>
+            <DashboardPageHeader icon="messages" title="Mensagem" />
         </template>
 
-        <div class="app-card p-4">
-            <div class="mb-3">
+        <DashboardContentCard
+            icon="messages"
+            :title="message.subject"
+            :description="`De ${message.barbershop.name} · ${new Date(message.created_at).toLocaleString('pt-BR')}`"
+        >
+            <div class="mb-4">
                 <Link
                     :href="message.is_sender ? route('messages.compose') : route('messages.inbox')"
                     class="btn btn-outline-secondary btn-sm"
@@ -28,18 +34,6 @@ defineProps({
                     Voltar
                 </Link>
             </div>
-
-            <header class="mb-4">
-                <h2 class="h5 fw-semibold mb-2">{{ message.subject }}</h2>
-                <p class="text-secondary small mb-0">
-                    De
-                    <strong>{{ message.barbershop.name }}</strong>
-                    ·
-                    {{
-                        new Date(message.created_at).toLocaleString('pt-BR')
-                    }}
-                </p>
-            </header>
 
             <div class="border border-secondary-subtle rounded p-4 mb-4">
                 <p class="mb-0" style="white-space: pre-wrap">{{ message.body }}</p>
@@ -81,6 +75,6 @@ defineProps({
                     </table>
                 </div>
             </div>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

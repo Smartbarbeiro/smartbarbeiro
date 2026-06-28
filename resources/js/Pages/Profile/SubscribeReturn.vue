@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -19,10 +21,14 @@ defineProps({
         <Head title="Assinatura" />
 
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Status da assinatura</h1>
+            <DashboardPageHeader icon="status" title="Status da assinatura" />
         </template>
 
-        <div class="app-card p-4">
+        <DashboardContentCard
+            icon="status"
+            title="Assinatura de perfil"
+            description="Confirmação do pagamento e liberação de acesso ao perfil."
+        >
             <p
                 v-if="subscription?.is_active"
                 class="text-success mb-3"
@@ -45,6 +51,6 @@ defineProps({
             >
                 Ir para o perfil
             </Link>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

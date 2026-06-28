@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import DangerButton from '@/Components/DangerButton.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -83,8 +85,11 @@ const qrProfileUrl = computed(() => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
-                <h1 class="h4 mb-0 fw-semibold">Editar usuário</h1>
+            <DashboardPageHeader icon="user-edit" title="Editar usuário" />
+        </template>
+
+        <div class="d-flex flex-column gap-4">
+            <div class="d-flex flex-wrap justify-content-end">
                 <Link
                     :href="route('admin.users.index')"
                     class="link-primary small"
@@ -92,9 +97,7 @@ const qrProfileUrl = computed(() => {
                     Voltar ao painel de controle
                 </Link>
             </div>
-        </template>
 
-        <div class="d-flex flex-column gap-4">
             <div
                 v-if="flashStatus === 'user-updated'"
                 class="alert alert-success mb-0"
@@ -103,7 +106,11 @@ const qrProfileUrl = computed(() => {
                 Usuário atualizado.
             </div>
 
-            <div class="app-card p-4">
+            <DashboardContentCard
+                icon="user-edit"
+                title="Editar usuário"
+                :description="managedUser.is_barbershop ? 'Conta de barbearia e perfil público.' : 'Conta de cliente.'"
+            >
                 <div class="d-flex align-items-start gap-4">
                     <ProfileAvatar
                         :name="managedUser.name"
@@ -319,23 +326,23 @@ const qrProfileUrl = computed(() => {
                         Salvar alterações
                     </PrimaryButton>
                 </form>
-            </div>
+            </DashboardContentCard>
 
-            <div v-if="managedUser.is_barbershop" class="app-card p-4">
-                <SubscribersList :subscribers="managedUser.subscribers" />
-            </div>
-
-            <div
-                v-if="managedUser.barbershop_members.length > 0"
-                class="app-card p-4"
+            <DashboardContentCard
+                v-if="managedUser.is_barbershop"
+                icon="subscribers"
+                title="Assinantes"
+                description="Clientes com assinatura ativa nesta barbearia."
             >
-                <header class="mb-4">
-                    <h2 class="h5 fw-semibold mb-1">Membros da barbearia</h2>
-                    <p class="text-secondary small mb-0">
-                        Clientes cadastrados nesta barbearia.
-                    </p>
-                </header>
+                <SubscribersList :subscribers="managedUser.subscribers" />
+            </DashboardContentCard>
 
+            <DashboardContentCard
+                v-if="managedUser.barbershop_members.length > 0"
+                icon="clients"
+                title="Membros da barbearia"
+                description="Clientes cadastrados nesta barbearia."
+            >
                 <div class="table-responsive">
                     <table class="table table-dark table-hover table-dark-custom mb-0">
                         <thead>
@@ -364,18 +371,18 @@ const qrProfileUrl = computed(() => {
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </DashboardContentCard>
 
-            <div v-if="canDelete" class="app-card p-4 app-form-panel">
-                <h3 class="h5 fw-semibold">Excluir usuário</h3>
-                <p class="text-secondary small mt-1">
-                    Remove permanentemente esta conta, perfil público e todo o
-                    armazenamento associado.
-                </p>
-                <DangerButton class="mt-3" @click="confirmingDeletion = true">
+            <DashboardContentCard
+                v-if="canDelete"
+                icon="delete-account"
+                title="Excluir usuário"
+                description="Remove permanentemente esta conta, perfil público e todo o armazenamento associado."
+            >
+                <DangerButton @click="confirmingDeletion = true">
                     Excluir usuário
                 </DangerButton>
-            </div>
+            </DashboardContentCard>
         </div>
 
         <Modal :show="confirmingDeletion" @close="confirmingDeletion = false">

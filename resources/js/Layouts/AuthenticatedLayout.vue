@@ -321,7 +321,7 @@ const mobileNavItems = computed(() => {
 
                         <div
                             v-if="$slots.header"
-                            class="app-topbar-title min-w-0 d-none d-lg-block"
+                            class="app-topbar-title min-w-0"
                         >
                             <slot name="header" />
                         </div>

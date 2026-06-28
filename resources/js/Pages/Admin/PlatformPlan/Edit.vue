@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -35,8 +37,16 @@ const submit = () => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 w-100">
-                <h1 class="h4 mb-0 fw-semibold">Plano da plataforma</h1>
+            <DashboardPageHeader icon="platform-plan" title="Plano da plataforma" />
+        </template>
+
+        <DashboardContentCard
+            icon="platform-plan"
+            title="Plano da plataforma"
+            description="Plano único cobrado de todas as barbearias após o cadastro. Apenas administradores podem alterar o preço."
+            card-class="dashboard-content-card--narrow"
+        >
+            <div class="d-flex flex-wrap justify-content-end mb-4">
                 <Link
                     :href="route('admin.users.index')"
                     class="link-primary small"
@@ -44,9 +54,7 @@ const submit = () => {
                     Voltar ao painel de controle
                 </Link>
             </div>
-        </template>
 
-        <div class="app-card p-4" style="max-width: 36rem">
             <div
                 v-if="flashStatus === 'platform-plan-updated'"
                 class="alert alert-success"
@@ -55,13 +63,7 @@ const submit = () => {
                 Plano da plataforma atualizado.
             </div>
 
-            <p class="text-muted small mb-4">
-                Este é o plano único cobrado de todas as barbearias após o
-                cadastro em /registrar. Apenas administradores podem alterar o
-                preço.
-            </p>
-
-            <form class="d-flex flex-column gap-3" @submit.prevent="submit">
+            <form class="d-flex flex-column gap-3 mt-3" @submit.prevent="submit">
                 <div>
                     <InputLabel for="title" value="Título" />
                     <TextInput
@@ -131,6 +133,6 @@ const submit = () => {
                     Salvar plano
                 </PrimaryButton>
             </form>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

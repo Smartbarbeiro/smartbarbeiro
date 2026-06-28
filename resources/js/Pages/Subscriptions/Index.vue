@@ -1,6 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import ServicePlanPaymentHistory from '@/Components/ServicePlanPaymentHistory.vue';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -32,6 +34,36 @@ const pageTitle = computed(() => {
     return 'Minhas assinaturas';
 });
 
+const pageIcon = computed(() => {
+    if (page.props.auth.user?.is_barbershop) {
+        return 'clients';
+    }
+
+    if (
+        page.props.auth.user?.primary_barbershop_username &&
+        !page.props.auth.user?.is_barbershop
+    ) {
+        return 'plan';
+    }
+
+    return 'subscriptions';
+});
+
+const pageDescription = computed(() => {
+    if (page.props.auth.user?.is_barbershop) {
+        return 'Acompanhe assinaturas e planos ativos dos seus clientes.';
+    }
+
+    if (
+        page.props.auth.user?.primary_barbershop_username &&
+        !page.props.auth.user?.is_barbershop
+    ) {
+        return 'Detalhes do seu plano na barbearia preferida.';
+    }
+
+    return 'Planos e assinaturas vinculados à sua conta.';
+});
+
 const statusClass = (status) => {
     if (status === 'authorized') return 'badge bg-success';
     if (status === 'cancelled') return 'badge bg-secondary';
@@ -45,7 +77,10 @@ const statusClass = (status) => {
         <Head :title="pageTitle" />
 
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">{{ pageTitle }}</h1>
+            <DashboardPageHeader
+                :icon="pageIcon"
+                :title="pageTitle"
+            />
         </template>
 
         <div class="d-flex flex-column gap-4">
@@ -58,99 +93,111 @@ const statusClass = (status) => {
                 a menos que assine novamente.
             </div>
 
-            <div
+            <DashboardContentCard
                 v-if="subscriptions.length === 0"
-                class="app-card p-4 text-center"
+                :icon="pageIcon"
+                :title="pageTitle"
+                :description="pageDescription"
+                centered
             >
                 <p class="text-secondary mb-0">Você ainda não tem assinaturas.</p>
-            </div>
+            </DashboardContentCard>
 
-            <div
-                v-for="subscription in subscriptions"
-                :key="subscription.id"
-                class="app-card p-4"
+            <DashboardContentCard
+                v-else
+                :icon="pageIcon"
+                :title="pageTitle"
+                :description="pageDescription"
             >
-                <div
-                    class="d-flex flex-column flex-sm-row align-items-sm-start justify-content-sm-between gap-3"
-                >
-                    <div>
-                        <h3 class="h5 fw-semibold mb-1">
-                            {{ subscription.creator.name }}
-                        </h3>
-                        <p class="text-secondary small mb-2">
-                            @{{ subscription.creator.username }}
-                        </p>
-                        <p
+                <div class="d-flex flex-column gap-3">
+                    <article
+                        v-for="subscription in subscriptions"
+                        :key="subscription.id"
+                        class="dashboard-content-card dashboard-content-card--nested"
+                    >
+                        <div
+                            class="d-flex flex-column flex-sm-row align-items-sm-start justify-content-sm-between gap-3"
+                        >
+                            <div>
+                                <h3 class="h5 fw-semibold mb-1">
+                                    {{ subscription.creator.name }}
+                                </h3>
+                                <p class="text-secondary small mb-2">
+                                    @{{ subscription.creator.username }}
+                                </p>
+                                <p
+                                    v-if="subscription.kind === 'service_plan'"
+                                    class="small mb-2"
+                                >
+                                    Plano: {{ subscription.package_label }}
+                                    <span class="text-secondary">
+                                        ({{ subscription.formatted_total }}/mês)
+                                    </span>
+                                </p>
+                                <span
+                                    class="badge"
+                                    :class="statusClass(subscription.status)"
+                                >
+                                    {{ subscription.status_label }}
+                                </span>
+                                <p
+                                    v-if="subscription.next_payment_date"
+                                    class="small text-secondary mt-2 mb-0"
+                                >
+                                    Próximo pagamento:
+                                    {{
+                                        new Date(
+                                            subscription.next_payment_date,
+                                        ).toLocaleDateString('pt-BR')
+                                    }}
+                                </p>
+                                <p
+                                    v-if="subscription.cancelled_at"
+                                    class="small text-secondary mb-0"
+                                >
+                                    Cancelada em
+                                    {{
+                                        new Date(
+                                            subscription.cancelled_at,
+                                        ).toLocaleDateString('pt-BR')
+                                    }}
+                                </p>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2 align-items-sm-end">
+                                <Link
+                                    v-if="subscription.is_active"
+                                    :href="
+                                        route('profile.public', {
+                                            username: subscription.creator.username,
+                                        })
+                                    "
+                                    class="link-primary small"
+                                >
+                                    Ver perfil
+                                </Link>
+
+                                <CancelSubscriptionButton
+                                    v-if="subscription.is_cancellable"
+                                    :subscription-id="subscription.id"
+                                    :creator-name="subscription.creator.name"
+                                    :destroy-route="
+                                        subscription.kind === 'service_plan'
+                                            ? route('service-plan-subscriptions.destroy', subscription.id)
+                                            : route('subscriptions.destroy', subscription.id)
+                                    "
+                                    compact
+                                />
+                            </div>
+                        </div>
+
+                        <ServicePlanPaymentHistory
                             v-if="subscription.kind === 'service_plan'"
-                            class="small mb-2"
-                        >
-                            Plano: {{ subscription.package_label }}
-                            <span class="text-secondary">
-                                ({{ subscription.formatted_total }}/mês)
-                            </span>
-                        </p>
-                        <span
-                            class="badge"
-                            :class="statusClass(subscription.status)"
-                        >
-                            {{ subscription.status_label }}
-                        </span>
-                        <p
-                            v-if="subscription.next_payment_date"
-                            class="small text-secondary mt-2 mb-0"
-                        >
-                            Próximo pagamento:
-                            {{
-                                new Date(
-                                    subscription.next_payment_date,
-                                ).toLocaleDateString('pt-BR')
-                            }}
-                        </p>
-                        <p
-                            v-if="subscription.cancelled_at"
-                            class="small text-secondary mb-0"
-                        >
-                            Cancelada em
-                            {{
-                                new Date(
-                                    subscription.cancelled_at,
-                                ).toLocaleDateString('pt-BR')
-                            }}
-                        </p>
-                    </div>
-
-                    <div class="d-flex flex-column gap-2 align-items-sm-end">
-                        <Link
-                            v-if="subscription.is_active"
-                            :href="
-                                route('profile.public', {
-                                    username: subscription.creator.username,
-                                })
-                            "
-                            class="link-primary small"
-                        >
-                            Ver perfil
-                        </Link>
-
-                        <CancelSubscriptionButton
-                            v-if="subscription.is_cancellable"
-                            :subscription-id="subscription.id"
-                            :creator-name="subscription.creator.name"
-                            :destroy-route="
-                                subscription.kind === 'service_plan'
-                                    ? route('service-plan-subscriptions.destroy', subscription.id)
-                                    : route('subscriptions.destroy', subscription.id)
-                            "
-                            compact
+                            :payment-history="subscription.payment_history ?? []"
                         />
-                    </div>
+                    </article>
                 </div>
-
-                <ServicePlanPaymentHistory
-                    v-if="subscription.kind === 'service_plan'"
-                    :payment-history="subscription.payment_history ?? []"
-                />
-            </div>
+            </DashboardContentCard>
         </div>
     </AuthenticatedLayout>
 </template>

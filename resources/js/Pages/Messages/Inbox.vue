@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -15,17 +17,14 @@ defineProps({
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Mensagens</h1>
+            <DashboardPageHeader icon="messages" title="Mensagens" />
         </template>
 
-        <div class="app-card p-4">
-            <header class="mb-3">
-                <h2 class="h5 fw-semibold mb-1">Caixa de entrada</h2>
-                <p class="text-secondary small mb-0">
-                    Mensagens enviadas pelas barbearias que você frequenta.
-                </p>
-            </header>
-
+        <DashboardContentCard
+            icon="messages"
+            title="Caixa de entrada"
+            description="Mensagens enviadas pelas barbearias que você frequenta."
+        >
             <div
                 v-if="messages.length === 0"
                 class="border border-secondary-subtle border-dashed rounded p-4 text-center text-secondary small"
@@ -66,6 +65,6 @@ defineProps({
                     </div>
                 </Link>
             </div>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

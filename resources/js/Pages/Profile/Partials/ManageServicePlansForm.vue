@@ -87,26 +87,16 @@ const hasConfiguredPackage = computed(() =>
 
 <template>
     <section>
-        <header>
-            <h2 id="planos-de-servico" class="h5 fw-semibold mb-1">
-                Planos de serviço
-            </h2>
-            <p class="text-secondary small mb-0">
-                Defina os preços dos pacotes padrão (Corte e Corte + Barba) e
-                adicione opcionais personalizados com valores próprios.
-            </p>
-        </header>
-
         <div
             v-if="!hasConfiguredPackage"
-            class="alert alert-warning mt-3 mb-0"
+            class="alert alert-warning mb-4"
             role="alert"
         >
             Configure ao menos um pacote padrão com preço maior que zero para
             exibir o montador de planos no seu perfil público.
         </div>
 
-        <form class="mt-4" @submit.prevent="submit">
+        <form id="planos-de-servico" class="mt-0" @submit.prevent="submit">
             <div class="row g-3">
                 <div class="col-md-6">
                     <div class="border rounded-3 p-3 h-100">

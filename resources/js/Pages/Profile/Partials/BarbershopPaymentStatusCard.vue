@@ -114,14 +114,6 @@ const copySubscribeLink = async () => {
 
 <template>
     <section>
-        <header>
-            <h2 class="h5 fw-semibold mb-1">Status do pagamento</h2>
-            <p class="text-secondary small mb-0">
-                Veja se seu perfil está configurado para cobrança e atualize o
-                pagamento no Mercado Pago quando necessário.
-            </p>
-        </header>
-
         <div class="mt-4">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
                 <span class="fw-medium">Situação:</span>

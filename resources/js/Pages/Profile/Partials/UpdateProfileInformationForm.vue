@@ -107,21 +107,9 @@ const submit = () => {
 
 <template>
     <section>
-        <header>
-            <h2 class="h5 fw-semibold mb-1">Informações do perfil</h2>
-
-            <p class="text-secondary small mb-0">
-                <template v-if="isBarbershop">
-                    Atualize as informações do perfil, nome da barbearia e
-                    endereço de e-mail da sua conta.
-                </template>
-                <template v-else>
-                    Atualize seu nome e endereço de e-mail.
-                </template>
-            </p>
-
+        <div class="dashboard-section-meta mb-4">
             <template v-if="isBarbershop && profileUrl">
-                <p class="text-secondary small mt-3 mb-0">
+                <p class="text-secondary small mb-0">
                     Perfil público:
                     <Link
                         :href="route('profile.public', { username: user.username })"
@@ -134,7 +122,7 @@ const submit = () => {
 
             <div
                 v-else-if="barbershopMemberships.length > 0"
-                class="mt-3"
+                class="mt-0"
             >
                 <p class="small fw-medium mb-2">Sua Barbearia Preferida:</p>
                 <ul class="list-unstyled mb-0">
@@ -158,9 +146,9 @@ const submit = () => {
                     </li>
                 </ul>
             </div>
-        </header>
+        </div>
 
-        <form @submit.prevent="submit" class="mt-4">
+        <form @submit.prevent="submit">
             <div v-if="isBarbershop" class="mb-4">
                 <div class="row g-4 align-items-start">
                     <div class="col-lg-6">

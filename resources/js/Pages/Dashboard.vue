@@ -2,6 +2,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BarbershopNoSubscribersDashboard from '@/Components/BarbershopNoSubscribersDashboard.vue';
 import BarbershopScheduleDashboard from '@/Components/BarbershopScheduleDashboard.vue';
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -62,12 +64,11 @@ defineProps({
 
     <AuthenticatedLayout>
         <template #header>
-            <h1
+            <DashboardPageHeader
                 v-if="!(isBarbershop && !hasSubscribers)"
-                class="h4 mb-0 fw-semibold"
-            >
-                Painel
-            </h1>
+                icon="dashboard"
+                title="Painel"
+            />
         </template>
 
         <BarbershopNoSubscribersDashboard
@@ -81,7 +82,12 @@ defineProps({
             :schedule="schedule"
         />
 
-        <div v-else class="app-card p-4">
+        <DashboardContentCard
+            v-else
+            icon="dashboard"
+            title="Painel"
+            description="Visão geral da sua conta e atalhos principais."
+        >
             <p class="mb-0">Você está conectado!</p>
 
             <div v-if="isBarbershop && profileUrl" class="mt-4">
@@ -171,6 +177,6 @@ defineProps({
                     </li>
                 </ul>
             </div>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

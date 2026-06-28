@@ -1,4 +1,6 @@
 <script setup>
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -62,16 +64,15 @@ const markShipped = (orderId) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <h1 class="h4 mb-0 fw-semibold">Pedidos QR acrílico</h1>
+            <DashboardPageHeader icon="qr-acrylic" title="Pedidos QR acrílico" />
         </template>
 
-        <div class="app-card p-4">
-            <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-4">
-                <div>
-                    <p class="text-secondary small mb-0">
-                        Receba pedidos de barbearias, confirme impressão e envio.
-                    </p>
-                </div>
+        <DashboardContentCard
+            icon="qr-acrylic"
+            title="Pedidos QR acrílico"
+            description="Receba pedidos de barbearias, confirme impressão e envio."
+        >
+            <div class="d-flex flex-wrap justify-content-end mb-4">
                 <Link
                     :href="route('admin.users.index')"
                     class="btn btn-outline-secondary btn-sm"
@@ -194,6 +195,6 @@ const markShipped = (orderId) => {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </DashboardContentCard>
     </AuthenticatedLayout>
 </template>
