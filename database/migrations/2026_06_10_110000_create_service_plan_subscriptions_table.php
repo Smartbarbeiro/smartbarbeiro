@@ -24,7 +24,7 @@ return new class extends Migration
             $table->timestamp('cancelled_at')->nullable();
             $table->timestamps();
 
-            $table->index(['creator_user_id', 'subscriber_user_id']);
+            $table->index(['creator_user_id', 'subscriber_user_id'], 'service_plan_sub_users_idx');
         });
     }
 

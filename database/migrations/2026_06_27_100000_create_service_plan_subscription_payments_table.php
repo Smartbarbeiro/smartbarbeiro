@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('service_plan_subscription_payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_plan_subscription_id')
-                ->constrained()
+                ->constrained(null, null, 'svc_plan_sub_pay_sub_fk')
                 ->cascadeOnDelete();
             $table->unsignedSmallInteger('billing_year');
             $table->unsignedTinyInteger('billing_month');

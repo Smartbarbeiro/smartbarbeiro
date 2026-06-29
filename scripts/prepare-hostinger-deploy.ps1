@@ -1,0 +1,69 @@
+# Prepare Hostinger FTP upload folders + zip archives.
+# Run from repo root: .\scripts\prepare-hostinger-deploy.ps1
+
+$ErrorActionPreference = "Stop"
+$ProjectRoot = Split-Path $PSScriptRoot -Parent
+$DeployRoot = Join-Path $ProjectRoot "deploy\hostinger\output"
+$LaravelOut = Join-Path $DeployRoot "laravel"
+$PublicOut = Join-Path $DeployRoot "public_html"
+
+Write-Host "==> Building frontend assets..."
+Push-Location $ProjectRoot
+npm ci --silent
+npm run build
+Write-Host "==> Installing PHP dependencies (production)..."
+php composer.phar install --no-dev --optimize-autoloader --no-interaction --quiet
+Pop-Location
+
+if (Test-Path $DeployRoot) {
+    Remove-Item $DeployRoot -Recurse -Force
+}
+New-Item -ItemType Directory -Path $LaravelOut -Force | Out-Null
+New-Item -ItemType Directory -Path $PublicOut -Force | Out-Null
+
+$excludeDirs = @(
+    "node_modules", ".git", ".cursor", ".codex", ".idea", ".vscode", ".nova", ".zed",
+    ".phpunit.cache", "tests", "deploy", "tmp"
+)
+
+Write-Host "==> Copying Laravel app to $LaravelOut"
+Get-ChildItem $ProjectRoot -Force | Where-Object {
+    $_.Name -notin $excludeDirs -and $_.Name -ne "public"
+} | ForEach-Object {
+    Copy-Item $_.FullName -Destination $LaravelOut -Recurse -Force
+}
+
+# Never ship local secrets.
+Remove-Item (Join-Path $LaravelOut ".env") -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $LaravelOut ".env.backup") -ErrorAction SilentlyContinue
+Remove-Item (Join-Path $LaravelOut ".env.production") -ErrorAction SilentlyContinue
+
+Write-Host "==> Copying public/ to $PublicOut"
+Copy-Item (Join-Path $ProjectRoot "public\*") $PublicOut -Recurse -Force
+Copy-Item (Join-Path $ProjectRoot "deploy\hostinger\public_html\index.php") (Join-Path $PublicOut "index.php") -Force
+
+$zipLaravel = Join-Path $DeployRoot "laravel.zip"
+$zipPublic = Join-Path $DeployRoot "public_html.zip"
+if (Test-Path $zipLaravel) { Remove-Item $zipLaravel -Force }
+if (Test-Path $zipPublic) { Remove-Item $zipPublic -Force }
+
+Write-Host "==> Creating zip archives..."
+Compress-Archive -Path (Join-Path $LaravelOut "*") -DestinationPath $zipLaravel -CompressionLevel Optimal
+Compress-Archive -Path (Join-Path $PublicOut "*") -DestinationPath $zipPublic -CompressionLevel Optimal
+
+Write-Host ""
+Write-Host "Done. Upload via FTP:"
+Write-Host "  laravel.zip     -> /domains/smartbarbeiro.com.br/laravel/"
+Write-Host "  public_html.zip -> /domains/smartbarbeiro.com.br/public_html/"
+Write-Host ""
+Write-Host "FTP host: ftp.smartbarbeiro.com.br (or smartbarbeiro.com.br)"
+Write-Host "FTP user: u379350398"
+Write-Host "FTP port: 21"
+Write-Host ""
+Write-Host "After upload, create .env in laravel/ from deploy/hostinger/env.production.example"
+Write-Host "Then run in hPanel Terminal:"
+Write-Host "  cd ~/domains/smartbarbeiro.com.br/laravel"
+Write-Host "  php artisan key:generate"
+Write-Host "  php artisan migrate --force"
+Write-Host "  php artisan storage:link"
+Write-Host "  php artisan config:cache && php artisan route:cache && php artisan view:cache"

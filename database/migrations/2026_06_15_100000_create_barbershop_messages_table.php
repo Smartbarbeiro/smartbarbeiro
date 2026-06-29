@@ -25,8 +25,8 @@ return new class extends Migration
             $table->timestamp('email_sent_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['barbershop_message_id', 'recipient_user_id']);
-            $table->index(['recipient_user_id', 'read_at']);
+            $table->unique(['barbershop_message_id', 'recipient_user_id'], 'barbershop_msg_recipient_unique');
+            $table->index(['recipient_user_id', 'read_at'], 'barbershop_msg_recipient_read_idx');
         });
     }
 

@@ -20,7 +20,9 @@ return new class extends Migration
 
         Schema::create('admin_broadcast_message_recipients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('admin_broadcast_message_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('admin_broadcast_message_id')
+                ->constrained(null, null, 'admin_broadcast_msg_rec_fk')
+                ->cascadeOnDelete();
             $table->foreignId('recipient_user_id')->constrained('users')->cascadeOnDelete();
             $table->timestamp('read_at')->nullable();
             $table->timestamp('dismissed_at')->nullable();
@@ -28,7 +30,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['admin_broadcast_message_id', 'recipient_user_id'], 'admin_broadcast_message_recipient_unique');
-            $table->index(['recipient_user_id', 'dismissed_at']);
+            $table->index(['recipient_user_id', 'dismissed_at'], 'admin_broadcast_recipient_dismissed_idx');
         });
     }
 
