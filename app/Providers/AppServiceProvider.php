@@ -19,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if ($publicPath = env('PUBLIC_PATH')) {
+        if ($publicPath = config('app.public_path')) {
             $this->app->usePublicPath($publicPath);
         }
     }
@@ -45,8 +45,8 @@ class AppServiceProvider extends ServiceProvider
 
         Vite::prefetch(concurrency: 3);
 
-        if (! $this->app->runningInConsole()) {
-            $request = request();
+        if (! $this->app->runningInConsole() && $this->app->bound('request')) {
+            $request = $this->app->make('request');
 
             if ($request->header('X-Forwarded-Proto') === 'https') {
                 URL::forceScheme('https');

@@ -38,9 +38,13 @@ Remove-Item (Join-Path $LaravelOut ".env") -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $LaravelOut ".env.backup") -ErrorAction SilentlyContinue
 Remove-Item (Join-Path $LaravelOut ".env.production") -ErrorAction SilentlyContinue
 
+Get-ChildItem (Join-Path $LaravelOut "bootstrap\cache\*.php") -ErrorAction SilentlyContinue | Remove-Item -Force
+
 Write-Host "==> Copying public/ to $PublicOut"
 Copy-Item (Join-Path $ProjectRoot "public\*") $PublicOut -Recurse -Force
-Copy-Item (Join-Path $ProjectRoot "deploy\hostinger\public_html\index.php") (Join-Path $PublicOut "index.php") -Force
+Get-ChildItem (Join-Path $ProjectRoot "deploy\hostinger\public_html\*.php") | ForEach-Object {
+    Copy-Item $_.FullName (Join-Path $PublicOut $_.Name) -Force
+}
 
 $zipLaravel = Join-Path $DeployRoot "laravel.zip"
 $zipPublic = Join-Path $DeployRoot "public_html.zip"
@@ -61,9 +65,6 @@ Write-Host "FTP user: u379350398"
 Write-Host "FTP port: 21"
 Write-Host ""
 Write-Host "After upload, create .env in laravel/ from deploy/hostinger/env.production.example"
-Write-Host "Then run in hPanel Terminal:"
-Write-Host "  cd ~/domains/smartbarbeiro.com.br/laravel"
-Write-Host "  php artisan key:generate"
-Write-Host "  php artisan migrate --force"
-Write-Host "  php artisan storage:link"
-Write-Host "  php artisan config:cache && php artisan route:cache && php artisan view:cache"
+Write-Host "No SSH? Upload helper scripts from deploy/hostinger/public_html/"
+Write-Host "  fix-env-format-smartbarbeiro.php, fix-vite-smartbarbeiro.php, setup-smartbarbeiro.php"
+Write-Host "Delete all *-smartbarbeiro.php helpers from public_html after deploy."

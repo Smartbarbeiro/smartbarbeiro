@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Public / web root (Hostinger split layout)
+    |--------------------------------------------------------------------------
+    |
+    | When the web root is public_html and the app lives in ../laravel, set
+    | PUBLIC_PATH in .env so Vite and assets resolve correctly after
+    | config:cache.
+    |
+    */
+
+    'public_path' => env('PUBLIC_PATH'),
+
 ];
