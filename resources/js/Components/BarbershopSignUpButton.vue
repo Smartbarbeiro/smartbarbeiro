@@ -1,4 +1,5 @@
 <script setup>
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -45,8 +46,15 @@ const loginUrl = computed(() =>
 
 <template>
     <div v-if="!isOwner">
+        <DashboardAlert
+            v-if="isAuthenticated"
+            :show="hasSignedUp"
+            variant="success"
+        >
+            Você está cadastrado nesta barbearia.
+        </DashboardAlert>
         <div
-            v-if="hasSignedUp"
+            v-else-if="hasSignedUp"
             class="alert alert-success mb-0"
             role="alert"
         >

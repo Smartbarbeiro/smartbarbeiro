@@ -179,10 +179,11 @@ const statusClass = (user) => {
                                 <button
                                     v-if="user.can_delete"
                                     type="button"
-                                    class="btn btn-outline-danger btn-sm"
+                                    class="btn btn-outline-danger btn-sm btn-icon"
+                                    aria-label="Excluir"
                                     @click="$emit('delete', user)"
                                 >
-                                    Excluir
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
                                 </button>
                             </div>
                         </td>

@@ -1,6 +1,7 @@
 <script setup>
 import AdminBarbershopGroups from '@/Components/Admin/AdminBarbershopGroups.vue';
 import AdminUsersTable from '@/Components/Admin/AdminUsersTable.vue';
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import DangerButton from '@/Components/DangerButton.vue';
@@ -89,28 +90,27 @@ const toggleFreeze = (user) => {
         </template>
 
         <div class="d-flex flex-column gap-4">
-            <div
-                v-if="flashStatus === 'user-deleted'"
-                class="alert alert-success mb-0"
-                role="alert"
+            <DashboardAlert
+                :show="flashStatus === 'user-deleted'"
+                variant="success"
             >
                 Usuário excluído. O perfil, assinaturas e armazenamento foram
                 removidos.
-            </div>
-            <div
-                v-else-if="flashStatus === 'user-frozen'"
-                class="alert alert-warning mb-0"
-                role="alert"
+            </DashboardAlert>
+
+            <DashboardAlert
+                :show="flashStatus === 'user-frozen'"
+                variant="warning"
             >
                 Conta congelada. O usuário não pode entrar nem exibir perfil público.
-            </div>
-            <div
-                v-else-if="flashStatus === 'user-unfrozen'"
-                class="alert alert-success mb-0"
-                role="alert"
+            </DashboardAlert>
+
+            <DashboardAlert
+                :show="flashStatus === 'user-unfrozen'"
+                variant="success"
             >
                 Conta descongelada.
-            </div>
+            </DashboardAlert>
 
             <DashboardContentCard>
                 <div class="d-flex flex-column gap-4">

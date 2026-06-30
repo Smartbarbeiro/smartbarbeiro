@@ -1,4 +1,5 @@
 <script setup>
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
@@ -55,13 +56,12 @@ const submit = () => {
                 </Link>
             </div>
 
-            <div
-                v-if="flashStatus === 'platform-plan-updated'"
-                class="alert alert-success"
-                role="alert"
+            <DashboardAlert
+                :show="flashStatus === 'platform-plan-updated'"
+                variant="success"
             >
                 Plano da plataforma atualizado.
-            </div>
+            </DashboardAlert>
 
             <form class="d-flex flex-column gap-3 mt-3" @submit.prevent="submit">
                 <div>

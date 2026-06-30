@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import BarbershopPaymentStatusCard from './Partials/BarbershopPaymentStatusCard.vue';
@@ -97,15 +98,14 @@ onMounted(() => {
                 />
             </DashboardContentCard>
 
-            <div
-                v-if="isBarbershop && platformSubscriptionExempt"
-                class="alert alert-info mb-0"
-                role="status"
+            <DashboardAlert
+                :show="isBarbershop && platformSubscriptionExempt"
+                variant="info"
             >
                 Sua conta foi isenta do plano da plataforma pelo administrador.
                 Seu perfil público permanece ativo sem a assinatura mensal no
                 Mercado Pago.
-            </div>
+            </DashboardAlert>
 
             <DashboardContentCard
                 v-if="isBarbershop && servicePlans"

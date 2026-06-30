@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ProfileSubscription;
 use App\Models\ServicePlanSubscription;
+use App\Models\User;
+use App\Services\BarbershopExpectedMonthlyRevenueService;
 use App\Services\MercadoPagoService;
 use App\Services\ProfileSubscriptionCancellationService;
 use App\Services\ServicePlanSubscriptionPaymentService;
@@ -15,9 +17,18 @@ use MercadoPago\Exceptions\MPApiException;
 
 class ProfileSubscriptionController extends Controller
 {
-    public function index(Request $request, ServicePlanSubscriptionPaymentService $paymentService): Response
-    {
-        $profileSubscriptions = $request->user()
+    public function index(
+        Request $request,
+        ServicePlanSubscriptionPaymentService $paymentService,
+        BarbershopExpectedMonthlyRevenueService $revenueService,
+    ): Response {
+        $user = $request->user();
+
+        if ($user->isBarbershop()) {
+            return $this->barbershopClientsIndex($user, $paymentService, $revenueService);
+        }
+
+        $profileSubscriptions = $user
             ->profileSubscriptions()
             ->with('creator:id,name,username')
             ->latest()
@@ -31,7 +42,7 @@ class ProfileSubscriptionController extends Controller
                 ],
             ]);
 
-        $servicePlanSubscriptions = $request->user()
+        $servicePlanSubscriptions = $user
             ->servicePlanSubscriptions()
             ->with('creator:id,name,username')
             ->latest()
@@ -56,6 +67,66 @@ class ProfileSubscriptionController extends Controller
 
         return Inertia::render('Subscriptions/Index', [
             'subscriptions' => $subscriptions,
+            'isBarbershopClientsView' => false,
+            'expectedMonthlyRevenue' => null,
+            'mercadopagoConfigured' => app(MercadoPagoService::class)->isConfigured(),
+        ]);
+    }
+
+    private function barbershopClientsIndex(
+        User $barbershop,
+        ServicePlanSubscriptionPaymentService $paymentService,
+        BarbershopExpectedMonthlyRevenueService $revenueService,
+    ): Response {
+        $subscriptionPlan = $barbershop->subscriptionPlan;
+        $profileMonthlyAmount = $subscriptionPlan && $subscriptionPlan->is_enabled
+            ? (float) $subscriptionPlan->monthly_amount
+            : 0.0;
+        $formattedProfilePrice = $subscriptionPlan?->is_enabled
+            ? $subscriptionPlan->formattedPrice()
+            : 'R$ 0,00';
+
+        $profileSubscriptions = $barbershop->subscribers()
+            ->with('subscriber:id,name,email,username')
+            ->latest()
+            ->get()
+            ->map(fn (ProfileSubscription $subscription) => [
+                ...$subscription->toSummaryArray(),
+                'subscriber' => [
+                    'name' => $subscription->subscriber->name,
+                    'email' => $subscription->subscriber->email,
+                    'username' => $subscription->subscriber->username,
+                ],
+                'monthly_total' => $profileMonthlyAmount,
+                'formatted_total' => $formattedProfilePrice,
+            ]);
+
+        $servicePlanSubscriptions = $barbershop->servicePlanSubscribers()
+            ->with('subscriber:id,name,email,username')
+            ->latest()
+            ->get()
+            ->map(function (ServicePlanSubscription $subscription) use ($paymentService) {
+                return [
+                    ...$subscription->toSummaryArray(),
+                    'subscriber' => [
+                        'name' => $subscription->subscriber->name,
+                        'email' => $subscription->subscriber->email,
+                        'username' => $subscription->subscriber->username,
+                    ],
+                    'payment_history' => $paymentService->paymentHistoryPayload($subscription),
+                ];
+            });
+
+        $subscriptions = $profileSubscriptions
+            ->concat($servicePlanSubscriptions)
+            ->sortByDesc('created_at')
+            ->values()
+            ->all();
+
+        return Inertia::render('Subscriptions/Index', [
+            'subscriptions' => $subscriptions,
+            'isBarbershopClientsView' => true,
+            'expectedMonthlyRevenue' => $revenueService->payloadFor($barbershop),
             'mercadopagoConfigured' => app(MercadoPagoService::class)->isConfigured(),
         ]);
     }

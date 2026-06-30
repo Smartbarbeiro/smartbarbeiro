@@ -1,4 +1,5 @@
 <script setup>
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
@@ -98,14 +99,13 @@ const submit = () => {
         </template>
 
         <div class="d-flex flex-column gap-4">
-            <div
-                v-if="flashStatus === 'admin-message-sent'"
-                class="alert alert-success mb-0"
-                role="alert"
+            <DashboardAlert
+                :show="flashStatus === 'admin-message-sent'"
+                variant="success"
             >
                 Mensagem enviada. Os destinatários receberão por e-mail e verão um
                 aviso fixo na tela ao entrar no app.
-            </div>
+            </DashboardAlert>
 
             <DashboardContentCard
                 icon="broadcast"

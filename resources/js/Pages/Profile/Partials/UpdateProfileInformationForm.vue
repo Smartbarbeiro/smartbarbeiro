@@ -1,9 +1,11 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
+import BarbershopNameInput from '@/Components/BarbershopNameInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import UpdatePasswordForm from './UpdatePasswordForm.vue';
@@ -79,6 +81,10 @@ const onPhotoChange = (event) => {
     photoPreview.value = URL.createObjectURL(file);
 };
 
+const openPhotoPicker = () => {
+    photoInput.value?.click();
+};
+
 const removePhoto = () => {
     form.profile_photo = null;
     form.remove_profile_photo = true;
@@ -113,7 +119,7 @@ const submit = () => {
                     Perfil público:
                     <Link
                         :href="route('profile.public', { username: user.username })"
-                        class="link-primary fw-medium"
+                        class="profile-public-link"
                     >
                         {{ profileUrl }}
                     </Link>
@@ -152,14 +158,21 @@ const submit = () => {
             <div v-if="isBarbershop" class="mb-4">
                 <div class="row g-4 align-items-start">
                     <div class="col-lg-6">
-                        <InputLabel value="Foto de perfil" />
+                        <InputLabel value="Logo ou foto da barbearia" />
 
                         <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
-                            <ProfileAvatar
-                                :name="form.name || user.name"
-                                :photo-url="photoPreview"
-                                size="lg"
-                            />
+                            <button
+                                type="button"
+                                class="profile-barbershop-photo-trigger"
+                                aria-label="Escolher logo ou foto da barbearia"
+                                @click="openPhotoPicker"
+                            >
+                                <ProfileAvatar
+                                    :name="form.name || user.name"
+                                    :photo-url="photoPreview"
+                                    size="lg"
+                                />
+                            </button>
 
                             <div class="d-flex flex-column gap-2">
                                 <input
@@ -183,13 +196,16 @@ const submit = () => {
                         <InputError class="mt-2" :message="form.errors.profile_photo" />
                     </div>
 
-                    <div v-if="qrProfileUrl" class="col-lg-6">
-                        <ProfileQrCode
-                            :url="qrProfileUrl"
-                            :filename="`${form.username || user.username}-profile`"
-                            show-acrylic-order
-                            :acrylic-order="acrylicQrOrder"
-                        />
+                    <div v-if="qrProfileUrl" class="col-12">
+                        <div class="barbershop-owner-qr-panel mx-auto">
+                            <ProfileQrCode
+                                :url="qrProfileUrl"
+                                :filename="`${form.username || user.username}-profile`"
+                                owner-dashboard
+                                show-acrylic-order
+                                :acrylic-order="acrylicQrOrder"
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -213,14 +229,14 @@ const submit = () => {
             <div v-if="isBarbershop" class="mb-3">
                 <InputLabel for="username" value="Nome da Barbearia" />
 
-                <TextInput
-                    id="username"
-                    type="text"
-                    class="mt-1 w-100"
-                    v-model="form.username"
-                    required
-                    autocomplete="username"
-                />
+                <div class="mt-1">
+                    <BarbershopNameInput
+                        id="username"
+                        v-model="form.username"
+                        required
+                        autocomplete="username"
+                    />
+                </div>
 
                 <p class="form-text">
                     Usado no seu link público: /barbearias/{{ form.username || 'sua-barbearia' }}
@@ -257,13 +273,12 @@ const submit = () => {
                     </Link>
                 </p>
 
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="alert alert-success py-2 small mb-0"
-                    role="alert"
+                <DashboardAlert
+                    :show="status === 'verification-link-sent'"
+                    variant="success"
                 >
                     Um novo link de verificação foi enviado para seu endereço de e-mail.
-                </div>
+                </DashboardAlert>
             </div>
 
             <div class="d-flex align-items-center gap-3 flex-wrap">

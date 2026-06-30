@@ -72,9 +72,7 @@ defineProps({
         </template>
 
         <BarbershopNoSubscribersDashboard
-            v-if="isBarbershop && !hasSubscribers && profileUrl"
-            :profile-url="profileUrl"
-            :acrylic-order="acrylicQrOrder"
+            v-if="isBarbershop && !hasSubscribers"
         />
 
         <BarbershopScheduleDashboard

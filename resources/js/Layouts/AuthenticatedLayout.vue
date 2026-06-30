@@ -4,7 +4,11 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import PlatformMessagePopups from '@/Components/PlatformMessagePopups.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, provide, ref } from 'vue';
+
+const dashboardAlertStack = ref(null);
+
+provide('dashboardAlertStack', dashboardAlertStack);
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -165,13 +169,40 @@ const mobileNavItems = computed(() => {
     }
 
     const currentUser = user.value;
+
+    if (currentUser?.is_barbershop && currentUser?.username) {
+        return [
+            {
+                href: homeHref.value,
+                active: isHomeActive.value,
+                icon: 'calendar3',
+                label: 'Home',
+            },
+            {
+                href: route('dashboard'),
+                active: route().current('dashboard'),
+                icon: 'journal-bookmark',
+                label: 'Agenda',
+            },
+            {
+                href: route('subscriptions.index'),
+                active: route().current('subscriptions.index'),
+                icon: 'scissors',
+                label: 'Clientes',
+            },
+            {
+                href: route('profile.edit'),
+                active: route().current('profile.edit'),
+                icon: 'gear',
+                label: 'Config.',
+            },
+        ];
+    }
+
     let barbeariasHref = homeHref.value;
     let barbeariasActive = false;
 
-    if (currentUser?.is_barbershop && currentUser?.username) {
-        barbeariasHref = route('profile.public', { username: currentUser.username });
-        barbeariasActive = route().current('profile.public');
-    } else if (currentUser?.primary_barbershop_username) {
+    if (currentUser?.primary_barbershop_username) {
         barbeariasHref = route('profile.public', {
             username: currentUser.primary_barbershop_username,
         });
@@ -332,7 +363,16 @@ const mobileNavItems = computed(() => {
             </header>
 
             <main class="app-content">
-                <slot />
+                <div
+                    ref="dashboardAlertStack"
+                    id="dashboard-alerts"
+                    class="dashboard-alert-stack"
+                    aria-live="polite"
+                ></div>
+
+                <div class="app-content-body">
+                    <slot />
+                </div>
             </main>
         </div>
 

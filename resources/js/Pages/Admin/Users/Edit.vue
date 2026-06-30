@@ -1,4 +1,5 @@
 <script setup>
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import DangerButton from '@/Components/DangerButton.vue';
@@ -98,13 +99,12 @@ const qrProfileUrl = computed(() => {
                 </Link>
             </div>
 
-            <div
-                v-if="flashStatus === 'user-updated'"
-                class="alert alert-success mb-0"
-                role="alert"
+            <DashboardAlert
+                :show="flashStatus === 'user-updated'"
+                variant="success"
             >
                 Usuário atualizado.
-            </div>
+            </DashboardAlert>
 
             <DashboardContentCard
                 icon="user-edit"

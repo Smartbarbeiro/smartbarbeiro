@@ -6,6 +6,7 @@ import {
     taxDocumentFieldMaxLength,
     validateTaxDocumentField,
 } from '@/utils/taxDocument';
+import { formatBarbershopUsernameInput } from '@/utils/formatBarbershopUsername';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
@@ -118,7 +119,7 @@ const onFieldInput = (step, event) => {
     }
 
     if (step.key === 'username') {
-        value = value.replace(/\s+/g, '_');
+        value = formatBarbershopUsernameInput(value);
         props.form[step.key] = value;
         event.target.value = value;
         return;

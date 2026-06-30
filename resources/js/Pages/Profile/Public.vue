@@ -2,13 +2,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BarbershopPublicLayout from '@/Layouts/BarbershopPublicLayout.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import MobileAppPromo from '@/Components/MobileAppPromo.vue';
 import PlanBuilder from '@/Components/PlanBuilder.vue';
 import PreferredHaircutDayPicker from '@/Components/PreferredHaircutDayPicker.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
+import { barbershopDisplayName } from '@/utils/barbershopDisplayName';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
@@ -158,6 +159,21 @@ const preferredDayPickerCloseable = computed(
     () => !props.needsPreferredHaircutDay,
 );
 
+const showPreferredDayNotice = computed(
+    () =>
+        flashStatus.value !== 'preferred-haircut-day-saved' &&
+        props.preferredHaircutDay &&
+        props.hasSignedUp &&
+        !props.isOwner &&
+        isAuthenticated.value,
+);
+
+const hasPlanBuilder = computed(() => props.servicePlans.packages.length > 0);
+
+const barbershopNameForDisplay = computed(() =>
+    barbershopDisplayName(props.profile.username, props.profile.name),
+);
+
 const scrollToCheckoutSection = () => {
     const hash = window.location.hash;
 
@@ -199,6 +215,151 @@ onUnmounted(() => {
                 'barbershop-profile-page--authenticated': isAuthenticated,
             }"
         >
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="flashStatus === 'preferred-haircut-day-saved'"
+                variant="success"
+            >
+                Preferência salva. Seu dia preferido para o corte é dia
+                {{ preferredHaircutDay }}.
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="showPreferredDayNotice"
+                variant="info"
+            >
+                <div
+                    class="d-flex flex-wrap align-items-center justify-content-between gap-3"
+                >
+                    <p class="mb-0">
+                        Seu dia preferido para o corte: dia
+                        {{ preferredHaircutDay }}.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-sm"
+                        @click="preferredDayPickerOpen = true"
+                    >
+                        Atualizar dia preferido
+                    </button>
+                </div>
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="flashStatus === 'barbershop-signup-success'"
+                variant="success"
+            >
+                Você está cadastrado nesta barbearia.
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="flashStatus === 'service-plan-signup-pending'"
+                variant="success"
+            >
+                Cadastro realizado. Confirme o pagamento do plano quando os
+                pagamentos estiverem disponíveis.
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="isOwner && servicePlans.packages.length === 0"
+                variant="warning"
+            >
+                Configure os preços dos seus planos em Editar perfil para
+                exibir o montador de planos aos clientes.
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="
+                    hasActiveServicePlanSubscription &&
+                    Boolean(activeServicePlanSubscription)
+                "
+                variant="success"
+            >
+                Plano ativo: {{ activeServicePlanSubscription.package_label }}
+                ({{ activeServicePlanSubscription.formatted_total }}/mês)
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="
+                    profileSubscriptionPaymentOnTime && Boolean(activeSubscription)
+                "
+                variant="success"
+            >
+                <p class="fw-medium mb-2 mb-sm-0">Pagamento em dia.</p>
+                <p
+                    v-if="activeSubscription.next_payment_date"
+                    class="small mb-2 mb-sm-0"
+                >
+                    Próximo pagamento:
+                    {{
+                        new Date(
+                            activeSubscription.next_payment_date,
+                        ).toLocaleDateString('pt-BR')
+                    }}
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                    <CancelSubscriptionButton
+                        v-if="activeSubscription.is_cancellable"
+                        :subscription-id="activeSubscription.id"
+                        :creator-name="profile.name"
+                        compact
+                    />
+                    <Link
+                        :href="route('subscriptions.index')"
+                        class="link-secondary small"
+                    >
+                        Gerenciar assinaturas
+                    </Link>
+                </div>
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="
+                    profileSubscriptionNeedsPaymentUpdate &&
+                    Boolean(activeSubscription)
+                "
+                variant="warning"
+            >
+                <p class="fw-medium mb-2">
+                    Atualize a forma de pagamento para manter seu acesso.
+                </p>
+                <p class="small mb-3">
+                    Status:
+                    <span class="badge bg-secondary">{{
+                        activeSubscription.status_label
+                    }}</span>
+                </p>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <Link
+                        v-if="mercadopagoConfigured"
+                        :href="
+                            route('profile.subscribe', {
+                                username: profile.username,
+                            })
+                        "
+                        method="post"
+                        as="button"
+                        class="btn btn-primary btn-sm"
+                    >
+                        Atualizar forma de pagamento
+                    </Link>
+                    <Link
+                        :href="route('subscriptions.index')"
+                        class="link-secondary small"
+                    >
+                        Gerenciar assinaturas
+                    </Link>
+                </div>
+            </DashboardAlert>
+
             <section
                 v-show="!planCheckoutActive"
                 class="barbershop-profile-services"
@@ -208,16 +369,27 @@ onUnmounted(() => {
                         <div class="col-md-8 col-lg-6 service-item">
                             <ProfileAvatar
                                 class="service-logo mx-auto d-block"
-                                :name="profile.name"
+                                :name="
+                                    hasPlanBuilder
+                                        ? barbershopNameForDisplay
+                                        : profile.name
+                                "
                                 :photo-url="profile.profile_photo_url"
                                 size="xl"
                             />
 
                             <h2 class="barbershop-profile-name mt-3 mb-1">
-                                {{ profile.name }}
+                                {{
+                                    hasPlanBuilder
+                                        ? barbershopNameForDisplay
+                                        : profile.name
+                                }}
                             </h2>
 
-                            <p class="barbershop-profile-meta mb-0">
+                            <p
+                                v-if="!hasPlanBuilder"
+                                class="barbershop-profile-meta mb-0"
+                            >
                                 @{{ profile.username }}
                             </p>
 
@@ -249,7 +421,7 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-if="flashStatus === 'preferred-haircut-day-saved'"
+                v-if="!isAuthenticated && flashStatus === 'preferred-haircut-day-saved'"
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-success mb-0" role="alert">
@@ -259,11 +431,11 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-else-if="
+                v-if="
+                    !isAuthenticated &&
                     preferredHaircutDay &&
                     hasSignedUp &&
-                    !isOwner &&
-                    isAuthenticated
+                    !isOwner
                 "
                 class="container barbershop-profile-notices"
             >
@@ -288,7 +460,7 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-if="flashStatus === 'barbershop-signup-success'"
+                v-if="!isAuthenticated && flashStatus === 'barbershop-signup-success'"
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-success mb-0" role="alert">
@@ -297,7 +469,7 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-if="flashStatus === 'service-plan-signup-pending'"
+                v-if="!isAuthenticated && flashStatus === 'service-plan-signup-pending'"
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-success mb-0" role="alert">
@@ -334,36 +506,30 @@ onUnmounted(() => {
                             class="btn btn-outline-secondary"
                         >
                             <i class="bi bi-pencil-square me-2"></i>
-                            Editar perfil
+                            Editar meus planos
                         </Link>
 
-                        <SecondaryButton
+                        <button
                             type="button"
+                            class="btn-share-qrcode"
                             :aria-expanded="ownerQrExpanded"
                             @click="ownerQrExpanded = !ownerQrExpanded"
                         >
-                            <i class="bi bi-qr-code me-2"></i>
+                            <i class="bi bi-qr-code me-2" aria-hidden="true"></i>
                             Compartilhar Qr-code
-                        </SecondaryButton>
+                        </button>
                     </div>
 
                     <div
                         v-if="isOwner && !showPaywall && ownerQrExpanded"
-                        class="mb-4 mx-auto text-start"
-                        style="max-width: 28rem"
+                        class="barbershop-owner-qr-panel mb-4 mx-auto"
                     >
-                        <p class="small text-secondary mb-2">
-                            Link do perfil:
-                            <span class="font-monospace text-body">{{
-                                profile.profile_url
-                            }}</span>
-                        </p>
-
                         <ProfileQrCode
                             v-model:expanded="ownerQrExpanded"
                             :url="profile.profile_url"
                             :filename="`${profile.username}-profile`"
                             hide-share-button
+                            owner-dashboard
                             show-acrylic-order
                             :acrylic-order="acrylicQrOrder"
                         />
@@ -372,7 +538,7 @@ onUnmounted(() => {
                     <PlanBuilder
                         :service-plans="servicePlans"
                         :barbershop-username="profile.username"
-                        :barbershop-name="profile.name"
+                        :barbershop-name="barbershopNameForDisplay"
                         :barbershop-photo-url="profile.profile_photo_url"
                         :is-authenticated="isAuthenticated"
                         :is-owner="isOwner"
@@ -387,7 +553,7 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-else-if="isOwner"
+                v-if="!isAuthenticated && isOwner && servicePlans.packages.length === 0"
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-warning mb-0" role="alert">
@@ -397,7 +563,11 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-if="hasActiveServicePlanSubscription && activeServicePlanSubscription"
+                v-if="
+                    !isAuthenticated &&
+                    hasActiveServicePlanSubscription &&
+                    activeServicePlanSubscription
+                "
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-success mb-0" role="alert">
@@ -407,7 +577,11 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-if="profileSubscriptionPaymentOnTime && activeSubscription"
+                v-if="
+                    !isAuthenticated &&
+                    profileSubscriptionPaymentOnTime &&
+                    activeSubscription
+                "
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-success mb-0" role="alert">
@@ -441,7 +615,11 @@ onUnmounted(() => {
             </section>
 
             <section
-                v-if="profileSubscriptionNeedsPaymentUpdate && activeSubscription"
+                v-if="
+                    !isAuthenticated &&
+                    profileSubscriptionNeedsPaymentUpdate &&
+                    activeSubscription
+                "
                 class="container barbershop-profile-notices"
             >
                 <div class="alert alert-warning mb-0" role="alert">

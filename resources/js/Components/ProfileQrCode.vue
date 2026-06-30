@@ -42,6 +42,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    ownerDashboard: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const page = usePage();
@@ -231,17 +235,96 @@ watch(
 
 <template>
     <div class="profile-qr-section">
-        <SecondaryButton
+        <button
             v-if="!hideShareButton"
             type="button"
+            class="btn-share-qrcode"
             :aria-expanded="expanded"
             @click="expanded = !expanded"
         >
-            <i class="bi bi-qr-code me-2"></i>
-            Compartilhar Qrcode
-        </SecondaryButton>
+            <i class="bi bi-qr-code me-2" aria-hidden="true"></i>
+            Compartilhar Qr-code
+        </button>
 
-        <div v-show="expanded" class="app-card p-3 mt-3">
+        <div
+            v-show="expanded"
+            :class="
+                ownerDashboard
+                    ? 'profile-qr-panel profile-qr-panel--owner-dashboard'
+                    : 'app-card p-3 mt-3'
+            "
+        >
+            <template v-if="ownerDashboard">
+                <p class="profile-qr-panel__url font-monospace small text-break mb-0">
+                    {{ url }}
+                </p>
+
+                <div class="profile-qr-panel__qr-frame">
+                    <img
+                        v-if="dataUrl"
+                        :src="dataUrl"
+                        :alt="`${label} para ${url}`"
+                        class="profile-qr-panel__image"
+                        :width="size"
+                        :height="size"
+                    />
+                    <div
+                        v-else
+                        class="profile-qr-panel__placeholder"
+                        :style="{ width: `${size}px`, height: `${size}px` }"
+                    >
+                        {{ error || 'Gerando…' }}
+                    </div>
+                </div>
+
+                <p class="profile-qr-panel__hint mb-0">
+                    Escaneie para abrir o perfil da sua barbearia no celular.
+                </p>
+
+                <div class="profile-qr-panel__actions">
+                    <button
+                        type="button"
+                        class="btn btn-yellow"
+                        :disabled="!dataUrl"
+                        @click="download"
+                    >
+                        <i class="bi bi-download me-2" aria-hidden="true"></i>
+                        Baixar PNG
+                    </button>
+
+                    <button
+                        v-if="showAcrylicOrder && !activeAcrylicOrder"
+                        type="button"
+                        class="btn btn-yellow"
+                        @click="openOrderModal"
+                    >
+                        <i class="bi bi-printer me-2" aria-hidden="true"></i>
+                        Pedir qr-code físico
+                    </button>
+
+                    <div
+                        v-else-if="showAcrylicOrder && activeAcrylicOrder"
+                        class="profile-qr-panel__order-status small"
+                    >
+                        <span
+                            class="badge"
+                            :class="acrylicStatusClass(activeAcrylicOrder.status)"
+                        >
+                            {{ activeAcrylicOrder.status_label }}
+                        </span>
+                        <p class="mb-0 mt-2">
+                            Pedido em
+                            {{
+                                new Date(
+                                    activeAcrylicOrder.created_at,
+                                ).toLocaleDateString('pt-BR')
+                            }}.
+                        </p>
+                    </div>
+                </div>
+            </template>
+
+            <template v-else>
             <p class="font-monospace small text-secondary text-break mb-0">
                 {{ url }}
             </p>
@@ -271,6 +354,7 @@ watch(
                     :disabled="!dataUrl"
                     @click="download"
                 >
+                    <i class="bi bi-download me-2" aria-hidden="true"></i>
                     Baixar PNG
                 </SecondaryButton>
 
@@ -279,6 +363,7 @@ watch(
                     type="button"
                     @click="openOrderModal"
                 >
+                    <i class="bi bi-printer me-2" aria-hidden="true"></i>
                     Pedir qr-code físico
                 </SecondaryButton>
 
@@ -303,6 +388,7 @@ watch(
                 </p>
             </div>
             </div>
+            </template>
         </div>
 
         <Modal :show="showOrderModal" max-width="lg" @close="closeOrderModal">

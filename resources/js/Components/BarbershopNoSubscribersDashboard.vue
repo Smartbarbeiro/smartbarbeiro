@@ -1,54 +1,27 @@
 <script setup>
-import ProfileQrCode from '@/Components/ProfileQrCode.vue';
-import { usePage } from '@inertiajs/vue3';
-import { ref } from 'vue';
-
-defineProps({
-    profileUrl: {
-        type: String,
-        required: true,
-    },
-    acrylicOrder: {
-        type: Object,
-        default: null,
-    },
-});
-
-const showQrCode = ref(false);
-const page = usePage();
+import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
     <section class="barbershop-empty-dashboard">
         <img
             src="/images/barbearia-empty-state.png"
-            alt=""
+            alt="Ilustração de uma barbearia"
             class="barbershop-empty-dashboard__icon"
-            width="280"
-            height="280"
+            width="560"
+            height="420"
         />
 
         <p class="barbershop-empty-dashboard__message mb-0">
-            Você ainda não tem assinantes!
+            Sua barbearia ainda não tem assinantes...
         </p>
 
-        <button
-            type="button"
-            class="btn btn-dark barbershop-empty-dashboard__share-btn"
-            @click="showQrCode = !showQrCode"
+        <Link
+            :href="`${route('profile.edit')}#planos-de-servico`"
+            class="btn btn-dark barbershop-empty-dashboard__action-btn"
         >
-            Compartilhar Qr-code
-        </button>
-
-        <div v-show="showQrCode" class="barbershop-empty-dashboard__qr">
-            <ProfileQrCode
-                :url="profileUrl"
-                :filename="`${page.props.auth.user.username}-profile`"
-                hide-share-button
-                default-expanded
-                show-acrylic-order
-                :acrylic-order="acrylicOrder"
-            />
-        </div>
+            <i class="bi bi-scissors me-2" aria-hidden="true"></i>
+            Crie seus planos
+        </Link>
     </section>
 </template>

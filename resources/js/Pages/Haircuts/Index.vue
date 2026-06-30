@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
@@ -94,21 +95,19 @@ const flashStatus = () => usePage().props.flash?.status;
         </template>
 
         <div class="d-flex flex-column gap-4">
-            <div
-                v-if="flashStatus === 'haircut-photo-uploaded'"
-                class="alert alert-success mb-0"
-                role="alert"
+            <DashboardAlert
+                :show="flashStatus() === 'haircut-photo-uploaded'"
+                variant="success"
             >
                 Foto do corte enviada com sucesso.
-            </div>
+            </DashboardAlert>
 
-            <div
-                v-if="flashStatus === 'haircut-photo-deleted'"
-                class="alert alert-success mb-0"
-                role="alert"
+            <DashboardAlert
+                :show="flashStatus() === 'haircut-photo-deleted'"
+                variant="success"
             >
                 Foto removida.
-            </div>
+            </DashboardAlert>
 
             <DashboardContentCard
                 icon="upload"

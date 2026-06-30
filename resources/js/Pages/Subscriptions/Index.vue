@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
@@ -15,6 +16,14 @@ defineProps({
     mercadopagoConfigured: {
         type: Boolean,
         default: false,
+    },
+    isBarbershopClientsView: {
+        type: Boolean,
+        default: false,
+    },
+    expectedMonthlyRevenue: {
+        type: Object,
+        default: null,
     },
 });
 
@@ -84,14 +93,32 @@ const statusClass = (status) => {
         </template>
 
         <div class="d-flex flex-column gap-4">
-            <div
-                v-if="$page.props.flash?.status === 'subscription-cancelled'"
-                class="alert alert-success mb-0"
-                role="alert"
+            <DashboardAlert
+                :show="$page.props.flash?.status === 'subscription-cancelled'"
+                variant="success"
             >
                 Assinatura cancelada. Você perderá o acesso após o período atual,
                 a menos que assine novamente.
-            </div>
+            </DashboardAlert>
+
+            <DashboardContentCard
+                v-if="isBarbershopClientsView && expectedMonthlyRevenue"
+                icon="payment"
+                title="Receita prevista do mês"
+                description="Soma dos valores mensais dos planos ativos de todos os clientes."
+            >
+                <p class="display-6 fw-semibold mb-2">
+                    {{ expectedMonthlyRevenue.formatted_amount }}
+                </p>
+                <p class="text-secondary small mb-0">
+                    {{ expectedMonthlyRevenue.active_plans_count }}
+                    {{
+                        expectedMonthlyRevenue.active_plans_count === 1
+                            ? 'plano ativo'
+                            : 'planos ativos'
+                    }}
+                </p>
+            </DashboardContentCard>
 
             <DashboardContentCard
                 v-if="subscriptions.length === 0"
@@ -100,7 +127,13 @@ const statusClass = (status) => {
                 :description="pageDescription"
                 centered
             >
-                <p class="text-secondary mb-0">Você ainda não tem assinaturas.</p>
+                <p class="text-secondary mb-0">
+                    {{
+                        isBarbershopClientsView
+                            ? 'Nenhum cliente com plano cadastrado ainda.'
+                            : 'Você ainda não tem assinaturas.'
+                    }}
+                </p>
             </DashboardContentCard>
 
             <DashboardContentCard
@@ -120,9 +153,19 @@ const statusClass = (status) => {
                         >
                             <div>
                                 <h3 class="h5 fw-semibold mb-1">
-                                    {{ subscription.creator.name }}
+                                    {{
+                                        isBarbershopClientsView
+                                            ? subscription.subscriber?.name
+                                            : subscription.creator.name
+                                    }}
                                 </h3>
-                                <p class="text-secondary small mb-2">
+                                <p
+                                    v-if="isBarbershopClientsView"
+                                    class="text-secondary small mb-2"
+                                >
+                                    {{ subscription.subscriber?.email }}
+                                </p>
+                                <p v-else class="text-secondary small mb-2">
                                     @{{ subscription.creator.username }}
                                 </p>
                                 <p
@@ -130,6 +173,18 @@ const statusClass = (status) => {
                                     class="small mb-2"
                                 >
                                     Plano: {{ subscription.package_label }}
+                                    <span class="text-secondary">
+                                        ({{ subscription.formatted_total }}/mês)
+                                    </span>
+                                </p>
+                                <p
+                                    v-else-if="
+                                        isBarbershopClientsView &&
+                                        subscription.formatted_total
+                                    "
+                                    class="small mb-2"
+                                >
+                                    Assinatura do perfil
                                     <span class="text-secondary">
                                         ({{ subscription.formatted_total }}/mês)
                                     </span>
@@ -164,7 +219,10 @@ const statusClass = (status) => {
                                 </p>
                             </div>
 
-                            <div class="d-flex flex-column gap-2 align-items-sm-end">
+                            <div
+                                v-if="!isBarbershopClientsView"
+                                class="d-flex flex-column gap-2 align-items-sm-end"
+                            >
                                 <Link
                                     v-if="subscription.is_active"
                                     :href="

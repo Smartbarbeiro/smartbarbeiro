@@ -1,8 +1,10 @@
 <script setup>
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import InputError from '@/Components/InputError.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ServicePlanIcon from '@/Components/ServicePlanIcon.vue';
 import StepSignupForm from '@/Components/StepSignupForm.vue';
+import { barbershopDisplayName } from '@/utils/barbershopDisplayName';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
@@ -130,6 +132,10 @@ const loginUrl = computed(() =>
     route('login', {
         redirect: `/barbearias/${props.barbershopUsername}`,
     }),
+);
+
+const barbershopNameForDisplay = computed(() =>
+    barbershopDisplayName(props.barbershopUsername, props.barbershopName),
 );
 
 const selectedPackage = computed(() =>
@@ -385,16 +391,32 @@ onUnmounted(() => {
 
 <template>
     <section v-if="servicePlans.packages.length > 0" class="plan-builder">
+        <DashboardAlert
+            v-if="isAuthenticated"
+            :show="hasActiveServicePlanSubscription"
+            variant="success"
+        >
+            Você já tem um plano de serviço ativo nesta barbearia.
+        </DashboardAlert>
         <div
-            v-if="hasActiveServicePlanSubscription"
+            v-else-if="hasActiveServicePlanSubscription"
             class="alert alert-success mb-3"
             role="alert"
         >
             Você já tem um plano de serviço ativo nesta barbearia.
         </div>
 
+        <DashboardAlert
+            v-if="isAuthenticated"
+            :show="isOwner"
+            variant="info"
+        >
+            <p class="mb-0">
+                Esta é a visualização do montador de planos para seus clientes.
+            </p>
+        </DashboardAlert>
         <div
-            v-if="isOwner"
+            v-else-if="isOwner"
             class="alert alert-info mb-3 text-start"
             role="alert"
         >
@@ -535,17 +557,14 @@ onUnmounted(() => {
                         >
                             <ProfileAvatar
                                 class="service-logo"
-                                :name="barbershopName"
+                                :name="barbershopNameForDisplay"
                                 :photo-url="barbershopPhotoUrl"
                                 size="lg"
                             />
                             <div class="perfil-info">
-                                <h3 class="barbershop-profile-name mb-1">
-                                    {{ barbershopName }}
+                                <h3 class="barbershop-profile-name mb-0">
+                                    {{ barbershopNameForDisplay }}
                                 </h3>
-                                <p class="barbershop-profile-meta mb-0">
-                                    @{{ barbershopUsername }}
-                                </p>
                             </div>
                         </div>
                     </div>

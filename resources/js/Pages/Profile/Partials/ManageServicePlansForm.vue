@@ -1,5 +1,6 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
+import DashboardAlert from '@/Components/DashboardAlert.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -87,14 +88,10 @@ const hasConfiguredPackage = computed(() =>
 
 <template>
     <section>
-        <div
-            v-if="!hasConfiguredPackage"
-            class="alert alert-warning mb-4"
-            role="alert"
-        >
+        <DashboardAlert :show="!hasConfiguredPackage" variant="warning">
             Configure ao menos um pacote padrão com preço maior que zero para
             exibir o montador de planos no seu perfil público.
-        </div>
+        </DashboardAlert>
 
         <form id="planos-de-servico" class="mt-0" @submit.prevent="submit">
             <div class="row g-3">
@@ -270,13 +267,14 @@ const hasConfiguredPackage = computed(() =>
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-md-2 d-flex align-items-end justify-content-md-end">
                             <button
                                 type="button"
-                                class="btn btn-outline-danger btn-sm w-100"
+                                class="btn btn-outline-danger btn-sm btn-icon"
+                                aria-label="Remover opcional"
                                 @click="removeAddon(index)"
                             >
-                                Remover
+                                <i class="bi bi-trash" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
