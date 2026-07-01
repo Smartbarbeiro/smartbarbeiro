@@ -53,7 +53,8 @@ if (file_put_contents($envPath, $content) === false) {
 }
 
 echo "\n.env patched (URLs and runtime only).\n";
-echo "Edit laravel/.env in hPanel for MERCADOPAGO_* and GOOGLE_* secrets.\n\n";
+echo "Edit laravel/.env in hPanel for MERCADOPAGO_* and GOOGLE_* secrets.\n";
+echo "Include MERCADOPAGO_WEBHOOK_SECRET (assinatura secreta from MP Webhooks panel).\n\n";
 echo "Mercado Pago webhook (set in MP Developers panel):\n";
 echo "  https://www.smartbarbeiro.com.br/webhooks/mercadopago\n\n";
 echo "Next:\n";

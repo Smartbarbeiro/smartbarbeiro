@@ -17,6 +17,7 @@ echo 'runtime: '.config('mercadopago.runtime_environment').PHP_EOL;
 echo 'app_url: '.config('app.url').PHP_EOL;
 echo 'back_url: '.config('mercadopago.back_url').PHP_EOL;
 echo 'back_url_https: '.(str_starts_with((string) config('mercadopago.back_url'), 'https://') ? 'yes' : 'no').PHP_EOL;
+echo 'webhook_secret: '.($mp->webhookSignatureConfigured() ? 'set' : 'missing').PHP_EOL;
 echo 'ssl_ca_bundle: '.(is_file(storage_path('certs/cacert.pem')) ? 'present' : 'missing').PHP_EOL;
 echo 'plan_mp_id: '.($plan->mercadopago_preapproval_plan_id ?? 'none').PHP_EOL;
 

@@ -357,6 +357,53 @@ class MercadoPagoService
         return is_file($bundle) ? $bundle : null;
     }
 
+    public function webhookSignatureConfigured(): bool
+    {
+        return filled(config('mercadopago.webhook_secret'));
+    }
+
+    public function verifyWebhookSignature(?string $xSignature, ?string $xRequestId, ?string $dataId): bool
+    {
+        $secret = config('mercadopago.webhook_secret');
+
+        if (! filled($secret) || ! filled($xSignature)) {
+            return false;
+        }
+
+        $timestamp = null;
+        $signature = null;
+
+        foreach (explode(',', $xSignature) as $part) {
+            $part = trim($part);
+
+            if (str_starts_with($part, 'ts=')) {
+                $timestamp = substr($part, 3);
+            } elseif (str_starts_with($part, 'v1=')) {
+                $signature = substr($part, 3);
+            }
+        }
+
+        if (! filled($timestamp) || ! filled($signature)) {
+            return false;
+        }
+
+        $manifestParts = [];
+
+        if (filled($dataId)) {
+            $manifestParts[] = 'id:'.strtolower($dataId);
+        }
+
+        if (filled($xRequestId)) {
+            $manifestParts[] = 'request-id:'.$xRequestId;
+        }
+
+        $manifestParts[] = 'ts:'.$timestamp;
+        $manifest = implode(';', $manifestParts).';';
+        $expected = hash_hmac('sha256', $manifest, (string) $secret);
+
+        return hash_equals($expected, $signature);
+    }
+
     /**
      * @throws MPApiException
      */

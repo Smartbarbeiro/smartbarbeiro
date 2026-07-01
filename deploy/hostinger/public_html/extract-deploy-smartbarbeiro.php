@@ -3,6 +3,11 @@
 /**
  * Extracts laravel.zip + public_html.zip uploaded via FTP, and removes
  * mistaken Laravel app files from public_html.
+ *
+ * Preserves on redeploy (never overwritten by zip contents):
+ *   - laravel/storage/app/public/  (user uploads → /storage/...)
+ *   - public_html/images/          (marketing assets + any server-only files)
+ *
  * Visit once: https://www.smartbarbeiro.com.br/extract-deploy-smartbarbeiro.php
  * DELETE immediately after.
  */
@@ -41,6 +46,92 @@ function deletePath(string $path): void
     }
 
     rmdir($path);
+}
+
+function normalizeRelativePath(string $path): string
+{
+    return str_replace('\\', '/', $path);
+}
+
+function shouldExcludePath(string $relativePath, array $excludePrefixes): bool
+{
+    $relativePath = normalizeRelativePath($relativePath);
+
+    foreach ($excludePrefixes as $prefix) {
+        $prefix = normalizeRelativePath(trim($prefix, '/'));
+
+        if ($relativePath === $prefix || str_starts_with($relativePath, $prefix.'/')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function copyDirectory(string $src, string $dest, array $excludePrefixes = [], ?string $baseSrc = null): void
+{
+    if (! is_dir($src)) {
+        return;
+    }
+
+    $baseSrc ??= $src;
+
+    if (! is_dir($dest) && ! mkdir($dest, 0755, true) && ! is_dir($dest)) {
+        throw new RuntimeException("Cannot create {$dest}");
+    }
+
+    $items = scandir($src);
+    if ($items === false) {
+        return;
+    }
+
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+
+        $srcPath = $src.DIRECTORY_SEPARATOR.$item;
+        $destPath = $dest.DIRECTORY_SEPARATOR.$item;
+        $relativePath = normalizeRelativePath(substr($srcPath, strlen($baseSrc) + 1));
+
+        if ($excludePrefixes !== [] && shouldExcludePath($relativePath, $excludePrefixes)) {
+            continue;
+        }
+
+        if (is_dir($srcPath)) {
+            copyDirectory($srcPath, $destPath, $excludePrefixes, $baseSrc);
+
+            continue;
+        }
+
+        $destDir = dirname($destPath);
+        if (! is_dir($destDir) && ! mkdir($destDir, 0755, true) && ! is_dir($destDir)) {
+            throw new RuntimeException("Cannot create {$destDir}");
+        }
+
+        if (! copy($srcPath, $destPath)) {
+            throw new RuntimeException("Cannot copy {$srcPath} to {$destPath}");
+        }
+    }
+}
+
+function backupDirectory(string $src, string $backup): void
+{
+    if (! is_dir($src)) {
+        return;
+    }
+
+    deletePath($backup);
+    copyDirectory($src, $backup);
+}
+
+function restoreDirectory(string $backup, string $dest): void
+{
+    if (! is_dir($backup)) {
+        return;
+    }
+
+    copyDirectory($backup, $dest);
 }
 
 function extractZip(string $zipPath, string $destDir): void
@@ -95,15 +186,30 @@ try {
         }
     }
 
+    $laravelDir = $domainRoot.'/laravel';
+    $laravelTemp = $laravelDir.'/.deploy-extract-tmp';
+
     echo "\nExtracting laravel.zip...\n";
-    extractZip($domainRoot.'/laravel/laravel.zip', $domainRoot.'/laravel/');
+    deletePath($laravelTemp);
+    extractZip($laravelDir.'/laravel.zip', $laravelTemp);
+    echo "Preserving laravel/storage/app/public/ (user uploads)...\n";
+    copyDirectory($laravelTemp, $laravelDir, ['storage/app/public']);
+    deletePath($laravelTemp);
     echo "laravel.zip OK\n";
 
+    $imagesBackup = $publicRoot.'/.deploy-preserve-images';
+
     echo "\nExtracting public_html.zip...\n";
+    echo "Backing up public_html/images/ ...\n";
+    backupDirectory($publicRoot.'/images', $imagesBackup);
     extractZip($publicRoot.'/public_html.zip', $publicRoot);
+    echo "Restoring public_html/images/ from backup...\n";
+    restoreDirectory($imagesBackup, $publicRoot.'/images');
+    deletePath($imagesBackup);
     echo "public_html.zip OK\n";
 
     echo "\nDeploy extract complete.\n";
+    echo "Preserved: laravel/storage/app/public/, public_html/images/\n";
     echo "Next:\n";
     echo "1. patch-mp-production-smartbarbeiro.php\n";
     echo "2. clear-cache-smartbarbeiro.php\n";

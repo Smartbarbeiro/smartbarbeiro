@@ -28,7 +28,7 @@ use App\Services\BarbershopScheduleForecastService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::post('/webhooks/mercadopago', MercadoPagoWebhookController::class)
+Route::match(['get', 'post'], '/webhooks/mercadopago', MercadoPagoWebhookController::class)
     ->name('webhooks.mercadopago');
 
 Route::post('/webhooks/stripe', StripeWebhookController::class)

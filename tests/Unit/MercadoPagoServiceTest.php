@@ -131,4 +131,30 @@ class MercadoPagoServiceTest extends TestCase
 
         $this->assertTrue(true);
     }
+
+    #[Test]
+    public function test_verify_webhook_signature_accepts_valid_signature(): void
+    {
+        config(['mercadopago.webhook_secret' => 'test-secret']);
+
+        $service = app(MercadoPagoService::class);
+        $dataId = 'ABC123';
+        $requestId = 'req-1';
+        $timestamp = '1704908010';
+        $manifest = 'id:abc123;request-id:req-1;ts:1704908010;';
+        $signature = hash_hmac('sha256', $manifest, 'test-secret');
+        $xSignature = "ts={$timestamp},v1={$signature}";
+
+        $this->assertTrue($service->verifyWebhookSignature($xSignature, $requestId, $dataId));
+    }
+
+    #[Test]
+    public function test_verify_webhook_signature_rejects_invalid_signature(): void
+    {
+        config(['mercadopago.webhook_secret' => 'test-secret']);
+
+        $service = app(MercadoPagoService::class);
+
+        $this->assertFalse($service->verifyWebhookSignature('ts=1,v1=bad', 'req-1', 'abc'));
+    }
 }
