@@ -485,6 +485,11 @@ onUnmounted(() => {
                     </span>
                 </button>
 
+                <hr
+                    v-if="showAddons && availableAddons.length > 0"
+                    class="plan-addons-divider"
+                />
+
                 <div
                     v-if="showAddons && availableAddons.length > 0"
                     class="plan-addons-panel text-start"

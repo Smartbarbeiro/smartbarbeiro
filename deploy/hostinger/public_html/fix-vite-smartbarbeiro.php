@@ -24,6 +24,11 @@ if (! is_file($manifest)) {
 }
 echo "\nmanifest.json: OK ({$manifest})\n";
 
+$imagesDir = $publicHtml.'/images';
+if (! is_dir($imagesDir) || ! is_file($imagesDir.'/logo.png')) {
+    echo "\nWARN: public_html/images/ is missing. Upload public/images via FTP.\n";
+}
+
 // 3. Patch config/app.php
 $configFile = $laravel.'/config/app.php';
 $config = file_get_contents($configFile);

@@ -85,16 +85,6 @@ const openPhotoPicker = () => {
     photoInput.value?.click();
 };
 
-const removePhoto = () => {
-    form.profile_photo = null;
-    form.remove_profile_photo = true;
-    photoPreview.value = null;
-
-    if (photoInput.value) {
-        photoInput.value.value = '';
-    }
-};
-
 const submit = () => {
     form.transform((data) => ({
         ...data,
@@ -156,48 +146,36 @@ const submit = () => {
 
         <form @submit.prevent="submit">
             <div v-if="isBarbershop" class="mb-4">
-                <div class="row g-4 align-items-start">
-                    <div class="col-lg-6">
-                        <InputLabel value="Logo ou foto da barbearia" />
+                <InputLabel value="Logo ou foto da barbearia" />
 
-                        <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
-                            <button
-                                type="button"
-                                class="profile-barbershop-photo-trigger"
-                                aria-label="Escolher logo ou foto da barbearia"
-                                @click="openPhotoPicker"
-                            >
-                                <ProfileAvatar
-                                    :name="form.name || user.name"
-                                    :photo-url="photoPreview"
-                                    size="lg"
-                                />
-                            </button>
+                <div class="d-flex flex-wrap align-items-start gap-3 mt-2">
+                    <button
+                        type="button"
+                        class="profile-barbershop-photo-trigger"
+                        aria-label="Escolher logo ou foto da barbearia"
+                        @click="openPhotoPicker"
+                    >
+                        <ProfileAvatar
+                            :name="form.name || user.name"
+                            :photo-url="photoPreview"
+                            size="lg"
+                        />
+                    </button>
 
-                            <div class="d-flex flex-column gap-2">
-                                <input
-                                    ref="photoInput"
-                                    type="file"
-                                    accept="image/jpeg,image/png,image/webp"
-                                    class="form-control form-control-sm"
-                                    style="max-width: 20rem"
-                                    @change="onPhotoChange"
-                                />
-                                <SecondaryButton
-                                    v-if="photoPreview"
-                                    type="button"
-                                    @click="removePhoto"
-                                >
-                                    Remover foto
-                                </SecondaryButton>
-                            </div>
-                        </div>
+                    <div class="d-flex flex-column gap-2">
+                        <input
+                            ref="photoInput"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            class="form-control form-control-sm"
+                            style="max-width: 20rem"
+                            @change="onPhotoChange"
+                        />
 
-                        <InputError class="mt-2" :message="form.errors.profile_photo" />
-                    </div>
-
-                    <div v-if="qrProfileUrl" class="col-12">
-                        <div class="barbershop-owner-qr-panel mx-auto">
+                        <div
+                            v-if="qrProfileUrl"
+                            class="barbershop-owner-qr-panel barbershop-owner-qr-panel--aside"
+                        >
                             <ProfileQrCode
                                 :url="qrProfileUrl"
                                 :filename="`${form.username || user.username}-profile`"
@@ -208,6 +186,8 @@ const submit = () => {
                         </div>
                     </div>
                 </div>
+
+                <InputError class="mt-2" :message="form.errors.profile_photo" />
             </div>
 
             <div class="mb-3">

@@ -1941,6 +1941,15 @@ li {
     width: 100%;
 }
 
+.barbershop-owner-qr-panel--aside {
+    max-width: 20rem;
+    text-align: left;
+}
+
+.barbershop-owner-qr-panel--aside .profile-qr-section {
+    align-items: flex-start;
+}
+
 .btn-share-qrcode > * {
     position: relative;
     z-index: 1;
@@ -2502,10 +2511,19 @@ li {
     margin-bottom: 0;
 }
 
+.plan-builder .plan-addons-divider {
+    border: 0;
+    border-top: 1px solid #dee2e6;
+    margin: 1.75rem 0 0;
+    opacity: 1;
+    width: 100%;
+}
+
 .plan-builder .plan-addons-panel {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 12px;
+    margin-top: 1.25rem;
     margin-bottom: 1rem;
     padding: 1rem 1.25rem;
 }
