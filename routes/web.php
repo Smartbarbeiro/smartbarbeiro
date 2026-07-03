@@ -34,7 +34,7 @@ Route::get('/uploads/{path}', [PublicStorageController::class, 'show'])
     ->where('path', '.+')
     ->name('uploads.public');
 
-Route::match(['get', 'post'], '/webhooks/mercadopago', MercadoPagoWebhookController::class)
+Route::match(['get', 'post', 'options'], '/webhooks/mercadopago', MercadoPagoWebhookController::class)
     ->name('webhooks.mercadopago');
 
 Route::post('/webhooks/stripe', StripeWebhookController::class)

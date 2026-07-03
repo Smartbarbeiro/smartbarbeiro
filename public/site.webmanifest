@@ -1,7 +1,30 @@
 {
-  "name": "SmartBarbeiro",
+  "id": "/",
+  "name": "Smart Barbeiro",
   "short_name": "SmartBarbeiro",
+  "description": "Gerencie sua barbearia, clientes, agenda e planos pelo celular.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "categories": ["business", "productivity"],
   "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/web-app-manifest-192x192.png",
       "sizes": "192x192",
@@ -14,8 +37,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
-  "display": "standalone"
+  ]
 }

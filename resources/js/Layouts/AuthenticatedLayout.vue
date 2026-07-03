@@ -1,6 +1,7 @@
 <script setup>
 import SidebarNavLink from '@/Components/SidebarNavLink.vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import InstallAppBanner from '@/Components/InstallAppBanner.vue';
 import PlatformMessagePopups from '@/Components/PlatformMessagePopups.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
@@ -369,6 +370,8 @@ const mobileNavItems = computed(() => {
                     class="dashboard-alert-stack"
                     aria-live="polite"
                 ></div>
+
+                <InstallAppBanner v-if="user?.is_barbershop" />
 
                 <div class="app-content-body">
                     <slot />

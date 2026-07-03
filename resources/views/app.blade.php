@@ -2,7 +2,9 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="light">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#000000">
+        <meta name="description" content="Gerencie sua barbearia, clientes, agenda e planos pelo celular.">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
@@ -10,7 +12,10 @@
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="SmartBarbeiro" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <link rel="manifest" href="/site.webmanifest" />
 
         <!-- Scripts -->

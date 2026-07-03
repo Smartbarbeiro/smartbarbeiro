@@ -387,18 +387,14 @@ class MercadoPagoService
             return false;
         }
 
-        $manifestParts = [];
-
-        if (filled($dataId)) {
-            $manifestParts[] = 'id:'.strtolower($dataId);
-        }
-
-        if (filled($xRequestId)) {
-            $manifestParts[] = 'request-id:'.$xRequestId;
-        }
-
-        $manifestParts[] = 'ts:'.$timestamp;
-        $manifest = implode(';', $manifestParts).';';
+        // Mercado Pago manifest template is always:
+        // id:[data.id];request-id:[x-request-id];ts:[ts];
+        $manifest = sprintf(
+            'id:%s;request-id:%s;ts:%s;',
+            strtolower((string) ($dataId ?? '')),
+            (string) ($xRequestId ?? ''),
+            $timestamp,
+        );
         $expected = hash_hmac('sha256', $manifest, (string) $secret);
 
         return hash_equals($expected, $signature);

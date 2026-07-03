@@ -33,6 +33,8 @@ echo 'runtime: '.config('mercadopago.runtime_environment')."\n";
 echo 'back_url: '.config('mercadopago.back_url')."\n";
 echo 'back_url_https: '.(str_starts_with((string) config('mercadopago.back_url'), 'https://') ? 'yes' : 'no')."\n";
 echo 'webhook_url: '.url('/webhooks/mercadopago')."\n";
+echo 'webhook_url_alt: '.url('/mp-notify.php')."\n";
+echo 'webhook_ping: '.url('/mp-ping.php')."\n";
 echo 'webhook_secret: '.(filled(config('mercadopago.webhook_secret')) ? 'set' : 'missing')."\n";
 echo 'platform_checkout_url: '.url('/assinatura/plataforma')."\n";
 echo 'platform_plan_active: '.($plan->is_active ? 'yes' : 'no')."\n";

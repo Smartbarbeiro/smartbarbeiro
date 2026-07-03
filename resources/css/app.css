@@ -1179,6 +1179,85 @@ li {
     width: 100%;
 }
 
+.install-app-banner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem 1rem;
+    margin: 0 auto 1rem;
+    max-width: min(72rem, 100%);
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 1rem;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.install-app-banner__content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: min(100%, 16rem);
+    flex: 1 1 14rem;
+}
+
+.install-app-banner__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+    background: #000000;
+    color: #ffffff;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.install-app-banner__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #000000;
+}
+
+.install-app-banner__subtitle {
+    margin-top: 0.2rem;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: #444444;
+}
+
+.install-app-banner__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.install-app-banner__install-btn {
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+}
+
+.install-app-banner__dismiss-btn {
+    color: #555555;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 0.45rem 0.65rem;
+}
+
+.install-app-banner__dismiss-btn:hover {
+    color: #000000;
+}
+
+.app-main:has(.barbershop-dashboard) .install-app-banner,
+.app-main:has(.barbershop-empty-dashboard) .install-app-banner {
+    max-width: min(42rem, 100%);
+}
+
 .dashboard-alert-stack:not(:has(.dashboard-alert)) {
     margin: 0;
 }
