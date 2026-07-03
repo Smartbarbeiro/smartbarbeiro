@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\AcrylicQrOrder;
 use App\Models\User;
+use App\Support\BarbershopDisplayName;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -58,7 +59,10 @@ class BarbershopQrPdfTest extends TestCase
     public function test_acrylic_order_qr_pdf_includes_recipient_details(): void
     {
         $admin = User::factory()->admin()->create();
-        $barbershop = User::factory()->create();
+        $barbershop = User::factory()->create([
+            'username' => 'barbearia_centro',
+            'name' => 'Legacy Name',
+        ]);
 
         $order = AcrylicQrOrder::query()->create([
             'user_id' => $barbershop->id,
@@ -67,7 +71,7 @@ class BarbershopQrPdfTest extends TestCase
         ]);
 
         $html = view('pdf.barbershop-profile-qr', [
-            'barbershopName' => $barbershop->name,
+            'barbershopName' => BarbershopDisplayName::from($barbershop->username, $barbershop->name),
             'username' => $barbershop->username,
             'profileUrl' => $barbershop->profileUrl(),
             'qrCodeDataUri' => 'data:image/svg+xml;base64,test',
@@ -79,6 +83,8 @@ class BarbershopQrPdfTest extends TestCase
             ],
         ])->render();
 
+        $this->assertStringContainsString('Barbearia Centro', $html);
+        $this->assertStringNotContainsString('Legacy Name', $html);
         $this->assertStringContainsString('Destinatário', $html);
         $this->assertStringContainsString('João Barbeiro', $html);
         $this->assertStringContainsString('(67) 99999-9999', $html);
@@ -103,9 +109,10 @@ class BarbershopQrPdfTest extends TestCase
         $this->assertStringContainsString('mini-qr-cut', $html);
         $this->assertStringContainsString('border: 1px dashed #888888', $html);
         $this->assertStringContainsString('background-color: #ffffff', $html);
-        $this->assertSame(3, substr_count($html, 'QR code Plano Mensal'));
-        $this->assertSame(3, substr_count($html, 'data:image/svg+xml;base64,mini'));
-        $this->assertStringContainsString('height: 120px', $html);
+        $this->assertSame(6, substr_count($html, 'QR code Plano Mensal'));
+        $this->assertSame(6, substr_count($html, 'data:image/svg+xml;base64,mini'));
+        $this->assertStringContainsString('height: 156px', $html);
+        $this->assertStringContainsString('padding: 64px 40px 56px', $html);
         $this->assertStringContainsString('background-color: #000000', $html);
         $this->assertStringContainsString('color: #ffffff', $html);
     }

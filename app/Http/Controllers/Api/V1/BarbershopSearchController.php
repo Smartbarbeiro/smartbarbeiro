@@ -17,13 +17,16 @@ class BarbershopSearchController extends Controller
 
         $term = trim($validated['q']);
         $likeTerm = '%'.$term.'%';
+        $usernamePrefixFromSpaces = str_replace(' ', '_', $term);
 
         $results = User::query()
             ->where('is_barbershop', true)
             ->where('is_frozen', false)
             ->whereNotNull('username')
-            ->where(function ($query) use ($term, $likeTerm) {
+            ->where(function ($query) use ($term, $likeTerm, $usernamePrefixFromSpaces) {
                 $query->where('username', 'like', $term.'%')
+                    ->orWhere('username', 'like', $usernamePrefixFromSpaces.'%')
+                    ->orWhereRaw("REPLACE(REPLACE(username, '_', ' '), '-', ' ') LIKE ?", [$likeTerm])
                     ->orWhere('name', 'like', $likeTerm);
             })
             ->orderByRaw('CASE WHEN username LIKE ? THEN 0 ELSE 1 END', [$term.'%'])

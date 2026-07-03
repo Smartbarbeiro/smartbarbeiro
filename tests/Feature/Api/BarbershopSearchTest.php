@@ -50,4 +50,18 @@ class BarbershopSearchTest extends TestCase
             ->assertOk()
             ->assertJsonPath('results.0.username', 'navalha-ouro');
     }
+
+    public function test_search_matches_username_with_spaces_as_underscores(): void
+    {
+        User::factory()->create([
+            'username' => 'barbearia_do_joao',
+            'name' => 'João Silva',
+            'is_frozen' => false,
+        ]);
+
+        $this->getJson('/api/v1/barbearias/search?q=barbearia do')
+            ->assertOk()
+            ->assertJsonPath('results.0.username', 'barbearia_do_joao')
+            ->assertJsonPath('results.0.name', 'João Silva');
+    }
 }

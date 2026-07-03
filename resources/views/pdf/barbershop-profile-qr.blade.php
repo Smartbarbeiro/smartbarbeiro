@@ -34,7 +34,7 @@
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 48px 40px 28px;
+                padding: 64px 40px 56px;
             }
 
             .sheet-bottom {
@@ -162,6 +162,10 @@
                 width: 33.33%;
             }
 
+            .mini-qr-copy--second-row {
+                padding-top: 18px;
+            }
+
             .mini-qr-cut {
                 border: 1px dashed #888888;
                 display: inline-block;
@@ -186,8 +190,8 @@
 
             .mini-qr-frame img {
                 display: block;
-                height: 120px;
-                width: 120px;
+                height: 156px;
+                width: 156px;
             }
         </style>
     </head>
@@ -241,6 +245,18 @@
                                 <tr>
                                     @foreach (range(1, 3) as $copy)
                                         <td class="mini-qr-copy">
+                                            <div class="mini-qr-cut">
+                                                <p class="mini-qr-label">Plano Mensal</p>
+                                                <div class="mini-qr-frame">
+                                                    <img src="{{ $miniQrCodeDataUri }}" alt="QR code Plano Mensal" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                    @endforeach
+                                </tr>
+                                <tr>
+                                    @foreach (range(1, 3) as $copy)
+                                        <td class="mini-qr-copy mini-qr-copy--second-row">
                                             <div class="mini-qr-cut">
                                                 <p class="mini-qr-label">Plano Mensal</p>
                                                 <div class="mini-qr-frame">

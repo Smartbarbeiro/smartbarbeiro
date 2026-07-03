@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AcrylicQrOrder;
 use App\Models\User;
+use App\Support\BarbershopDisplayName;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Encoding\Encoding;
@@ -28,14 +29,14 @@ class BarbershopProfileQrPdfService
         }
 
         $qrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 420, margin: 12);
-        $miniQrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 220, margin: 8);
+        $miniQrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 280, margin: 8);
         $filename ??= sprintf(
             'qrcode-%s.pdf',
             $barbershop->username ?? $barbershop->id,
         );
 
         return Pdf::loadView('pdf.barbershop-profile-qr', [
-            'barbershopName' => $barbershop->name,
+            'barbershopName' => BarbershopDisplayName::from($barbershop->username, $barbershop->name),
             'username' => $barbershop->username,
             'profileUrl' => $profileUrl,
             'qrCodeDataUri' => $qrCodeDataUri,
