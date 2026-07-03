@@ -123,6 +123,9 @@ $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 $laravelFiles = @(
     "app\Services\MercadoPagoService.php",
     "app\Http\Controllers\MercadoPagoWebhookController.php",
+    "app\Http\Controllers\BarbershopPlatformSubscribeController.php",
+    "app\Http\Controllers\ProfileSubscribeController.php",
+    "app\Http\Controllers\ServicePlanSubscribeController.php",
     "routes\web.php"
 )
 

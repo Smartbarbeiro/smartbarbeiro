@@ -20,6 +20,10 @@ defineProps({
         type: Boolean,
         default: true,
     },
+    hasConfiguredServicePlans: {
+        type: Boolean,
+        default: false,
+    },
     barbershopAccountsCount: {
         type: Number,
         default: null,
@@ -73,6 +77,10 @@ defineProps({
 
         <BarbershopNoSubscribersDashboard
             v-if="isBarbershop && !hasSubscribers"
+            :profile-url="profileUrl"
+            :profile-username="$page.props.auth.user.username"
+            :has-configured-service-plans="hasConfiguredServicePlans"
+            :acrylic-qr-order="acrylicQrOrder"
         />
 
         <BarbershopScheduleDashboard

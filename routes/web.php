@@ -26,6 +26,7 @@ use App\Http\Controllers\PublicStorageController;
 use App\Models\User;
 use App\Services\BarbershopClientAudienceService;
 use App\Services\BarbershopScheduleForecastService;
+use App\Services\BarbershopServicePlanService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -79,6 +80,7 @@ Route::get('/', function () {
 Route::get('/dashboard', function (
     BarbershopScheduleForecastService $scheduleForecast,
     BarbershopClientAudienceService $clientAudience,
+    BarbershopServicePlanService $servicePlanService,
 ) {
     $user = auth()->user()->load([
         'subscriptionPlan',
@@ -118,6 +120,7 @@ Route::get('/dashboard', function (
         $props = [
             ...$props,
             'hasSubscribers' => $hasSubscribers,
+            'hasConfiguredServicePlans' => $servicePlanService->hasConfiguredPackages($user),
             'schedule' => $scheduleForecast->dashboardPayload($user),
             'acrylicQrOrder' => app(\App\Services\AcrylicQrOrderService::class)
                 ->activeOrderPayloadFor($user),

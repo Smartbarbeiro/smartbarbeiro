@@ -93,7 +93,25 @@ class BarbershopScheduleForecastTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Dashboard')
                 ->where('hasSubscribers', false)
+                ->where('hasConfiguredServicePlans', false)
                 ->where('profileUrl', $barbershop->profileUrl()));
+    }
+
+    public function test_dashboard_empty_state_knows_when_service_plans_are_configured(): void
+    {
+        $barbershop = User::factory()->create();
+
+        $barbershop->servicePackages()
+            ->where('type', 'cut')
+            ->update(['monthly_price' => 89.9]);
+
+        $this->actingAs($barbershop)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Dashboard')
+                ->where('hasSubscribers', false)
+                ->where('hasConfiguredServicePlans', true));
     }
 
     public function test_dashboard_shows_schedule_when_barbershop_has_clients(): void

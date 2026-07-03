@@ -1161,6 +1161,13 @@ li {
     text-decoration: none;
 }
 
+.barbershop-empty-dashboard__qr {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    width: min(28rem, 100%);
+}
+
 .dashboard-alert-stack {
     display: flex;
     flex-direction: column;

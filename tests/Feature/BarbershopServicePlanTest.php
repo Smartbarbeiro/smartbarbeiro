@@ -27,6 +27,20 @@ class BarbershopServicePlanTest extends TestCase
         ]);
     }
 
+    public function test_has_configured_packages_is_false_until_price_is_set(): void
+    {
+        $barbershop = User::factory()->create();
+        $service = app(\App\Services\BarbershopServicePlanService::class);
+
+        $this->assertFalse($service->hasConfiguredPackages($barbershop));
+
+        $barbershop->servicePackages()
+            ->where('type', 'cut')
+            ->update(['monthly_price' => 79.9]);
+
+        $this->assertTrue($service->hasConfiguredPackages($barbershop->fresh()));
+    }
+
     public function test_barbershop_can_update_service_plans_and_addons(): void
     {
         $barbershop = User::factory()->create();

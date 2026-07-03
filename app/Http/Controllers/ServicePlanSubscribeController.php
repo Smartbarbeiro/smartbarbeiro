@@ -19,6 +19,7 @@ use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
 use Stripe\Exception\ApiErrorException;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class ServicePlanSubscribeController extends Controller
 {
@@ -27,7 +28,7 @@ class ServicePlanSubscribeController extends Controller
         Request $request,
         ServicePlanCheckoutService $checkoutService,
         StripeServicePlanService $stripe,
-    ): RedirectResponse {
+    ): RedirectResponse|HttpResponse {
         $barbershop = User::query()
             ->where('username', $username)
             ->where('is_barbershop', true)
@@ -71,7 +72,7 @@ class ServicePlanSubscribeController extends Controller
                 ]);
         }
 
-        return redirect()->away($checkout['checkout_url']);
+        return Inertia::location($checkout['checkout_url']);
     }
 
     public function registerAndStore(
@@ -79,7 +80,7 @@ class ServicePlanSubscribeController extends Controller
         Request $request,
         ServicePlanCheckoutService $checkoutService,
         StripeServicePlanService $stripe,
-    ): RedirectResponse {
+    ): RedirectResponse|HttpResponse {
         if ($request->user()) {
             return redirect()->route('profile.public', $username);
         }
@@ -176,7 +177,7 @@ class ServicePlanSubscribeController extends Controller
             );
         }
 
-        return redirect()->away($checkout['checkout_url']);
+        return Inertia::location($checkout['checkout_url']);
     }
 
     private function redirectToServicePlanPayment(string $username): RedirectResponse

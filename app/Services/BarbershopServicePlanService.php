@@ -74,6 +74,19 @@ class BarbershopServicePlanService
         ];
     }
 
+    public function hasConfiguredPackages(User $user): bool
+    {
+        if (! $user->isBarbershop()) {
+            return false;
+        }
+
+        $this->ensureDefaultPackages($user);
+
+        return $user->servicePackages()
+            ->where('monthly_price', '>', 0)
+            ->exists();
+    }
+
     public function updateForUser(User $user, array $data): void
     {
         $this->ensureDefaultPackages($user);

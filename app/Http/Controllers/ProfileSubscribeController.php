@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use MercadoPago\Exceptions\MPApiException;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class ProfileSubscribeController extends Controller
 {
@@ -19,7 +20,7 @@ class ProfileSubscribeController extends Controller
         string $username,
         Request $request,
         MercadoPagoService $mercadoPago,
-    ): RedirectResponse {
+    ): RedirectResponse|HttpResponse {
         $creator = User::query()
             ->where('username', $username)
             ->where('is_barbershop', true)
@@ -99,7 +100,7 @@ class ProfileSubscribeController extends Controller
             ]);
         }
 
-        return redirect()->away($mercadoPago->checkoutUrl($preapproval));
+        return Inertia::location($mercadoPago->checkoutUrl($preapproval));
     }
 
     public function return(

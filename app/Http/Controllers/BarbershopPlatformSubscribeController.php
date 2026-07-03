@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use MercadoPago\Exceptions\MPApiException;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 class BarbershopPlatformSubscribeController extends Controller
 {
@@ -43,7 +44,7 @@ class BarbershopPlatformSubscribeController extends Controller
         Request $request,
         BarbershopPlatformCheckoutService $checkoutService,
         MercadoPagoService $mercadoPago,
-    ): RedirectResponse {
+    ): RedirectResponse|HttpResponse {
         $user = $request->user();
 
         abort_unless($user->isBarbershopAccount(), 403);
@@ -72,7 +73,7 @@ class BarbershopPlatformSubscribeController extends Controller
             ]);
         }
 
-        return redirect()->away($result['checkout_url']);
+        return Inertia::location($result['checkout_url']);
     }
 
     public function return(

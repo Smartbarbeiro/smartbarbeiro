@@ -181,6 +181,35 @@ class BarbershopPlatformSubscriptionTest extends TestCase
         ]);
     }
 
+    public function test_platform_checkout_redirects_inertia_clients_to_mercado_pago(): void
+    {
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
+
+        $barbershop = User::factory()->create();
+        $barbershop->platformSubscription()->update([
+            'status' => BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
+
+        $preapproval = new PreApproval;
+        $preapproval->id = 'mp-platform-inertia';
+        $preapproval->status = 'pending';
+        $preapproval->init_point = 'https://mercadopago.test/platform-checkout';
+
+        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
+            $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
+            $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
+            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/platform-checkout');
+        });
+
+        $this->actingAs($barbershop)
+            ->withHeader('X-Inertia', 'true')
+            ->post(route('platform.subscribe.store'))
+            ->assertStatus(409)
+            ->assertHeader('X-Inertia-Location', 'https://mercadopago.test/platform-checkout');
+    }
+
     public function test_admin_can_update_platform_plan_price(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);

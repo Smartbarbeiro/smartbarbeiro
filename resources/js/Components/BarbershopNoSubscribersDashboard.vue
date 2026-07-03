@@ -1,5 +1,25 @@
 <script setup>
+import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import { Link } from '@inertiajs/vue3';
+
+defineProps({
+    profileUrl: {
+        type: String,
+        required: true,
+    },
+    profileUsername: {
+        type: String,
+        required: true,
+    },
+    hasConfiguredServicePlans: {
+        type: Boolean,
+        default: false,
+    },
+    acrylicQrOrder: {
+        type: Object,
+        default: null,
+    },
+});
 </script>
 
 <template>
@@ -17,11 +37,22 @@ import { Link } from '@inertiajs/vue3';
         </p>
 
         <Link
+            v-if="!hasConfiguredServicePlans"
             :href="`${route('profile.edit')}#planos-de-servico`"
             class="btn btn-dark barbershop-empty-dashboard__action-btn"
         >
             <i class="bi bi-scissors me-2" aria-hidden="true"></i>
             Crie seus planos
         </Link>
+
+        <ProfileQrCode
+            v-else
+            class="barbershop-empty-dashboard__qr mt-4"
+            :url="profileUrl"
+            :filename="`${profileUsername}-profile`"
+            owner-dashboard
+            show-acrylic-order
+            :acrylic-order="acrylicQrOrder"
+        />
     </section>
 </template>
