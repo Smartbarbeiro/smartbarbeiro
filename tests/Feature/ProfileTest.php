@@ -106,6 +106,19 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->profile_photo_url);
     }
 
+    public function test_public_storage_route_serves_uploaded_profile_photo(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $path = 'profile-photos/'.$user->id.'/avatar.jpg';
+        Storage::disk('public')->put($path, 'fake-image');
+        $user->update(['profile_photo_path' => $path]);
+
+        $this->get('/uploads/'.$path)
+            ->assertOk();
+    }
+
     public function test_user_can_remove_profile_photo(): void
     {
         Storage::fake('public');

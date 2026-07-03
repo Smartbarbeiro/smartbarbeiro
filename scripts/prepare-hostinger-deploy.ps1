@@ -45,6 +45,7 @@ Copy-Item (Join-Path $ProjectRoot "public\*") $PublicOut -Recurse -Force
 Get-ChildItem (Join-Path $ProjectRoot "deploy\hostinger\public_html\*.php") | ForEach-Object {
     Copy-Item $_.FullName (Join-Path $PublicOut $_.Name) -Force
 }
+Copy-Item (Join-Path $ProjectRoot "deploy\hostinger\public_html\storage.htaccess.template") (Join-Path $PublicOut "storage.htaccess.template") -Force
 
 $zipLaravel = Join-Path $DeployRoot "laravel.zip"
 $zipPublic = Join-Path $DeployRoot "public_html.zip"

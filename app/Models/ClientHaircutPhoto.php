@@ -34,7 +34,7 @@ class ClientHaircutPhoto extends Model
      */
     protected function photoUrl(): Attribute
     {
-        return Attribute::get(fn (): string => '/storage/'.ltrim($this->photo_path, '/'));
+        return Attribute::get(fn (): string => '/uploads/'.ltrim($this->photo_path, '/'));
     }
 
     public function deleteStoredPhoto(): void

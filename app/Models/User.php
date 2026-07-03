@@ -299,7 +299,7 @@ class User extends Authenticatable
     {
         return Attribute::get(function (): ?string {
             if ($this->profile_photo_path) {
-                return '/storage/'.ltrim($this->profile_photo_path, '/');
+                return '/uploads/'.ltrim($this->profile_photo_path, '/');
             }
 
             if ($this->isBarbershop()) {

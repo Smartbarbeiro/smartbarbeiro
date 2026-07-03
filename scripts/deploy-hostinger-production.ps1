@@ -88,6 +88,14 @@ Write-Host "==> Verifying Vite assets..."
 Invoke-DeployUrl "fix-vite-smartbarbeiro.php" | Out-Null
 
 Write-Host ""
+Write-Host "==> Fixing storage symlink (profile photos)..."
+Invoke-DeployUrl "fix-storage-link-smartbarbeiro.php" | Out-Null
+
+Write-Host ""
+Write-Host "==> Storage diagnostics..."
+Invoke-DeployUrl "storage-status-smartbarbeiro.php" | Out-Null
+
+Write-Host ""
 Write-Host "==> Health check..."
 try {
     $homeResponse = Invoke-WebRequest -Uri $SiteBase -UseBasicParsing -TimeoutSec 60

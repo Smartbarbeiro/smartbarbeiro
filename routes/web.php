@@ -22,11 +22,16 @@ use App\Http\Controllers\ProfileSubscriptionController;
 use App\Http\Controllers\ProfileSubscriptionPlanController;
 use App\Http\Controllers\PlatformMessageController;
 use App\Http\Controllers\PublicProfileController;
+use App\Http\Controllers\PublicStorageController;
 use App\Models\User;
 use App\Services\BarbershopClientAudienceService;
 use App\Services\BarbershopScheduleForecastService;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/uploads/{path}', [PublicStorageController::class, 'show'])
+    ->where('path', '.+')
+    ->name('uploads.public');
 
 Route::match(['get', 'post'], '/webhooks/mercadopago', MercadoPagoWebhookController::class)
     ->name('webhooks.mercadopago');

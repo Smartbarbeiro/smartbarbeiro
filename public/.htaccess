@@ -5,6 +5,16 @@
 
     RewriteEngine On
 
+    # Profile photos / uploads: Hostinger disables symlink(); serve from laravel/storage/app/public
+    RewriteCond %{REQUEST_URI} ^/uploads/(.+)$
+    RewriteCond %{DOCUMENT_ROOT}/../laravel/storage/app/public/%1 -f
+    RewriteRule ^uploads/(.+)$ ../laravel/storage/app/public/$1 [L]
+
+    # Fallback to Laravel when the file is not on disk yet
+    RewriteCond %{REQUEST_URI} ^/uploads/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
