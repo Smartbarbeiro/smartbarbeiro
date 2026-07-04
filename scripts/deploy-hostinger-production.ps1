@@ -2,6 +2,11 @@
 # Usage:
 #   $env:HOSTINGER_FTP_PASSWORD = 'your-ftp-password'
 #   .\scripts\deploy-hostinger-production.ps1
+#   .\scripts\deploy-hostinger-production.ps1 -SkipPrepare
+
+param(
+    [switch]$SkipPrepare
+)
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
@@ -21,9 +26,9 @@ function Get-EnvValue([string]$Key) {
 }
 
 $FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } elseif (Get-EnvValue 'HOSTINGER_FTP_HOST') { Get-EnvValue 'HOSTINGER_FTP_HOST' } else { "smartbarbeiro.com.br" }
-$FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } elseif (Get-EnvValue 'HOSTINGER_FTP_USER') { Get-EnvValue 'HOSTINGER_FTP_USER' } else { "u379350398" }
-$FtpPass = $env:HOSTINGER_FTP_PASSWORD
-if (-not $FtpPass) { $FtpPass = Get-EnvValue 'HOSTINGER_FTP_PASSWORD' }
+$FtpUser = if (Get-EnvValue 'HOSTINGER_FTP_USER') { Get-EnvValue 'HOSTINGER_FTP_USER' } elseif ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } else { "u379350398" }
+$FtpPass = Get-EnvValue 'HOSTINGER_FTP_PASSWORD'
+if (-not $FtpPass) { $FtpPass = $env:HOSTINGER_FTP_PASSWORD }
 if (-not $FtpPass) {
     throw "Set HOSTINGER_FTP_PASSWORD in .env or your shell before running this script."
 }
@@ -35,21 +40,21 @@ function Send-FtpFile([string]$LocalPath, [string]$RemotePath) {
         throw "Missing file: $LocalPath"
     }
 
-    $uri = "ftp://$FtpHost/$RemotePath"
-    $request = [System.Net.FtpWebRequest]::Create($uri)
-    $request.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
-    $request.Credentials = New-Object System.Net.NetworkCredential($FtpUser, $FtpPass)
-    $request.UseBinary = $true
-    $request.UsePassive = $true
-    $bytes = [System.IO.File]::ReadAllBytes($LocalPath)
-    $request.ContentLength = $bytes.Length
-    $stream = $request.GetRequestStream()
-    $stream.Write($bytes, 0, $bytes.Length)
-    $stream.Close()
-    $response = $request.GetResponse()
-    $sizeMb = [math]::Round($bytes.Length / 1MB, 1)
+    $uri = "ftp://${FtpHost}/${RemotePath}"
+    $sizeMb = [math]::Round((Get-Item $LocalPath).Length / 1MB, 1)
+    Write-Host "  uploading $sizeMb MB -> $RemotePath ..."
+
+    # curl handles Hostinger FTP auth more reliably than .NET FtpWebRequest.
+    & curl.exe -S --connect-timeout 120 --max-time 900 --ftp-pasv `
+        -T $LocalPath `
+        --user "${FtpUser}:${FtpPass}" `
+        $uri
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "FTP upload failed for $RemotePath (curl exit $LASTEXITCODE)"
+    }
+
     Write-Host "  uploaded $sizeMb MB -> $RemotePath"
-    $response.Close()
 }
 
 function Invoke-DeployUrl([string]$Path) {
@@ -72,7 +77,11 @@ function Invoke-DeployUrl([string]$Path) {
 }
 
 Write-Host "==> Building deploy packages..."
-& $PrepareScript
+if (-not $SkipPrepare) {
+    & $PrepareScript
+} else {
+    Write-Host "  (skipped - using existing zips in deploy/hostinger/output/)"
+}
 
 $laravelZip = Join-Path $OutputDir "laravel.zip"
 $publicZip = Join-Path $OutputDir "public_html.zip"
