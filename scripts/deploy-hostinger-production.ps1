@@ -8,11 +8,24 @@ $ProjectRoot = Split-Path $PSScriptRoot -Parent
 $OutputDir = Join-Path $ProjectRoot "deploy\hostinger\output"
 $PrepareScript = Join-Path $PSScriptRoot "prepare-hostinger-deploy.ps1"
 
-$FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } else { "smartbarbeiro.com.br" }
-$FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } else { "u379350398" }
+$EnvFile = Join-Path $ProjectRoot ".env"
+
+function Get-EnvValue([string]$Key) {
+    if (-not (Test-Path $EnvFile)) { return $null }
+    foreach ($line in Get-Content $EnvFile) {
+        if ($line -match "^$([regex]::Escape($Key))=(.*)$") {
+            return $Matches[1].Trim().Trim('"')
+        }
+    }
+    return $null
+}
+
+$FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } elseif (Get-EnvValue 'HOSTINGER_FTP_HOST') { Get-EnvValue 'HOSTINGER_FTP_HOST' } else { "smartbarbeiro.com.br" }
+$FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } elseif (Get-EnvValue 'HOSTINGER_FTP_USER') { Get-EnvValue 'HOSTINGER_FTP_USER' } else { "u379350398" }
 $FtpPass = $env:HOSTINGER_FTP_PASSWORD
+if (-not $FtpPass) { $FtpPass = Get-EnvValue 'HOSTINGER_FTP_PASSWORD' }
 if (-not $FtpPass) {
-    throw "Set HOSTINGER_FTP_PASSWORD before running this script."
+    throw "Set HOSTINGER_FTP_PASSWORD in .env or your shell before running this script."
 }
 $RemoteBase = "domains/smartbarbeiro.com.br"
 $SiteBase = "https://www.smartbarbeiro.com.br"

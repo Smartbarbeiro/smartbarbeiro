@@ -50,6 +50,21 @@ const form = useForm({
 const photoPreview = ref(user.profile_photo_url);
 const photoInput = ref(null);
 const showPasswordForm = ref(false);
+const usernameLocked = ref(true);
+const originalUsername = ref(user.username);
+
+const unlockUsername = () => {
+    usernameLocked.value = false;
+};
+
+const cancelUsernameChange = () => {
+    form.username = originalUsername.value;
+    usernameLocked.value = true;
+};
+
+const usernameChanged = computed(
+    () => form.username !== originalUsername.value,
+);
 
 const qrProfileUrl = computed(() => {
     if (!props.isBarbershop || !props.profileUrl) {
@@ -96,6 +111,8 @@ const submit = () => {
             form.profile_photo = null;
             form.remove_profile_photo = false;
             photoPreview.value = usePage().props.auth.user.profile_photo_url;
+            originalUsername.value = usePage().props.auth.user.username;
+            usernameLocked.value = true;
         },
     });
 };
@@ -207,19 +224,72 @@ const submit = () => {
             </div>
 
             <div v-if="isBarbershop" class="mb-3">
-                <InputLabel for="username" value="Nome da Barbearia" />
+                <div
+                    class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1"
+                >
+                    <InputLabel
+                        for="username"
+                        value="Nome da Barbearia"
+                        class="mb-0"
+                    />
 
-                <div class="mt-1">
+                    <SecondaryButton
+                        v-if="usernameLocked"
+                        type="button"
+                        class="btn-sm"
+                        @click="unlockUsername"
+                    >
+                        <i class="bi bi-pencil me-1" aria-hidden="true"></i>
+                        Alterar nome
+                    </SecondaryButton>
+
+                    <SecondaryButton
+                        v-else
+                        type="button"
+                        class="btn-sm"
+                        @click="cancelUsernameChange"
+                    >
+                        Cancelar alteração
+                    </SecondaryButton>
+                </div>
+
+                <div
+                    v-if="!usernameLocked"
+                    class="alert alert-warning small mb-3"
+                    role="alert"
+                >
+                    <strong>Atenção:</strong> alterar o nome da barbearia muda o
+                    link público e invalida o QR code atual (digital e físico).
+                    Depois de salvar, peça um novo QR code acrílico pelo botão
+                    acima e substitua o cartão na sua barbearia.
+                </div>
+
+                <div
+                    class="mt-1"
+                    :class="{
+                        'profile-barbershop-name-field-wrap--locked':
+                            usernameLocked,
+                    }"
+                >
                     <BarbershopNameInput
                         id="username"
                         v-model="form.username"
                         required
                         autocomplete="username"
+                        :readonly="usernameLocked"
+                        :aria-readonly="usernameLocked"
                     />
                 </div>
 
                 <p class="form-text">
                     Usado no seu link público: /barbearias/{{ form.username || 'sua-barbearia' }}
+                </p>
+
+                <p
+                    v-if="usernameChanged"
+                    class="form-text text-warning mb-0"
+                >
+                    O QR code será atualizado somente depois que você salvar.
                 </p>
 
                 <InputError class="mt-2" :message="form.errors.username" />

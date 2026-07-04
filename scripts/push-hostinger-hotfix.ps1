@@ -10,8 +10,9 @@ $EnvFile = Join-Path $ProjectRoot ".env"
 $FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } else { "smartbarbeiro.com.br" }
 $FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } else { "u379350398" }
 $FtpPass = $env:HOSTINGER_FTP_PASSWORD
+if (-not $FtpPass) { $FtpPass = Get-EnvValue 'HOSTINGER_FTP_PASSWORD' }
 if (-not $FtpPass) {
-    throw "Set HOSTINGER_FTP_PASSWORD before running this script."
+    throw "Set HOSTINGER_FTP_PASSWORD in .env or your shell before running this script."
 }
 $RemoteBase = "domains/smartbarbeiro.com.br"
 

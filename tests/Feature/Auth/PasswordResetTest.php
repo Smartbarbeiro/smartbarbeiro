@@ -70,4 +70,25 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_password_reset_email_uses_portuguese_subject_and_markdown(): void
+    {
+        $user = User::factory()->create(['name' => 'João Barbearia']);
+        $token = app('auth.password.broker')->createToken($user);
+
+        $mail = (new ResetPassword($token))->toMail($user);
+
+        $this->assertSame(
+            'Redefinir sua senha — '.config('app.name'),
+            $mail->subject,
+        );
+        $this->assertSame('mail.password-reset', $mail->markdown);
+    }
+
+    public function test_forgot_password_page_uses_marketing_layout(): void
+    {
+        $this->get(route('password.request'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Auth/ForgotPassword'));
+    }
 }

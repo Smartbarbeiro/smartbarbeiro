@@ -4028,6 +4028,15 @@ li {
     color: #ffffff;
 }
 
+.profile-barbershop-name-field-wrap--locked .profile-barbershop-name-field {
+    opacity: 0.88;
+}
+
+.profile-barbershop-name-field-wrap--locked .profile-barbershop-name-field__input {
+    background: #f3f3f3;
+    cursor: not-allowed;
+}
+
 .profile-barbershop-name-field {
     display: flex;
     max-width: 100%;

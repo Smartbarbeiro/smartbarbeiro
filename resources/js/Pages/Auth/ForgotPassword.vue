@@ -1,10 +1,8 @@
 <script setup>
-import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import MarketingLayout from '@/Layouts/MarketingLayout.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 defineProps({
     status: {
@@ -17,45 +15,75 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('password.email'));
+    form.post(route('password.email'), {
+        preserveScroll: true,
+    });
 };
 </script>
 
 <template>
-    <GuestLayout>
+    <MarketingLayout active-nav="login">
         <Head title="Esqueceu a senha" />
 
-        <p class="text-secondary small mb-3">
-            Esqueceu sua senha? Sem problemas. Informe seu endereço de e-mail
-            e enviaremos um link para redefinir sua senha.
-        </p>
+        <section class="register-hero">
+            <div class="register-hero__inner">
+                <div class="login-panel">
+                    <header class="login-panel__header">
+                        <h1 class="login-panel__title">Esqueceu a senha?</h1>
+                        <p class="login-panel__subtitle">
+                            Informe seu e-mail e enviaremos um link para redefinir
+                            sua senha.
+                        </p>
+                    </header>
 
-        <div v-if="status" class="alert alert-success mb-3" role="alert">
-            {{ status }}
-        </div>
+                    <div
+                        v-if="status"
+                        class="alert alert-success mb-3"
+                        role="alert"
+                    >
+                        {{ status }}
+                    </div>
 
-        <form @submit.prevent="submit">
-            <div class="mb-3">
-                <InputLabel for="email" value="E-mail" />
+                    <form class="login-panel__form" @submit.prevent="submit">
+                        <div class="mb-4">
+                            <InputLabel for="email" value="E-mail" />
 
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 w-100"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
+                            <input
+                                id="email"
+                                v-model="form.email"
+                                type="email"
+                                class="form-control mt-1"
+                                required
+                                autofocus
+                                autocomplete="username"
+                            />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                            <InputError
+                                class="mt-2"
+                                :message="form.errors.email"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="btn btn-dark btn-lg w-100 login-panel__submit"
+                            :disabled="form.processing"
+                        >
+                            Enviar link de redefinição
+                        </button>
+
+                        <p class="login-panel__footer mb-0">
+                            Lembrou a senha?
+                            <Link
+                                :href="route('login')"
+                                class="login-panel__link"
+                            >
+                                Voltar para entrar
+                            </Link>
+                        </p>
+                    </form>
+                </div>
             </div>
-
-            <div class="d-flex justify-content-end">
-                <PrimaryButton :disabled="form.processing">
-                    Enviar link de redefinição de senha
-                </PrimaryButton>
-            </div>
-        </form>
-    </GuestLayout>
+        </section>
+    </MarketingLayout>
 </template>
