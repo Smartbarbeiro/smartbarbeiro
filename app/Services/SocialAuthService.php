@@ -121,10 +121,13 @@ class SocialAuthService
 
         $payload = $response->json();
         $clientId = (string) config('services.google.client_id');
+        $audience = $payload['aud'] ?? null;
+        $audienceMatches = $audience === $clientId
+            || (is_array($audience) && in_array($clientId, $audience, true));
 
         if (
             ! is_array($payload)
-            || ($payload['aud'] ?? null) !== $clientId
+            || ! $audienceMatches
             || ! filled($payload['sub'] ?? null)
         ) {
             throw new \InvalidArgumentException(__('auth.oauth_failed'));
@@ -204,10 +207,7 @@ class SocialAuthService
 
     public function resolveGoogleUser(?string $accessToken, ?string $idToken): SocialiteUser
     {
-        if (filled($accessToken)) {
-            return $this->resolveGoogleUserFromAccessToken($accessToken);
-        }
-
+        // Prefer ID token (native apps / OpenID). Audience must be the web client ID.
         if (filled($idToken)) {
             $payload = $this->resolveGoogleUserFromIdToken($idToken);
 
@@ -216,6 +216,10 @@ class SocialAuthService
             }
 
             return $this->socialiteUserFromIdTokenPayload($payload);
+        }
+
+        if (filled($accessToken)) {
+            return $this->resolveGoogleUserFromAccessToken($accessToken);
         }
 
         throw new \InvalidArgumentException(__('auth.oauth_failed'));

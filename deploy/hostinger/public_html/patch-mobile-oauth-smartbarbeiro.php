@@ -1,5 +1,31 @@
 <?php
 
+/**
+ * Patches mobile Google OAuth (browser redirect back to app).
+ * Visit once: https://www.smartbarbeiro.com.br/patch-mobile-oauth-smartbarbeiro.php
+ * Then: clear-cache-smartbarbeiro.php
+ * DELETE this file after success.
+ */
+
+declare(strict_types=1);
+
+header('Content-Type: text/plain; charset=utf-8');
+
+$laravelRoot = dirname(__DIR__).'/laravel';
+if (! is_file($laravelRoot.'/vendor/autoload.php') && is_file(dirname(__DIR__).'/laravel/laravel/vendor/autoload.php')) {
+    $laravelRoot = dirname(__DIR__).'/laravel/laravel';
+}
+
+$socialAuthPath = $laravelRoot.'/app/Http/Controllers/Auth/SocialAuthController.php';
+$apiAuthPath = $laravelRoot.'/app/Http/Controllers/Api/V1/AuthController.php';
+
+if (! is_file($socialAuthPath) || ! is_file($apiAuthPath)) {
+    exit("Missing controller files under {$laravelRoot}\n");
+}
+
+$socialAuthContent = <<<'PHP'
+<?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -189,3 +215,134 @@ class SocialAuthController extends Controller
         return redirect()->away(self::MOBILE_OAUTH_SCHEME.'?'.http_build_query($params));
     }
 }
+PHP;
+
+if (file_put_contents($socialAuthPath, $socialAuthContent) === false) {
+    exit("Could not write {$socialAuthPath}\n");
+}
+
+echo "Updated SocialAuthController.php\n";
+
+$apiAuthContent = file_get_contents($apiAuthPath);
+if ($apiAuthContent === false) {
+    exit("Could not read {$apiAuthPath}\n");
+}
+
+$oldRegisterBlock = <<<'PHP'
+        $validated = $request->validate([
+            'access_token' => ['required_without:id_token', 'string'],
+            'id_token' => ['required_without:access_token', 'string'],
+            'name' => ['required', 'string', 'max:255'],
+            'cpf' => ['required', 'string', 'cpf', new UniqueTaxDocument],
+            'barbershop_username' => ['required', 'string', 'exists:users,username'],
+            'device_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        try {
+            $socialUser = $socialAuth->resolveGoogleUser(
+                $validated['access_token'] ?? null,
+                $validated['id_token'] ?? null,
+            );
+        } catch (\InvalidArgumentException $exception) {
+            throw ValidationException::withMessages([
+                'google' => [$exception->getMessage()],
+            ]);
+        }
+PHP;
+
+$newRegisterBlock = <<<'PHP'
+        $validated = $request->validate([
+            'oauth_code' => ['required_without_all:access_token,id_token', 'string', 'size:40'],
+            'access_token' => ['required_without_all:oauth_code,id_token', 'string'],
+            'id_token' => ['required_without_all:oauth_code,access_token', 'string'],
+            'name' => ['required', 'string', 'max:255'],
+            'cpf' => ['required', 'string', 'cpf', new UniqueTaxDocument],
+            'barbershop_username' => ['required', 'string', 'exists:users,username'],
+            'device_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        try {
+            $socialUser = $this->resolveGoogleRegistrationIdentity(
+                $validated['oauth_code'] ?? null,
+                $validated['access_token'] ?? null,
+                $validated['id_token'] ?? null,
+                $socialAuth,
+            );
+        } catch (\InvalidArgumentException $exception) {
+            throw ValidationException::withMessages([
+                'google' => [$exception->getMessage()],
+            ]);
+        }
+PHP;
+
+if (! str_contains($apiAuthContent, $oldRegisterBlock) && ! str_contains($apiAuthContent, 'resolveGoogleRegistrationIdentity')) {
+    exit("AuthController.php googleRegister block not found (already patched or unexpected format).\n");
+}
+
+if (str_contains($apiAuthContent, $oldRegisterBlock)) {
+    $apiAuthContent = str_replace($oldRegisterBlock, $newRegisterBlock, $apiAuthContent);
+}
+
+if (! str_contains($apiAuthContent, 'resolveGoogleRegistrationIdentity')) {
+    $helperMethod = <<<'PHP'
+
+    private function resolveGoogleRegistrationIdentity(
+        ?string $oauthCode,
+        ?string $accessToken,
+        ?string $idToken,
+        SocialAuthService $socialAuth,
+    ): SocialiteUser {
+        if ($oauthCode !== null) {
+            $cached = Cache::pull('mobile_oauth_registration:'.$oauthCode);
+
+            if (! is_array($cached) || ($cached['provider'] ?? null) !== 'google') {
+                throw new \InvalidArgumentException(__('auth.oauth_session_expired'));
+            }
+
+            return new class($cached) implements SocialiteUser
+            {
+                public function __construct(private array $data) {}
+
+                public function getId(): string
+                {
+                    return (string) ($this->data['provider_id'] ?? '');
+                }
+
+                public function getNickname(): ?string
+                {
+                    return null;
+                }
+
+                public function getName(): ?string
+                {
+                    return $this->data['name'] ?? null;
+                }
+
+                public function getEmail(): ?string
+                {
+                    return $this->data['email'] ?? null;
+                }
+
+                public function getAvatar(): ?string
+                {
+                    return null;
+                }
+            };
+        }
+
+        return $socialAuth->resolveGoogleUser($accessToken, $idToken);
+    }
+}
+PHP;
+
+    $apiAuthContent = preg_replace('/\n}\s*$/', $helperMethod, $apiAuthContent, 1);
+}
+
+if (file_put_contents($apiAuthPath, $apiAuthContent) === false) {
+    exit("Could not write {$apiAuthPath}\n");
+}
+
+echo "Updated Api/V1/AuthController.php\n";
+echo "\nMobile OAuth patch complete.\n";
+echo "Next: clear-cache-smartbarbeiro.php\n";
+echo "DELETE patch-mobile-oauth-smartbarbeiro.php when done.\n";

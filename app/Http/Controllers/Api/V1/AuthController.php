@@ -11,10 +11,12 @@ use App\Support\TaxDocument;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 class AuthController extends Controller
 {
@@ -171,8 +173,9 @@ class AuthController extends Controller
         abort_unless($socialAuth->isGoogleEnabled(), 404);
 
         $validated = $request->validate([
-            'access_token' => ['required_without:id_token', 'string'],
-            'id_token' => ['required_without:access_token', 'string'],
+            'oauth_code' => ['required_without_all:access_token,id_token', 'string', 'size:40'],
+            'access_token' => ['required_without_all:oauth_code,id_token', 'string'],
+            'id_token' => ['required_without_all:oauth_code,access_token', 'string'],
             'name' => ['required', 'string', 'max:255'],
             'cpf' => ['required', 'string', 'cpf', new UniqueTaxDocument],
             'barbershop_username' => ['required', 'string', 'exists:users,username'],
@@ -180,9 +183,11 @@ class AuthController extends Controller
         ]);
 
         try {
-            $socialUser = $socialAuth->resolveGoogleUser(
+            $socialUser = $this->resolveGoogleRegistrationIdentity(
+                $validated['oauth_code'] ?? null,
                 $validated['access_token'] ?? null,
                 $validated['id_token'] ?? null,
+                $socialAuth,
             );
         } catch (\InvalidArgumentException $exception) {
             throw ValidationException::withMessages([
@@ -259,5 +264,52 @@ class AuthController extends Controller
                 ? null
                 : $user->primaryBarbershop()?->username,
         ];
+    }
+
+    private function resolveGoogleRegistrationIdentity(
+        ?string $oauthCode,
+        ?string $accessToken,
+        ?string $idToken,
+        SocialAuthService $socialAuth,
+    ): SocialiteUser {
+        if ($oauthCode !== null) {
+            $cached = Cache::pull('mobile_oauth_registration:'.$oauthCode);
+
+            if (! is_array($cached) || ($cached['provider'] ?? null) !== 'google') {
+                throw new \InvalidArgumentException(__('auth.oauth_session_expired'));
+            }
+
+            return new class($cached) implements SocialiteUser
+            {
+                public function __construct(private array $data) {}
+
+                public function getId(): string
+                {
+                    return (string) ($this->data['provider_id'] ?? '');
+                }
+
+                public function getNickname(): ?string
+                {
+                    return null;
+                }
+
+                public function getName(): ?string
+                {
+                    return $this->data['name'] ?? null;
+                }
+
+                public function getEmail(): ?string
+                {
+                    return $this->data['email'] ?? null;
+                }
+
+                public function getAvatar(): ?string
+                {
+                    return null;
+                }
+            };
+        }
+
+        return $socialAuth->resolveGoogleUser($accessToken, $idToken);
     }
 }
