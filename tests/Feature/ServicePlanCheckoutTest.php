@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ClientServicePlanConfirmedMail;
 use App\Models\BarbershopServiceAddon;
 use App\Models\BarbershopServicePackage;
 use App\Models\BarbershopMembership;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Services\StripeServicePlanService;
 use App\Services\ServicePlanSubscriptionSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Subscription;
 use Tests\Support\TestTaxDocuments;
 use Tests\TestCase;
@@ -260,6 +262,90 @@ class ServicePlanCheckoutTest extends TestCase
             'barbershop_user_id' => $barbershop->id,
             'member_user_id' => $customer->id,
         ]);
+    }
+
+    public function test_authorized_service_plan_sends_confirmation_email_to_client(): void
+    {
+        Mail::fake();
+
+        $barbershop = User::factory()->create(['name' => 'Barbearia Centro']);
+        $customer = User::factory()->customer()->create([
+            'name' => 'Cliente VIP',
+            'email' => 'cliente@example.com',
+        ]);
+
+        $subscription = ServicePlanSubscription::create([
+            'creator_user_id' => $barbershop->id,
+            'subscriber_user_id' => $customer->id,
+            'package_type' => 'cut_beard',
+            'selected_addon_ids' => [],
+            'monthly_total' => 129,
+            'currency_id' => 'BRL',
+            'payer_email' => $customer->email,
+            'external_reference' => 'service-plan-mail-ref',
+            'status' => ServicePlanSubscription::STATUS_PENDING,
+            'stripe_subscription_id' => 'sub_test_mail',
+        ]);
+
+        $stripeSubscription = Subscription::constructFrom([
+            'id' => 'sub_test_mail',
+            'status' => 'active',
+            'metadata' => [
+                'service_plan_subscription_id' => (string) $subscription->id,
+            ],
+            'current_period_end' => now()->addMonth()->timestamp,
+        ]);
+
+        $this->mock(StripeServicePlanService::class, function ($mock) use ($stripeSubscription) {
+            $mock->shouldReceive('mapSubscriptionStatus')->andReturn(ServicePlanSubscription::STATUS_AUTHORIZED);
+        });
+
+        app(ServicePlanSubscriptionSyncService::class)->syncFromStripeSubscription($stripeSubscription);
+
+        Mail::assertSent(ClientServicePlanConfirmedMail::class, function (ClientServicePlanConfirmedMail $mail) use ($customer, $barbershop, $subscription) {
+            return $mail->hasTo($customer->email)
+                && $mail->subscription->id === $subscription->id
+                && $mail->isPlanUpdate === false
+                && $mail->envelope()->subject === 'Plano confirmado — '.$barbershop->name;
+        });
+    }
+
+    public function test_re_syncing_authorized_service_plan_does_not_resend_confirmation_email(): void
+    {
+        Mail::fake();
+
+        $barbershop = User::factory()->create();
+        $customer = User::factory()->customer()->create();
+
+        $subscription = ServicePlanSubscription::create([
+            'creator_user_id' => $barbershop->id,
+            'subscriber_user_id' => $customer->id,
+            'package_type' => 'cut',
+            'selected_addon_ids' => [],
+            'monthly_total' => 99,
+            'currency_id' => 'BRL',
+            'payer_email' => $customer->email,
+            'external_reference' => 'service-plan-resync-ref',
+            'status' => ServicePlanSubscription::STATUS_AUTHORIZED,
+            'stripe_subscription_id' => 'sub_resync',
+        ]);
+
+        $stripeSubscription = Subscription::constructFrom([
+            'id' => 'sub_resync',
+            'status' => 'active',
+            'metadata' => [
+                'service_plan_subscription_id' => (string) $subscription->id,
+            ],
+            'current_period_end' => now()->addMonth()->timestamp,
+        ]);
+
+        $this->mock(StripeServicePlanService::class, function ($mock) {
+            $mock->shouldReceive('mapSubscriptionStatus')->andReturn(ServicePlanSubscription::STATUS_AUTHORIZED);
+        });
+
+        app(ServicePlanSubscriptionSyncService::class)->syncFromStripeSubscription($stripeSubscription);
+
+        Mail::assertNothingSent();
     }
 
     public function test_subscriber_can_cancel_service_plan_subscription(): void

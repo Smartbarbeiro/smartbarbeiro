@@ -11,6 +11,7 @@ class ServicePlanSubscriptionSyncService
 {
     public function __construct(
         private StripeServicePlanService $stripe,
+        private ServicePlanSubscriptionNotificationService $notifications,
     ) {}
 
     public function syncFromStripeSubscription(Subscription $stripeSubscription): ?ServicePlanSubscription
@@ -20,6 +21,8 @@ class ServicePlanSubscriptionSyncService
         if (! $subscription) {
             return null;
         }
+
+        $previousStatus = $subscription->status;
 
         $status = $this->stripe->mapSubscriptionStatus($stripeSubscription->status);
 
@@ -39,6 +42,7 @@ class ServicePlanSubscriptionSyncService
         $subscription->save();
 
         $this->ensureMembership($subscription);
+        $this->notifications->notifyAfterSync($subscription, $previousStatus);
 
         return $subscription;
     }

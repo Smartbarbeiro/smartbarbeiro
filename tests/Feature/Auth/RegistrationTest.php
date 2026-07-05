@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Mail\BarbershopWelcomeMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\Support\TestTaxDocuments;
 use Tests\TestCase;
 
@@ -73,5 +75,44 @@ class RegistrationTest extends TestCase
             ->assertSessionHasErrors('cpf_cnpj');
 
         $this->assertGuest();
+    }
+
+    public function test_barbershop_registration_sends_welcome_email_with_next_steps(): void
+    {
+        Mail::fake();
+
+        $this->post('/registrar', [
+            'name' => 'Barbearia Centro',
+            'cpf_cnpj' => TestTaxDocuments::CNPJ,
+            'username' => 'barbearia-centro',
+            'email' => 'centro@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        Mail::assertSent(BarbershopWelcomeMail::class, function (BarbershopWelcomeMail $mail) {
+            return $mail->hasTo('centro@example.com')
+                && $mail->barbershop->username === 'barbearia-centro'
+                && $mail->envelope()->subject === 'Bem-vindo ao '.config('app.name').' — próximos passos';
+        });
+    }
+
+    public function test_customer_registration_does_not_send_barbershop_welcome_email(): void
+    {
+        Mail::fake();
+
+        $barbershop = \App\Models\User::factory()->create([
+            'username' => 'barbearia-demo',
+        ]);
+
+        $this->post('/registrar?redirect='.urlencode('/barbearias/'.$barbershop->username), [
+            'name' => 'Cliente Novo',
+            'cpf' => TestTaxDocuments::CPF,
+            'email' => 'cliente@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ]);
+
+        Mail::assertNotSent(BarbershopWelcomeMail::class);
     }
 }

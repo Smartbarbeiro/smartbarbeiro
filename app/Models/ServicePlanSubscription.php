@@ -90,6 +90,25 @@ class ServicePlanSubscription extends Model
         };
     }
 
+    /**
+     * @return list<string>
+     */
+    public function selectedAddonLabels(): array
+    {
+        $ids = $this->selected_addon_ids ?? [];
+
+        if ($ids === []) {
+            return [];
+        }
+
+        return BarbershopServiceAddon::query()
+            ->whereIn('id', $ids)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->pluck('name')
+            ->all();
+    }
+
     public function formattedTotal(): string
     {
         return match ($this->currency_id) {

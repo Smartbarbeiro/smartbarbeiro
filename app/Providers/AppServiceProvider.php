@@ -7,9 +7,12 @@ use App\Models\User;
 use App\Observers\UserObserver;
 use App\Policies\AdminBroadcastMessageRecipientPolicy;
 use App\Policies\AdminUserPolicy;
+use App\Listeners\SendBarbershopWelcomeEmail;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -65,6 +68,8 @@ class AppServiceProvider extends ServiceProvider
         }
 
         \Illuminate\Support\Facades\Date::setLocale(config('app.locale'));
+
+        Event::listen(Registered::class, SendBarbershopWelcomeEmail::class);
 
         ResetPassword::toMailUsing(function (object $notifiable, string $token) {
             $url = url(route('password.reset', [
