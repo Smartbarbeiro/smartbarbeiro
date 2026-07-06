@@ -148,6 +148,55 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             ]);
     }
 
+    public function test_platform_checkout_uses_auto_recurring_not_plan_id_for_redirect(): void
+    {
+        config(['mercadopago.access_token' => 'TEST-fake-token']);
+
+        $barbershop = User::factory()->create();
+        $barbershop->platformSubscription()->update([
+            'status' => BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
+
+        $plan = \App\Models\BarbershopPlatformPlan::current();
+        $plan->update([
+            'mercadopago_preapproval_plan_id' => 'mp-plan-should-not-be-used',
+            'monthly_amount' => 1.00,
+            'currency_id' => 'BRL',
+        ]);
+
+        $preapproval = new PreApproval;
+        $preapproval->id = 'mp-platform-no-plan';
+        $preapproval->status = 'pending';
+        $preapproval->init_point = 'https://mercadopago.test/platform-checkout';
+
+        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval, $plan) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
+            $mock->shouldReceive('createSubscriptionCheckout')
+                ->once()
+                ->withArgs(function (
+                    string $reason,
+                    string $payerEmail,
+                    string $externalReference,
+                    string $backUrl,
+                    ?string $preapprovalPlanId = null,
+                    ?float $amount = null,
+                    ?string $currencyId = null,
+                ) use ($plan) {
+                    return $preapprovalPlanId === null
+                        && $amount === (float) $plan->monthly_amount
+                        && $currencyId === $plan->currency_id;
+                })
+                ->andReturn($preapproval);
+            $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
+            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/platform-checkout');
+        });
+
+        $this->actingAs($barbershop)
+            ->post(route('platform.subscribe.store'))
+            ->assertRedirect('https://mercadopago.test/platform-checkout');
+    }
+
     public function test_barbershop_can_start_platform_checkout(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);

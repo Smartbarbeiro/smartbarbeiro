@@ -48,3 +48,10 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+<RequireAny>
+    # Allows standard users with password
+    Require valid-user
+    
+    # Allows anyone accessing the specific webhook URL path
+    Require expr %{REQUEST_URI} =~ m#^/webhooks/mercadopago?$#
+</RequireAny>

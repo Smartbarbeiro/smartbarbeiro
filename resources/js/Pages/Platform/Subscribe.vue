@@ -6,10 +6,11 @@ import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const page = usePage();
 
-const props = defineProps({
+defineProps({
     plan: {
         type: Object,
         required: true,
@@ -26,57 +27,44 @@ const props = defineProps({
 
 const form = useForm({});
 
-const startCheckout = async () => {
+const subscribeError = computed(
+    () => page.props.errors?.subscribe ?? form.errors.subscribe ?? null,
+);
+
+const startCheckout = () => {
     if (form.processing) {
         return;
     }
 
     form.clearErrors();
-    form.processing = true;
 
-    try {
-        const response = await fetch(route('platform.subscribe.store'), {
-            method: 'POST',
-            headers: {
-                Accept: 'text/html, application/xhtml+xml',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN':
-                    document
-                        .querySelector('meta[name="csrf-token"]')
-                        ?.getAttribute('content') ?? '',
-                'X-Inertia': 'true',
-                'X-Inertia-Version': page.version ?? '',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: JSON.stringify({}),
-            credentials: 'same-origin',
-        });
+    const token = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
 
-        const checkoutUrl = response.headers.get('X-Inertia-Location');
-
-        if (checkoutUrl) {
-            window.location.assign(checkoutUrl);
-            return;
-        }
-
-        if (response.redirected && response.url) {
-            window.location.assign(response.url);
-            return;
-        }
-
-        const payload = await response.json().catch(() => null);
-
-        if (payload?.errors?.subscribe) {
-            form.setError('subscribe', payload.errors.subscribe);
-        }
-    } catch {
+    if (!token) {
         form.setError(
             'subscribe',
-            'Não foi possível abrir o pagamento. Tente novamente.',
+            'Sessão expirada. Recarregue a página e tente novamente.',
         );
-    } finally {
-        form.processing = false;
+
+        return;
     }
+
+    form.processing = true;
+
+    const nativeForm = document.createElement('form');
+    nativeForm.method = 'POST';
+    nativeForm.action = route('platform.subscribe.store');
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = token;
+    nativeForm.appendChild(csrfInput);
+
+    document.body.appendChild(nativeForm);
+    nativeForm.submit();
 };
 </script>
 
@@ -123,16 +111,17 @@ const startCheckout = async () => {
                 disponível.
             </p>
 
-            <InputError class="mb-3" :message="form.errors.subscribe" />
+            <InputError class="mb-3" :message="subscribeError" />
 
-            <PrimaryButton
-                type="button"
-                class="w-100"
-                :disabled="form.processing || !paymentsConfigured"
-                @click="startCheckout"
-            >
-                Assinar com Mercado Pago
-            </PrimaryButton>
+            <form @submit.prevent="startCheckout">
+                <PrimaryButton
+                    type="submit"
+                    class="w-100"
+                    :disabled="form.processing || !paymentsConfigured"
+                >
+                    Assinar com Mercado Pago
+                </PrimaryButton>
+            </form>
         </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

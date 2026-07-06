@@ -53,12 +53,13 @@ class BarbershopPlatformCheckoutService
             throw new \InvalidArgumentException(__('messages.mercadopago_https_back_url_required'));
         }
 
+        // Redirect checkout must use auto_recurring (no preapproval_plan_id). MP requires
+        // card_token_id when associating a subscription with a plan via API.
         $preapproval = $this->mercadoPago->createSubscriptionCheckout(
             reason: $plan->title,
             payerEmail: $barbershop->email,
             externalReference: $subscription->external_reference,
             backUrl: $backUrl,
-            preapprovalPlanId: $plan->mercadopago_preapproval_plan_id,
             amount: (float) $plan->monthly_amount,
             currencyId: $plan->currency_id,
         );
