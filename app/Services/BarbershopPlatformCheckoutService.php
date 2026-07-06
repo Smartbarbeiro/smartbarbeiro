@@ -58,6 +58,7 @@ class BarbershopPlatformCheckoutService
             payerEmail: $barbershop->email,
             externalReference: $subscription->external_reference,
             backUrl: $backUrl,
+            preapprovalPlanId: $plan->mercadopago_preapproval_plan_id,
             amount: (float) $plan->monthly_amount,
             currencyId: $plan->currency_id,
         );

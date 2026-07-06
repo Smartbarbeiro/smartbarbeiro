@@ -63,11 +63,11 @@ class BarbershopPlatformSubscribeController extends Controller
             ]);
         }
 
-        if ($result['checkout_url'] === null) {
-            return back()->with('status', 'platform-subscription-pending');
-        }
+        if (! filled($result['checkout_url'])) {
+            if (! $mercadoPago->isConfigured()) {
+                return back()->with('status', 'platform-subscription-pending');
+            }
 
-        if ($result['checkout_url'] === '') {
             return back()->withErrors([
                 'subscribe' => __('messages.mercadopago_no_checkout_url'),
             ]);

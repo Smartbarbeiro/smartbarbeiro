@@ -22,20 +22,12 @@ if (-not $FtpPass) { throw "Set HOSTINGER_FTP_PASSWORD in .env or your shell" }
 $RemoteBase = "domains/smartbarbeiro.com.br"
 
 function Send-FtpFile([string]$LocalPath, [string]$RemotePath) {
-    $uri = "ftp://$FtpHost/$RemotePath"
-    $request = [System.Net.FtpWebRequest]::Create($uri)
-    $request.Method = [System.Net.WebRequestMethods+Ftp]::UploadFile
-    $request.Credentials = New-Object System.Net.NetworkCredential($FtpUser, $FtpPass)
-    $request.UseBinary = $true
-    $request.UsePassive = $true
-    $bytes = [System.IO.File]::ReadAllBytes($LocalPath)
-    $request.ContentLength = $bytes.Length
-    $stream = $request.GetRequestStream()
-    $stream.Write($bytes, 0, $bytes.Length)
-    $stream.Close()
-    $response = $request.GetResponse()
+    $uri = "ftp://${FtpHost}/${RemotePath}"
+    & curl.exe -S --ftp-pasv -T $LocalPath --user "${FtpUser}:${FtpPass}" $uri
+    if ($LASTEXITCODE -ne 0) {
+        throw "FTP upload failed for $RemotePath"
+    }
     Write-Host "  uploaded -> $RemotePath"
-    $response.Close()
 }
 
 $laravelFiles = @(
