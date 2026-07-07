@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" role="img" aria-label="Cartão de crédito e débito">
+  <defs>
+    <linearGradient id="card-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3d4f67"/>
+      <stop offset="100%" stop-color="#1f2937"/>
+    </linearGradient>
+    <linearGradient id="card-chip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3e5ab"/>
+      <stop offset="100%" stop-color="#c9a227"/>
+    </linearGradient>
+    <linearGradient id="card-back" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(40, 8) rotate(-7 120 42)">
+    <rect width="240" height="68" rx="10" fill="url(#card-back)" opacity="0.55"/>
+  </g>
+
+  <g transform="translate(40, 16)">
+    <rect width="240" height="68" rx="10" fill="url(#card-bg)"/>
+    <rect x="0" y="14" width="240" height="14" fill="#111827" opacity="0.35"/>
+
+    <rect x="18" y="36" width="34" height="26" rx="5" fill="url(#card-chip)"/>
+    <path
+      d="M24 42h22M24 47h22M24 52h22M36 42v10"
+      stroke="#9a7b1a"
+      stroke-width="1.2"
+      stroke-linecap="round"
+      opacity="0.65"
+    />
+
+    <g transform="translate(62, 38)" stroke="#e5e7eb" stroke-width="2.2" fill="none" stroke-linecap="round">
+      <path d="M0 12c6-8 12-8 18 0"/>
+      <path d="M4 12c4-5 8-5 12 0"/>
+      <path d="M8 12c2-2 4-2 6 0"/>
+    </g>
+
+    <g fill="#f9fafb" opacity="0.95">
+      <circle cx="24" cy="72" r="2.2"/>
+      <circle cx="34" cy="72" r="2.2"/>
+      <circle cx="44" cy="72" r="2.2"/>
+      <circle cx="54" cy="72" r="2.2"/>
+      <rect x="66" y="69.8" width="28" height="4.4" rx="2.2" opacity="0.85"/>
+      <rect x="102" y="69.8" width="28" height="4.4" rx="2.2" opacity="0.85"/>
+      <rect x="138" y="69.8" width="28" height="4.4" rx="2.2" opacity="0.85"/>
+      <rect x="174" y="69.8" width="18" height="4.4" rx="2.2" opacity="0.85"/>
+    </g>
+
+    <circle cx="196" cy="58" r="12" fill="#eb001b" opacity="0.92"/>
+    <circle cx="214" cy="58" r="12" fill="#f79e1b" opacity="0.92"/>
+  </g>
+</svg>

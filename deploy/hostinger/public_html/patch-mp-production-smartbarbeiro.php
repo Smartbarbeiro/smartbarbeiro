@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * Patches laravel/.env with production Mercado Pago + domain settings.
+ * Visit once: https://www.smartbarbeiro.com.br/patch-mp-production-smartbarbeiro.php
+ * DELETE this file immediately after.
+ */
+
+declare(strict_types=1);
+
+header('Content-Type: text/plain; charset=utf-8');
+
+$laravelRoot = dirname(__DIR__).'/laravel';
+if (! is_dir($laravelRoot) && is_dir(dirname(__DIR__).'/laravel/laravel')) {
+    $laravelRoot = dirname(__DIR__).'/laravel/laravel';
+}
+
+$envPath = $laravelRoot.'/.env';
+
+if (! is_file($envPath)) {
+    exit(".env not found at {$envPath}\nRun env-setup-smartbarbeiro.php first.\n");
+}
+
+$updates = [
+    'APP_URL' => 'https://www.smartbarbeiro.com.br',
+    'MERCADOPAGO_CURRENCY' => 'BRL',
+    'MERCADOPAGO_RUNTIME' => 'server',
+    'MERCADOPAGO_BACK_URL' => 'https://www.smartbarbeiro.com.br',
+    'GOOGLE_REDIRECT_URI' => 'https://www.smartbarbeiro.com.br/auth/google/callback',
+    'PUBLIC_PATH' => '/home/u379350398/domains/smartbarbeiro.com.br/public_html',
+];
+
+$content = file_get_contents($envPath);
+if ($content === false) {
+    exit("Could not read {$envPath}\n");
+}
+
+foreach ($updates as $key => $value) {
+    $pattern = '/^'.preg_quote($key, '/').'=.*$/m';
+    $line = $key.'='.$value;
+
+    if (preg_match($pattern, $content)) {
+        $content = preg_replace($pattern, $line, $content) ?? $content;
+        echo "updated {$key}\n";
+    } else {
+        $content = rtrim($content)."\n".$line."\n";
+        echo "added {$key}\n";
+    }
+}
+
+if (file_put_contents($envPath, $content) === false) {
+    exit("Could not write {$envPath}\n");
+}
+
+echo "\n.env patched (URLs and runtime only).\n";
+echo "Edit laravel/.env in hPanel for MERCADOPAGO_* and GOOGLE_* secrets.\n";
+echo "Include MERCADOPAGO_WEBHOOK_SECRET (assinatura secreta from MP Webhooks panel).\n\n";
+echo "Mercado Pago webhook (set in MP Developers panel):\n";
+echo "  https://www.smartbarbeiro.com.br/webhooks/mercadopago\n\n";
+echo "Next:\n";
+echo "1. clear-cache-smartbarbeiro.php\n";
+echo "2. https://www.smartbarbeiro.com.br\n";
+echo "\nDELETE patch-mp-production-smartbarbeiro.php when done.\n";

@@ -1,0 +1,7 @@
+# When public_html/storage is a real folder (no symlink to Laravel), serve missing
+# files through the main front controller so /storage/profile-photos/... works.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ /index.php [L]
+</IfModule>

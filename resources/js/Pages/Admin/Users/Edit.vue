@@ -1,0 +1,411 @@
+<script setup>
+import DashboardAlert from '@/Components/DashboardAlert.vue';
+import DashboardContentCard from '@/Components/DashboardContentCard.vue';
+import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
+import DangerButton from '@/Components/DangerButton.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import Modal from '@/Components/Modal.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import ProfileAvatar from '@/Components/ProfileAvatar.vue';
+import ProfileQrCode from '@/Components/ProfileQrCode.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
+import SubscribersList from '@/Pages/Profile/Partials/SubscribersList.vue';
+import TextInput from '@/Components/TextInput.vue';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+
+const props = defineProps({
+    managedUser: {
+        type: Object,
+        required: true,
+    },
+    canDelete: {
+        type: Boolean,
+        default: false,
+    },
+    canFreeze: {
+        type: Boolean,
+        default: false,
+    },
+});
+
+const flashStatus = computed(() => usePage().props.flash?.status);
+
+const form = useForm({
+    name: props.managedUser.name,
+    username: props.managedUser.username,
+    email: props.managedUser.email,
+    password: '',
+    password_confirmation: '',
+    is_admin: props.managedUser.is_admin,
+    is_frozen: props.managedUser.is_frozen,
+    platform_subscription_exempt:
+        props.managedUser.platform_subscription_exempt ?? false,
+});
+
+const confirmingDeletion = ref(false);
+const deleteForm = useForm({});
+
+const submit = () => {
+    form.patch(route('admin.users.update', props.managedUser.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            form.password = '';
+            form.password_confirmation = '';
+        },
+    });
+};
+
+const deleteUser = () => {
+    deleteForm.delete(route('admin.users.destroy', props.managedUser.id));
+};
+
+const qrProfileUrl = computed(() => {
+    if (!props.managedUser.is_barbershop || !props.managedUser.profile_url) {
+        return null;
+    }
+
+    const username = form.username || props.managedUser.username;
+
+    try {
+        const url = new URL(props.managedUser.profile_url);
+
+        url.pathname = `/barbearias/${username}`;
+
+        return url.toString();
+    } catch {
+        return props.managedUser.profile_url;
+    }
+});
+</script>
+
+<template>
+    <Head :title="`Editar ${managedUser.name}`" />
+
+    <AuthenticatedLayout>
+        <template #header>
+            <DashboardPageHeader icon="user-edit" title="Editar usuário" />
+        </template>
+
+        <div class="d-flex flex-column gap-4">
+            <div class="d-flex flex-wrap justify-content-end">
+                <Link
+                    :href="route('admin.users.index')"
+                    class="link-primary small"
+                >
+                    Voltar ao painel de controle
+                </Link>
+            </div>
+
+            <DashboardAlert
+                :show="flashStatus === 'user-updated'"
+                variant="success"
+            >
+                Usuário atualizado.
+            </DashboardAlert>
+
+            <DashboardContentCard
+                icon="user-edit"
+                title="Editar usuário"
+                :description="managedUser.is_barbershop ? 'Conta de barbearia e perfil público.' : 'Conta de cliente.'"
+            >
+                <div class="d-flex align-items-start gap-4">
+                    <ProfileAvatar
+                        :name="managedUser.name"
+                        :photo-url="managedUser.profile_photo_url"
+                        size="lg"
+                    />
+                    <div class="small text-secondary">
+                        <p class="mb-1">
+                            <span class="fw-medium text-body">Tipo:</span>
+                            {{
+                                managedUser.is_barbershop
+                                    ? 'Barbearia'
+                                    : 'Cliente'
+                            }}
+                            <span
+                                v-if="managedUser.is_frozen"
+                                class="badge bg-danger ms-2"
+                            >
+                                Congelado
+                            </span>
+                        </p>
+                        <p v-if="managedUser.profile_url" class="mb-1">
+                            <span class="fw-medium text-body">Perfil público:</span>
+                            <a
+                                :href="managedUser.profile_url"
+                                class="link-primary ms-1"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {{ managedUser.profile_url }}
+                            </a>
+                        </p>
+                        <p class="mb-1">
+                            <span class="fw-medium text-body">Cadastrado em:</span>
+                            {{ managedUser.created_at }}
+                        </p>
+                        <p v-if="managedUser.is_barbershop" class="mb-1">
+                            <span class="fw-medium text-body">Armazenamento:</span>
+                            <span class="font-monospace ms-1" style="font-size: 0.75rem">{{
+                                managedUser.storage_path
+                            }}</span>
+                        </p>
+                        <p class="mb-0">
+                            Assinantes pagos:
+                            {{ managedUser.active_subscribers_count }} ativos /
+                            {{ managedUser.subscribers_count }} total
+                            · Membros da barbearia:
+                            {{ managedUser.barbershop_members_count }}
+                            · Assinaturas como cliente:
+                            {{ managedUser.subscriptions_count }}
+                        </p>
+                    </div>
+                </div>
+
+                <ProfileQrCode
+                    v-if="qrProfileUrl"
+                    class="mt-4"
+                    style="max-width: 28rem"
+                    :url="qrProfileUrl"
+                    :filename="`${form.username || managedUser.username}-profile`"
+                />
+
+                <div
+                    v-if="managedUser.is_barbershop && managedUser.profile_url"
+                    class="mt-3"
+                >
+                    <a
+                        :href="route('admin.users.qrcode.pdf', managedUser.id)"
+                        class="btn btn-outline-secondary btn-sm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i class="bi bi-printer me-2" aria-hidden="true"></i>
+                        Imprimir PDF do QR code
+                    </a>
+                </div>
+
+                <form @submit.prevent="submit" class="mt-4">
+                    <div class="mb-3">
+                        <InputLabel for="name" value="Nome" />
+                        <TextInput
+                            id="name"
+                            v-model="form.name"
+                            type="text"
+                            class="mt-1 w-100"
+                            required
+                        />
+                        <InputError class="mt-2" :message="form.errors.name" />
+                    </div>
+
+                    <div v-if="managedUser.is_barbershop" class="mb-3">
+                        <InputLabel for="username" value="Nome da Barbearia" />
+                        <TextInput
+                            id="username"
+                            v-model="form.username"
+                            type="text"
+                            class="mt-1 w-100"
+                            required
+                        />
+                        <InputError
+                            class="mt-2"
+                            :message="form.errors.username"
+                        />
+                    </div>
+
+                    <div class="mb-3">
+                        <InputLabel for="email" value="E-mail" />
+                        <TextInput
+                            id="email"
+                            v-model="form.email"
+                            type="email"
+                            class="mt-1 w-100"
+                            required
+                        />
+                        <InputError class="mt-2" :message="form.errors.email" />
+                    </div>
+
+                    <div class="mb-3">
+                        <InputLabel
+                            for="password"
+                            value="Nova senha (opcional)"
+                        />
+                        <TextInput
+                            id="password"
+                            v-model="form.password"
+                            type="password"
+                            class="mt-1 w-100"
+                            autocomplete="new-password"
+                        />
+                        <InputError
+                            class="mt-2"
+                            :message="form.errors.password"
+                        />
+                    </div>
+
+                    <div class="mb-3">
+                        <InputLabel
+                            for="password_confirmation"
+                            value="Confirmar nova senha"
+                        />
+                        <TextInput
+                            id="password_confirmation"
+                            v-model="form.password_confirmation"
+                            type="password"
+                            class="mt-1 w-100"
+                            autocomplete="new-password"
+                        />
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input
+                            id="is_admin"
+                            v-model="form.is_admin"
+                            type="checkbox"
+                            class="form-check-input"
+                        />
+                        <InputLabel
+                            for="is_admin"
+                            value="Administrador"
+                            class="form-check-label"
+                        />
+                    </div>
+                    <p class="form-text mb-0">
+                        Administradores não possuem perfil público nem conta de
+                        barbearia.
+                    </p>
+                    <InputError class="mt-2 mb-3" :message="form.errors.is_admin" />
+
+                    <div v-if="canFreeze" class="form-check mb-3">
+                        <input
+                            id="is_frozen"
+                            v-model="form.is_frozen"
+                            type="checkbox"
+                            class="form-check-input"
+                        />
+                        <InputLabel
+                            for="is_frozen"
+                            value="Congelar conta (bloqueia login e perfil público)"
+                            class="form-check-label"
+                        />
+                    </div>
+                    <InputError class="mt-2 mb-3" :message="form.errors.is_frozen" />
+
+                    <div
+                        v-if="managedUser.is_barbershop_account"
+                        class="border rounded-3 p-3 mb-3"
+                    >
+                        <div class="form-check mb-0">
+                            <input
+                                id="platform_subscription_exempt"
+                                v-model="form.platform_subscription_exempt"
+                                type="checkbox"
+                                class="form-check-input"
+                            />
+                            <InputLabel
+                                for="platform_subscription_exempt"
+                                value="Isentar do plano da plataforma"
+                                class="form-check-label"
+                            />
+                        </div>
+                        <p class="form-text mb-0 mt-2">
+                            Permite que esta barbearia use o perfil público sem
+                            pagar a assinatura mensal da plataforma no Mercado
+                            Pago.
+                        </p>
+                        <InputError
+                            class="mt-2 mb-0"
+                            :message="form.errors.platform_subscription_exempt"
+                        />
+                    </div>
+
+                    <PrimaryButton :disabled="form.processing">
+                        Salvar alterações
+                    </PrimaryButton>
+                </form>
+            </DashboardContentCard>
+
+            <DashboardContentCard
+                v-if="managedUser.is_barbershop"
+                icon="subscribers"
+                title="Assinantes"
+                description="Clientes com assinatura ativa nesta barbearia."
+            >
+                <SubscribersList :subscribers="managedUser.subscribers" />
+            </DashboardContentCard>
+
+            <DashboardContentCard
+                v-if="managedUser.barbershop_members.length > 0"
+                icon="clients"
+                title="Membros da barbearia"
+                description="Clientes cadastrados nesta barbearia."
+            >
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-dark-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Membro</th>
+                                <th scope="col">Cadastrado em</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="row in managedUser.barbershop_members"
+                                :key="row.id"
+                            >
+                                <td>
+                                    <p class="fw-medium mb-0">
+                                        {{ row.member.name }}
+                                    </p>
+                                    <p class="text-secondary small mb-0">
+                                        {{ row.member.email }}
+                                    </p>
+                                </td>
+                                <td class="text-secondary">
+                                    {{ row.joined_at }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </DashboardContentCard>
+
+            <DashboardContentCard
+                v-if="canDelete"
+                icon="delete-account"
+                title="Excluir usuário"
+                description="Remove permanentemente esta conta, perfil público e todo o armazenamento associado."
+            >
+                <DangerButton @click="confirmingDeletion = true">
+                    Excluir usuário
+                </DangerButton>
+            </DashboardContentCard>
+        </div>
+
+        <Modal :show="confirmingDeletion" @close="confirmingDeletion = false">
+            <div class="p-4">
+                <h2 class="h5 fw-semibold">
+                    Excluir {{ managedUser.name }}?
+                </h2>
+                <p class="text-secondary small mt-2 mb-0">
+                    Isso não pode ser desfeito. Fotos de perfil, arquivos privados e
+                    dados de assinatura serão apagados.
+                </p>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <SecondaryButton @click="confirmingDeletion = false">
+                        Cancelar
+                    </SecondaryButton>
+                    <DangerButton
+                        :disabled="deleteForm.processing"
+                        @click="deleteUser"
+                    >
+                        Excluir permanentemente
+                    </DangerButton>
+                </div>
+            </div>
+        </Modal>
+    </AuthenticatedLayout>
+</template>

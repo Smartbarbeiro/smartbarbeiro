@@ -1,0 +1,57 @@
+# Mercado Pago / Stripe webhooks: avoid Hostinger ModSecurity / Imunify 403s.
+<IfModule mod_security2.c>
+    SecRule REQUEST_URI "@contains /webhooks/" "id:1099001,phase:1,nolog,pass,ctl:ruleEngine=Off"
+</IfModule>
+<IfModule mod_security.c>
+    SecRule REQUEST_URI "@contains /webhooks/" "id:1099001,phase:1,nolog,pass,ctl:ruleEngine=Off"
+</IfModule>
+
+# PWA service worker must always revalidate.
+<IfModule mod_headers.c>
+    <FilesMatch "^(sw\.js|site\.webmanifest)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Profile photos / uploads: Hostinger disables symlink(); serve from laravel/storage/app/public
+    RewriteCond %{REQUEST_URI} ^/uploads/(.+)$
+    RewriteCond %{DOCUMENT_ROOT}/../laravel/storage/app/public/%1 -f
+    RewriteRule ^uploads/(.+)$ ../laravel/storage/app/public/$1 [L]
+
+    # Fallback to Laravel when the file is not on disk yet
+    RewriteCond %{REQUEST_URI} ^/uploads/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Handle X-XSRF-Token Header
+    RewriteCond %{HTTP:x-xsrf-token} .
+    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+<RequireAny>
+    # Allows standard users with password
+    Require valid-user
+    
+    # Allows anyone accessing the specific webhook URL path
+    Require expr %{REQUEST_URI} =~ m#^/webhooks/mercadopago?$#
+</RequireAny>
