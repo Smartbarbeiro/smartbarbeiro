@@ -21,7 +21,6 @@ class ProfileSubscriptionController extends Controller
     public function index(
         Request $request,
         ServicePlanSubscriptionPaymentService $paymentService,
-        BarbershopExpectedMonthlyRevenueService $revenueService,
     ): Response {
         $user = $request->user();
 
@@ -32,7 +31,7 @@ class ProfileSubscriptionController extends Controller
         }
 
         if ($user->isBarbershop()) {
-            return $this->barbershopClientsIndex($user, $paymentService, $revenueService);
+            return $this->barbershopClientsIndex($user, $paymentService);
         }
 
         $profileSubscriptions = $user
@@ -102,7 +101,6 @@ class ProfileSubscriptionController extends Controller
     private function barbershopClientsIndex(
         User $barbershop,
         ServicePlanSubscriptionPaymentService $paymentService,
-        BarbershopExpectedMonthlyRevenueService $revenueService,
     ): Response {
         $subscriptionPlan = $barbershop->subscriptionPlan;
         $profileMonthlyAmount = $subscriptionPlan && $subscriptionPlan->is_enabled
@@ -155,7 +153,8 @@ class ProfileSubscriptionController extends Controller
             'isAdminPlatformSubscriptionsView' => false,
             'platformPayingBarbershops' => [],
             'platformRevenueSummary' => null,
-            'expectedMonthlyRevenue' => $revenueService->payloadFor($barbershop),
+            'expectedMonthlyRevenue' => app(BarbershopExpectedMonthlyRevenueService::class)
+                ->payloadFor($barbershop),
             'mercadopagoConfigured' => app(MercadoPagoService::class)->isConfigured(),
         ]);
     }
