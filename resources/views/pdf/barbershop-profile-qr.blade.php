@@ -32,7 +32,7 @@
             }
 
             .sheet-top-wrap {
-                background-color: #ffffff;
+                background-color: #000000;
                 padding: 36px 0;
             }
 
@@ -202,7 +202,7 @@
     <body>
         <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td bgcolor="#ffffff" class="sheet-top-wrap" style="background-color: #ffffff;">
+                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000;">
                     <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
                         <div class="content">
                             <h1>{{ $barbershopName }}</h1>
