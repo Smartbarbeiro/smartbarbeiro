@@ -35,7 +35,8 @@
 
             .sheet-top-wrap {
                 background-color: #000000;
-                min-height: 178.2mm;
+                height: 213.84mm;
+                min-height: 213.84mm;
                 vertical-align: middle;
             }
 
@@ -55,7 +56,7 @@
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
-                padding: 4px 18px 6px;
+                padding: 2px 14px 4px;
                 text-align: center;
             }
 
@@ -113,9 +114,9 @@
                 border: 1px solid #cccccc;
                 border-radius: 10px;
                 color: #000000;
-                margin: 4px auto 0;
+                margin: 2px auto 0;
                 max-width: 420px;
-                padding: 6px 10px;
+                padding: 4px 8px;
                 text-align: left;
             }
 
@@ -159,7 +160,7 @@
             }
 
             .mini-qr-row {
-                margin: 4px auto 0;
+                margin: 2px auto 0;
                 text-align: center;
                 width: 100%;
             }
@@ -212,7 +213,7 @@
     <body>
         <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; min-height: 178.2mm;" valign="middle">
+                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; height: 213.84mm; min-height: 213.84mm;" valign="middle">
                     <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
                         <div class="sheet-top__inner">
                             <h1>{{ $barbershopName }}</h1>
