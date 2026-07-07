@@ -31,16 +31,22 @@
                 vertical-align: top;
             }
 
+            .sheet-top-wrap {
+                background-color: #ffffff;
+                padding: 36px 0;
+            }
+
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 64px 40px 56px;
+                padding: 56px 40px 48px;
             }
 
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
                 padding: 24px 32px 40px;
+                text-align: center;
             }
 
             .content {
@@ -144,7 +150,6 @@
 
             .mini-qr-row {
                 margin: 32px auto 0;
-                max-width: 480px;
                 text-align: center;
                 width: 100%;
             }
@@ -152,14 +157,13 @@
             .mini-qr-row table {
                 border-collapse: collapse;
                 margin: 0 auto;
-                width: 100%;
+                width: auto;
             }
 
             .mini-qr-copy {
-                padding: 10px 8px;
+                padding: 10px 12px;
                 text-align: center;
                 vertical-align: top;
-                width: 33.33%;
             }
 
             .mini-qr-copy--second-row {
@@ -198,23 +202,25 @@
     <body>
         <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td bgcolor="#000000" class="sheet-top" style="background-color: #000000; color: #ffffff;">
-                    <div class="content">
-                        <h1>{{ $barbershopName }}</h1>
+                <td bgcolor="#ffffff" class="sheet-top-wrap" style="background-color: #ffffff;">
+                    <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
+                        <div class="content">
+                            <h1>{{ $barbershopName }}</h1>
 
-                        @if ($username)
-                            <p class="username">{{ '@'.$username }}</p>
-                        @endif
+                            @if ($username)
+                                <p class="username">{{ '@'.$username }}</p>
+                            @endif
 
-                        <div class="qr-frame">
-                            <img src="{{ $qrCodeDataUri }}" alt="QR code do perfil" />
+                            <div class="qr-frame">
+                                <img src="{{ $qrCodeDataUri }}" alt="QR code do perfil" />
+                            </div>
+
+                            <p class="profile-url">{{ $profileUrl }}</p>
+
+                            <p class="hint">
+                                Escaneie o QR code para abrir o perfil público desta barbearia.
+                            </p>
                         </div>
-
-                        <p class="profile-url">{{ $profileUrl }}</p>
-
-                        <p class="hint">
-                            Escaneie o QR code para abrir o perfil público desta barbearia.
-                        </p>
                     </div>
                 </td>
             </tr>
@@ -241,7 +247,7 @@
                         @endif
 
                         <div class="mini-qr-row">
-                            <table role="presentation">
+                            <table role="presentation" align="center" cellpadding="0" cellspacing="0">
                                 <tr>
                                     @foreach (range(1, 3) as $copy)
                                         <td class="mini-qr-copy">
