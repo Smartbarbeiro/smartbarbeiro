@@ -114,8 +114,8 @@ class BarbershopQrPdfTest extends TestCase
         $this->assertStringContainsString('height: 320px', $html);
         $this->assertStringContainsString('height: 112px', $html);
         $this->assertStringContainsString('sheet-top-wrap', $html);
-        $this->assertStringContainsString('padding: 8px 0', $html);
-        $this->assertStringContainsString('padding: 14px 32px 10px', $html);
+        $this->assertStringContainsString('min-height: 148.5mm', $html);
+        $this->assertStringContainsString('valign="middle"', $html);
         $this->assertStringContainsString('align="center"', $html);
         $this->assertStringContainsString('background-color: #000000', $html);
         $this->assertStringContainsString('color: #ffffff', $html);

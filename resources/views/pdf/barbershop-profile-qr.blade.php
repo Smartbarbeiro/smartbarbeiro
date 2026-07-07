@@ -17,12 +17,14 @@
                 background-color: #ffffff;
                 color: #000000;
                 font-family: DejaVu Sans, sans-serif;
+                height: 297mm;
                 margin: 0;
                 padding: 0;
             }
 
             .layout {
                 border-collapse: collapse;
+                height: 297mm;
                 width: 100%;
             }
 
@@ -33,13 +35,21 @@
 
             .sheet-top-wrap {
                 background-color: #000000;
-                padding: 8px 0;
+                min-height: 148.5mm;
+                vertical-align: middle;
             }
 
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 14px 32px 10px;
+                padding: 0 32px;
+            }
+
+            .sheet-top__inner {
+                margin: 0 auto;
+                max-width: 520px;
+                text-align: center;
+                width: 100%;
             }
 
             .sheet-bottom {
@@ -202,9 +212,9 @@
     <body>
         <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000;">
+                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; min-height: 148.5mm;" valign="middle">
                     <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
-                        <div class="content">
+                        <div class="sheet-top__inner">
                             <h1>{{ $barbershopName }}</h1>
 
                             @if ($username)
