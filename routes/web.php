@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BarbershopPlatformSubscribeController;
 use App\Http\Controllers\BarbershopAppointmentBookingController;
 use App\Http\Controllers\BarbershopAppointmentController;
+use App\Http\Controllers\BarbershopCommissionController;
 use App\Http\Controllers\BarbershopEmployeeController;
 use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\BarbershopPreferredHaircutDayController;
@@ -178,6 +179,8 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
         ->name('employees.update');
     Route::delete('/funcionarios/{employee}', [BarbershopEmployeeController::class, 'destroy'])
         ->name('employees.destroy');
+    Route::get('/comissoes', [BarbershopCommissionController::class, 'index'])
+        ->name('commissions.index');
     Route::get('/agenda', [BarbershopAppointmentController::class, 'index'])
         ->name('agenda.index');
     Route::patch('/agenda/{appointment}', [BarbershopAppointmentController::class, 'update'])

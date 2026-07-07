@@ -25,6 +25,9 @@ class BarbershopAppointment extends Model
         'duration_minutes',
         'service_label',
         'package_type',
+        'service_amount',
+        'commission_percent',
+        'commission_amount',
         'status',
         'client_notes',
     ];
@@ -34,6 +37,9 @@ class BarbershopAppointment extends Model
         return [
             'scheduled_at' => 'datetime',
             'duration_minutes' => 'integer',
+            'service_amount' => 'decimal:2',
+            'commission_percent' => 'decimal:2',
+            'commission_amount' => 'decimal:2',
         ];
     }
 
@@ -104,6 +110,8 @@ class BarbershopAppointment extends Model
                 'name' => $this->employee->name,
                 'commission_percent' => (float) $this->employee->commission_percent,
             ] : null,
+            'service_amount' => $this->service_amount !== null ? (float) $this->service_amount : null,
+            'commission_amount' => $this->commission_amount !== null ? (float) $this->commission_amount : null,
         ];
     }
 }

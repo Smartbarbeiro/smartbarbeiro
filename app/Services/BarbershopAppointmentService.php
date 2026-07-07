@@ -18,6 +18,10 @@ class BarbershopAppointmentService
 
     public const SLOT_MINUTES = 30;
 
+    public function __construct(
+        private BarbershopCommissionReportService $commissionReportService,
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -151,8 +155,11 @@ class BarbershopAppointmentService
 
     public function complete(BarbershopAppointment $appointment): BarbershopAppointment
     {
+        $appointment->loadMissing(['employee', 'barbershop']);
+
         $appointment->update([
             'status' => BarbershopAppointment::STATUS_COMPLETED,
+            ...$this->commissionReportService->commissionSnapshotForAppointment($appointment),
         ]);
 
         return $appointment->fresh(['client', 'employee']);

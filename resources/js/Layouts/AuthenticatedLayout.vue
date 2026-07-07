@@ -122,6 +122,12 @@ const navItems = computed(() => {
             icon: 'people',
             label: 'Funcionários',
         });
+        items.push({
+            href: route('commissions.index'),
+            active: route().current('commissions.*'),
+            icon: 'cash-stack',
+            label: 'Comissões',
+        });
     }
 
     items.push({

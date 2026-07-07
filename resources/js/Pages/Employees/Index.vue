@@ -7,7 +7,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const props = defineProps({
@@ -121,6 +121,13 @@ const deleteEmployee = (employee) => {
                 title="Equipe da barbearia"
                 description="Cadastre os barbeiros que trabalham com você e defina a comissão de cada um sobre os serviços realizados."
             >
+                <p class="small text-secondary mb-3">
+                    <Link :href="route('commissions.index')" class="link-primary">
+                        Ver relatório de comissões
+                    </Link>
+                    dos serviços concluídos na agenda.
+                </p>
+
                 <form class="row g-3 align-items-end" @submit.prevent="submitCreate">
                     <div class="col-md-5">
                         <InputLabel for="employee-name" value="Nome" />
