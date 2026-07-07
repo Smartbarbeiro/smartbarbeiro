@@ -117,6 +117,12 @@ const navItems = computed(() => {
 
     if (user.value?.is_barbershop) {
         items.push({
+            href: route('agenda.index'),
+            active: route().current('agenda.*'),
+            icon: 'journal-bookmark',
+            label: 'Agenda',
+        });
+        items.push({
             href: route('employees.index'),
             active: route().current('employees.*'),
             icon: 'people',
@@ -343,6 +349,11 @@ const mobileNavItems = computed(() => {
                                     <li>
                                         <Link :href="route('profile.edit')" class="dropdown-item">
                                             <i class="bi bi-person me-2"></i>Perfil
+                                        </Link>
+                                    </li>
+                                    <li v-if="user?.is_barbershop">
+                                        <Link :href="route('agenda.index')" class="dropdown-item">
+                                            <i class="bi bi-journal-bookmark me-2"></i>Agenda
                                         </Link>
                                     </li>
                                     <li>

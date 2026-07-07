@@ -37,6 +37,14 @@ defineProps({
         </p>
 
         <Link
+            :href="route('agenda.index')"
+            class="btn btn-outline-dark barbershop-empty-dashboard__action-btn mt-3"
+        >
+            <i class="bi bi-journal-bookmark me-2" aria-hidden="true"></i>
+            Abrir agenda
+        </Link>
+
+        <Link
             v-if="!hasConfiguredServicePlans"
             :href="`${route('profile.edit')}#planos-de-servico`"
             class="btn btn-dark barbershop-empty-dashboard__action-btn"

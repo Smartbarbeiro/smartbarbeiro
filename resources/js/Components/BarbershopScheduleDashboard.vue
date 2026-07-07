@@ -1,7 +1,7 @@
 <script setup>
 import BarbershopScheduleDayCard from '@/Components/BarbershopScheduleDayCard.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
 defineProps({
     schedule: {
@@ -34,10 +34,22 @@ defineProps({
         </section>
 
         <section class="barbershop-dashboard-intro">
-            <p class="barbershop-dashboard-greeting mb-0">
-                <strong>{{ schedule.greeting }}</strong>
-                {{ schedule.formatted_date }}
-            </p>
+            <div
+                class="d-flex flex-wrap align-items-center justify-content-between gap-3"
+            >
+                <p class="barbershop-dashboard-greeting mb-0">
+                    <strong>{{ schedule.greeting }}</strong>
+                    {{ schedule.formatted_date }}
+                </p>
+
+                <Link
+                    :href="route('agenda.index')"
+                    class="btn btn-dark btn-sm"
+                >
+                    <i class="bi bi-journal-bookmark me-2"></i>
+                    Abrir agenda
+                </Link>
+            </div>
         </section>
 
         <section class="barbershop-dashboard-today">
