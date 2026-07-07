@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProfileSubscription;
 use App\Models\ServicePlanSubscription;
 use App\Models\User;
+use App\Services\AdminPlatformSubscriptionOverviewService;
 use App\Services\BarbershopExpectedMonthlyRevenueService;
 use App\Services\MercadoPagoService;
 use App\Services\ProfileSubscriptionCancellationService;
@@ -23,6 +24,12 @@ class ProfileSubscriptionController extends Controller
         BarbershopExpectedMonthlyRevenueService $revenueService,
     ): Response {
         $user = $request->user();
+
+        if ($user->isAdmin()) {
+            return $this->adminPlatformSubscriptionsIndex(
+                app(AdminPlatformSubscriptionOverviewService::class),
+            );
+        }
 
         if ($user->isBarbershop()) {
             return $this->barbershopClientsIndex($user, $paymentService, $revenueService);
@@ -68,6 +75,25 @@ class ProfileSubscriptionController extends Controller
         return Inertia::render('Subscriptions/Index', [
             'subscriptions' => $subscriptions,
             'isBarbershopClientsView' => false,
+            'isAdminPlatformSubscriptionsView' => false,
+            'platformPayingBarbershops' => [],
+            'platformRevenueSummary' => null,
+            'expectedMonthlyRevenue' => null,
+            'mercadopagoConfigured' => app(MercadoPagoService::class)->isConfigured(),
+        ]);
+    }
+
+    private function adminPlatformSubscriptionsIndex(
+        AdminPlatformSubscriptionOverviewService $overviewService,
+    ): Response {
+        $overview = $overviewService->payload();
+
+        return Inertia::render('Subscriptions/Index', [
+            'subscriptions' => [],
+            'isBarbershopClientsView' => false,
+            'isAdminPlatformSubscriptionsView' => true,
+            'platformPayingBarbershops' => $overview['barbershops'],
+            'platformRevenueSummary' => $overview['summary'],
             'expectedMonthlyRevenue' => null,
             'mercadopagoConfigured' => app(MercadoPagoService::class)->isConfigured(),
         ]);
@@ -126,6 +152,9 @@ class ProfileSubscriptionController extends Controller
         return Inertia::render('Subscriptions/Index', [
             'subscriptions' => $subscriptions,
             'isBarbershopClientsView' => true,
+            'isAdminPlatformSubscriptionsView' => false,
+            'platformPayingBarbershops' => [],
+            'platformRevenueSummary' => null,
             'expectedMonthlyRevenue' => $revenueService->payloadFor($barbershop),
             'mercadopagoConfigured' => app(MercadoPagoService::class)->isConfigured(),
         ]);

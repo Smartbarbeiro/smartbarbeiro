@@ -21,6 +21,18 @@ defineProps({
         type: Boolean,
         default: false,
     },
+    isAdminPlatformSubscriptionsView: {
+        type: Boolean,
+        default: false,
+    },
+    platformPayingBarbershops: {
+        type: Array,
+        default: () => [],
+    },
+    platformRevenueSummary: {
+        type: Object,
+        default: null,
+    },
     expectedMonthlyRevenue: {
         type: Object,
         default: null,
@@ -29,6 +41,10 @@ defineProps({
 
 const page = usePage();
 const pageTitle = computed(() => {
+    if (page.props.auth.user?.is_administrator) {
+        return 'Assinaturas';
+    }
+
     if (page.props.auth.user?.is_barbershop) {
         return 'Clientes';
     }
@@ -44,6 +60,10 @@ const pageTitle = computed(() => {
 });
 
 const pageIcon = computed(() => {
+    if (page.props.auth.user?.is_administrator) {
+        return 'subscriptions';
+    }
+
     if (page.props.auth.user?.is_barbershop) {
         return 'clients';
     }
@@ -59,6 +79,10 @@ const pageIcon = computed(() => {
 });
 
 const pageDescription = computed(() => {
+    if (page.props.auth.user?.is_administrator) {
+        return 'Barbearias com assinatura ativa da plataforma no Mercado Pago.';
+    }
+
     if (page.props.auth.user?.is_barbershop) {
         return 'Acompanhe assinaturas e planos ativos dos seus clientes.';
     }
@@ -102,6 +126,115 @@ const statusClass = (status) => {
             </DashboardAlert>
 
             <DashboardContentCard
+                v-if="isAdminPlatformSubscriptionsView && platformRevenueSummary"
+                icon="payment"
+                title="Receita mensal da plataforma"
+                description="Soma das assinaturas ativas de todas as barbearias pagantes."
+            >
+                <p class="display-6 fw-semibold mb-2">
+                    {{ platformRevenueSummary.formatted_amount }}
+                </p>
+                <p class="text-secondary small mb-0">
+                    {{ platformRevenueSummary.paying_barbershops_count }}
+                    {{
+                        platformRevenueSummary.paying_barbershops_count === 1
+                            ? 'barbearia pagante'
+                            : 'barbearias pagantes'
+                    }}
+                    · {{ platformRevenueSummary.plan_formatted_price }}/barbearia
+                </p>
+            </DashboardContentCard>
+
+            <DashboardContentCard
+                v-if="isAdminPlatformSubscriptionsView && platformPayingBarbershops.length === 0"
+                :icon="pageIcon"
+                title="Barbearias pagantes"
+                :description="pageDescription"
+                centered
+            >
+                <p class="text-secondary mb-0">
+                    Nenhuma barbearia com pagamento ativo da plataforma no momento.
+                </p>
+            </DashboardContentCard>
+
+            <DashboardContentCard
+                v-else-if="isAdminPlatformSubscriptionsView"
+                icon="clients"
+                title="Barbearias pagantes"
+                :description="pageDescription"
+            >
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-dark-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Barbearia</th>
+                                <th scope="col">E-mail</th>
+                                <th scope="col">Valor/mês</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Próximo pagamento</th>
+                                <th scope="col" class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="barbershop in platformPayingBarbershops"
+                                :key="barbershop.id"
+                            >
+                                <td>
+                                    <p class="fw-medium mb-0">{{ barbershop.name }}</p>
+                                    <p
+                                        v-if="barbershop.username"
+                                        class="text-secondary small mb-0"
+                                    >
+                                        @{{ barbershop.username }}
+                                    </p>
+                                    <span
+                                        v-if="barbershop.is_frozen"
+                                        class="badge bg-secondary mt-1"
+                                    >
+                                        Congelada
+                                    </span>
+                                </td>
+                                <td class="text-secondary small">
+                                    {{ barbershop.email }}
+                                </td>
+                                <td>{{ barbershop.formatted_monthly_amount }}</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        {{ barbershop.status_label }}
+                                    </span>
+                                </td>
+                                <td class="text-secondary small">
+                                    {{
+                                        barbershop.next_payment_date
+                                            ? new Date(
+                                                  barbershop.next_payment_date,
+                                              ).toLocaleDateString('pt-BR')
+                                            : '—'
+                                    }}
+                                </td>
+                                <td class="text-end">
+                                    <Link
+                                        :href="route('admin.users.edit', barbershop.id)"
+                                        class="link-primary small"
+                                    >
+                                        Gerenciar
+                                    </Link>
+                                    <Link
+                                        v-if="barbershop.profile_url"
+                                        :href="barbershop.profile_url"
+                                        class="link-primary small ms-3"
+                                    >
+                                        Ver perfil
+                                    </Link>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </DashboardContentCard>
+
+            <DashboardContentCard
                 v-if="isBarbershopClientsView && expectedMonthlyRevenue"
                 icon="payment"
                 title="Receita prevista do mês"
@@ -121,7 +254,7 @@ const statusClass = (status) => {
             </DashboardContentCard>
 
             <DashboardContentCard
-                v-if="subscriptions.length === 0"
+                v-if="!isAdminPlatformSubscriptionsView && subscriptions.length === 0"
                 :icon="pageIcon"
                 :title="pageTitle"
                 :description="pageDescription"
@@ -137,7 +270,7 @@ const statusClass = (status) => {
             </DashboardContentCard>
 
             <DashboardContentCard
-                v-else
+                v-else-if="!isAdminPlatformSubscriptionsView"
                 :icon="pageIcon"
                 :title="pageTitle"
                 :description="pageDescription"
