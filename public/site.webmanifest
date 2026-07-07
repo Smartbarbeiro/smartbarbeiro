@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Smart Barbeiro",
   "short_name": "SmartBarbeiro",
-  "description": "Gerencie sua barbearia, clientes, agenda e planos pelo celular.",
+  "description": "SmartBarbeiro - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/dashboard",

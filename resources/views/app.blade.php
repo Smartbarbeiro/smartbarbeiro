@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#000000">
-        <meta name="description" content="Gerencie sua barbearia, clientes, agenda e planos pelo celular.">
+        <meta name="description" content="SmartBarbeiro - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular.">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 

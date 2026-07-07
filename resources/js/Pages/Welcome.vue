@@ -14,7 +14,13 @@ defineProps({
 
 <template>
     <MarketingLayout>
-        <Head title="SmartBarbeiro - Fidelize seus Clientes!" />
+        <Head title="SmartBarbeiro - Fidelize seus Clientes!">
+            <meta
+                head-key="description"
+                name="description"
+                content="SmartBarbeiro - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular."
+            />
+        </Head>
 
         <section id="hero1" class="marketing-hero marketing-hero-1">
             <div class="frosted-card">
