@@ -111,10 +111,11 @@ class BarbershopQrPdfTest extends TestCase
         $this->assertStringContainsString('mini-qr-cut', $html);
         $this->assertStringContainsString('border: 1px dashed #888888', $html);
         $this->assertStringContainsString('background-color: #ffffff', $html);
-        $this->assertSame(6, substr_count($html, 'QR code Plano Mensal'));
-        $this->assertSame(6, substr_count($html, 'data:image/svg+xml;base64,mini'));
+        $this->assertSame(9, substr_count($html, 'QR code Plano Mensal'));
+        $this->assertSame(9, substr_count($html, 'data:image/svg+xml;base64,mini'));
         $this->assertStringContainsString('height: 320px', $html);
-        $this->assertStringContainsString('height: 142px', $html);
+        $this->assertStringContainsString('height: 118px', $html);
+        $this->assertSame(3, substr_count($html, 'mini-qr-copy--follow-row'));
         $this->assertStringContainsString('sheet-top-wrap', $html);
         $this->assertStringContainsString('min-height: 178.2mm', $html);
         $this->assertStringContainsString('padding: 28px 32px', $html);

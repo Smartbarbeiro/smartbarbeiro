@@ -55,7 +55,7 @@
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
-                padding: 4px 18px 6px;
+                padding: 2px 14px 4px;
                 text-align: center;
             }
 
@@ -114,32 +114,32 @@
 
             .recipient {
                 border: 1px solid #cccccc;
-                border-radius: 10px;
+                border-radius: 8px;
                 color: #000000;
-                margin: 4px auto 0;
+                margin: 2px auto 0;
                 max-width: 420px;
-                padding: 6px 10px;
+                padding: 4px 8px;
                 text-align: left;
             }
 
             .recipient__title {
                 color: #000000;
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 700;
-                margin: 0 0 6px;
+                margin: 0 0 4px;
                 text-transform: uppercase;
             }
 
             .recipient__contact {
                 border-collapse: collapse;
-                margin: 0 0 6px;
+                margin: 0 0 4px;
                 width: 100%;
             }
 
             .recipient__contact td {
                 color: #000000;
-                font-size: 12px;
-                line-height: 1.4;
+                font-size: 11px;
+                line-height: 1.3;
                 padding: 0;
                 vertical-align: top;
             }
@@ -156,13 +156,13 @@
 
             .recipient__line {
                 color: #000000;
-                font-size: 12px;
-                line-height: 1.4;
+                font-size: 11px;
+                line-height: 1.3;
                 margin: 0;
             }
 
             .mini-qr-row {
-                margin: 4px auto 0;
+                margin: 2px auto 0;
                 text-align: center;
                 width: 100%;
             }
@@ -174,27 +174,27 @@
             }
 
             .mini-qr-copy {
-                padding: 2px 4px;
+                padding: 1px 3px;
                 text-align: center;
                 vertical-align: top;
             }
 
-            .mini-qr-copy--second-row {
-                padding-top: 4px;
+            .mini-qr-copy--follow-row {
+                padding-top: 2px;
             }
 
             .mini-qr-cut {
                 border: 1px dashed #888888;
                 display: inline-block;
-                padding: 6px 6px 4px;
+                padding: 4px 5px 3px;
             }
 
             .mini-qr-label {
                 color: #000000;
-                font-size: 10px;
+                font-size: 9px;
                 font-weight: 700;
                 letter-spacing: 0.04em;
-                margin: 0 0 6px;
+                margin: 0 0 4px;
                 text-transform: uppercase;
             }
 
@@ -202,13 +202,13 @@
                 background: #ffffff;
                 border: 1px solid #bbbbbb;
                 display: inline-block;
-                padding: 5px;
+                padding: 4px;
             }
 
             .mini-qr-frame img {
                 display: block;
-                height: 142px;
-                width: 142px;
+                height: 118px;
+                width: 118px;
             }
         </style>
     </head>
@@ -259,30 +259,25 @@
 
                         <div class="mini-qr-row">
                             <table role="presentation" align="center" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    @foreach (range(1, 3) as $copy)
-                                        <td class="mini-qr-copy">
-                                            <div class="mini-qr-cut">
-                                                <p class="mini-qr-label">Plano Mensal</p>
-                                                <div class="mini-qr-frame">
-                                                    <img src="{{ $miniQrCodeDataUri }}" alt="QR code Plano Mensal" />
+                                @foreach (range(1, 3) as $row)
+                                    <tr>
+                                        @foreach (range(1, 3) as $copy)
+                                            <td
+                                                class="mini-qr-copy{{ $row > 1 ? ' mini-qr-copy--follow-row' : '' }}"
+                                            >
+                                                <div class="mini-qr-cut">
+                                                    <p class="mini-qr-label">Plano Mensal</p>
+                                                    <div class="mini-qr-frame">
+                                                        <img
+                                                            src="{{ $miniQrCodeDataUri }}"
+                                                            alt="QR code Plano Mensal"
+                                                        />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                    @endforeach
-                                </tr>
-                                <tr>
-                                    @foreach (range(1, 3) as $copy)
-                                        <td class="mini-qr-copy mini-qr-copy--second-row">
-                                            <div class="mini-qr-cut">
-                                                <p class="mini-qr-label">Plano Mensal</p>
-                                                <div class="mini-qr-frame">
-                                                    <img src="{{ $miniQrCodeDataUri }}" alt="QR code Plano Mensal" />
-                                                </div>
-                                            </div>
-                                        </td>
-                                    @endforeach
-                                </tr>
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
                             </table>
                         </div>
                     </div>

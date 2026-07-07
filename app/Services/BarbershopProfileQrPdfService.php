@@ -29,7 +29,7 @@ class BarbershopProfileQrPdfService
         }
 
         $qrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 420, margin: 12);
-        $miniQrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 360, margin: 8);
+        $miniQrCodeDataUri = $this->buildQrCodeDataUri($profileUrl, size: 320, margin: 8);
         $filename ??= sprintf(
             'qrcode-%s.pdf',
             $barbershop->username ?? $barbershop->id,
