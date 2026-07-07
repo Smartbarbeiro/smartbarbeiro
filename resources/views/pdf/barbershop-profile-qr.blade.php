@@ -33,19 +33,19 @@
 
             .sheet-top-wrap {
                 background-color: #000000;
-                padding: 36px 0;
+                padding: 12px 0;
             }
 
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 56px 40px 48px;
+                padding: 20px 24px 16px;
             }
 
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
-                padding: 24px 32px 40px;
+                padding: 10px 24px 12px;
                 text-align: center;
             }
 
@@ -58,54 +58,54 @@
 
             h1 {
                 color: #ffffff;
-                font-size: 28px;
+                font-size: 22px;
                 line-height: 1.2;
-                margin: 0 0 8px;
+                margin: 0 0 4px;
             }
 
             .username {
                 color: #ffffff;
-                font-size: 14px;
-                margin: 0 0 28px;
+                font-size: 13px;
+                margin: 0 0 12px;
             }
 
             .qr-frame {
                 background: #ffffff;
                 border: 2px solid #ffffff;
-                border-radius: 16px;
+                border-radius: 12px;
                 display: inline-block;
                 margin: 0 auto;
-                padding: 18px;
+                padding: 10px;
             }
 
             .qr-frame img {
                 display: block;
-                height: 320px;
-                width: 320px;
+                height: 250px;
+                width: 250px;
             }
 
             .profile-url {
                 color: #ffffff;
-                font-size: 13px;
-                line-height: 1.5;
-                margin: 24px 0 0;
+                font-size: 12px;
+                line-height: 1.4;
+                margin: 12px 0 0;
                 word-break: break-all;
             }
 
             .hint {
                 color: #dddddd;
-                font-size: 12px;
-                line-height: 1.5;
-                margin: 18px 0 0;
+                font-size: 11px;
+                line-height: 1.4;
+                margin: 8px 0 0;
             }
 
             .recipient {
                 border: 1px solid #cccccc;
-                border-radius: 12px;
+                border-radius: 10px;
                 color: #000000;
-                margin: 36px auto 0;
+                margin: 12px auto 0;
                 max-width: 420px;
-                padding: 16px 18px;
+                padding: 10px 14px;
                 text-align: left;
             }
 
@@ -149,7 +149,7 @@
             }
 
             .mini-qr-row {
-                margin: 32px auto 0;
+                margin: 12px auto 0;
                 text-align: center;
                 width: 100%;
             }
@@ -161,27 +161,27 @@
             }
 
             .mini-qr-copy {
-                padding: 10px 12px;
+                padding: 4px 6px;
                 text-align: center;
                 vertical-align: top;
             }
 
             .mini-qr-copy--second-row {
-                padding-top: 18px;
+                padding-top: 8px;
             }
 
             .mini-qr-cut {
                 border: 1px dashed #888888;
                 display: inline-block;
-                padding: 12px 10px 10px;
+                padding: 8px 8px 6px;
             }
 
             .mini-qr-label {
                 color: #000000;
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: 700;
                 letter-spacing: 0.04em;
-                margin: 0 0 10px;
+                margin: 0 0 6px;
                 text-transform: uppercase;
             }
 
@@ -189,13 +189,13 @@
                 background: #ffffff;
                 border: 1px solid #bbbbbb;
                 display: inline-block;
-                padding: 8px;
+                padding: 6px;
             }
 
             .mini-qr-frame img {
                 display: block;
-                height: 156px;
-                width: 156px;
+                height: 118px;
+                width: 118px;
             }
         </style>
     </head>
