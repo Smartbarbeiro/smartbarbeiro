@@ -6,6 +6,7 @@ use App\Models\ProfileSubscription;
 use App\Models\ServicePlanSubscription;
 use App\Models\User;
 use App\Services\AcrylicQrOrderService;
+use App\Services\BarbershopAppointmentService;
 use App\Services\BarbershopClientAccessService;
 use App\Services\BarbershopServicePlanService;
 use App\Services\ProfileAccessService;
@@ -94,11 +95,48 @@ class PublicProfileController extends Controller
             'needsPreferredHaircutDay' => $needsPreferredHaircutDay,
             'preferredHaircutDay' => $membership?->preferred_haircut_day,
             'servicePlans' => $servicePlanService->publicPlansPayload($user),
+            'canBookAppointment' => $viewer
+                ? $this->clientAccess->hasSignedUp($user, $viewer) && ! $viewer->isBarbershop()
+                : false,
+            'defaultAppointmentService' => $this->defaultAppointmentService(
+                $user,
+                $activeServicePlanSubscription,
+                $servicePlanService,
+            ),
             'mobileApp' => [
                 'name' => config('mobile_app.name'),
                 'play_store_url' => config('mobile_app.play_store_url'),
                 'app_store_url' => config('mobile_app.app_store_url'),
             ],
         ]);
+    }
+
+    /**
+     * @return array{label: string, package_type: string|null}
+     */
+    private function defaultAppointmentService(
+        User $barbershop,
+        ?ServicePlanSubscription $activeServicePlanSubscription,
+        BarbershopServicePlanService $servicePlanService,
+    ): array {
+        $appointmentService = app(BarbershopAppointmentService::class);
+        $packageType = $activeServicePlanSubscription?->isActive()
+            ? $activeServicePlanSubscription->package_type
+            : null;
+
+        if ($packageType !== null) {
+            return [
+                'label' => $appointmentService->serviceLabelForPackageType($packageType),
+                'package_type' => $packageType,
+            ];
+        }
+
+        $enabledPackage = collect($servicePlanService->publicPlansPayload($barbershop)['packages'] ?? [])
+            ->first(fn (array $package) => $package['is_enabled'] ?? false);
+
+        return [
+            'label' => $enabledPackage['label'] ?? 'Serviço',
+            'package_type' => $enabledPackage['type'] ?? null,
+        ];
     }
 }

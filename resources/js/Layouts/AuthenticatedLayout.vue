@@ -113,13 +113,23 @@ const navItems = computed(() => {
             icon: 'credit-card',
             label: user.value?.is_barbershop ? 'Clientes' : 'Assinaturas',
         },
-        {
+    ];
+
+    if (user.value?.is_barbershop) {
+        items.push({
+            href: route('employees.index'),
+            active: route().current('employees.*'),
+            icon: 'people',
+            label: 'Funcionários',
+        });
+    }
+
+    items.push({
             href: route('profile.edit'),
             active: route().current('profile.edit'),
             icon: 'person-gear',
             label: 'Perfil',
-        },
-    ];
+        });
 
     if (user.value?.is_barbershop && user.value?.username) {
         items.splice(1, 0, {
@@ -180,8 +190,8 @@ const mobileNavItems = computed(() => {
                 label: 'Home',
             },
             {
-                href: route('dashboard'),
-                active: route().current('dashboard'),
+                href: route('agenda.index'),
+                active: route().current('agenda.*'),
                 icon: 'journal-bookmark',
                 label: 'Agenda',
             },

@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import BarbershopPublicLayout from '@/Layouts/BarbershopPublicLayout.vue';
+import BookAppointmentCard from '@/Components/BookAppointmentCard.vue';
 import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue';
 import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
@@ -92,6 +93,17 @@ const props = defineProps({
             name: 'Smart Barbeiro',
             play_store_url: null,
             app_store_url: null,
+        }),
+    },
+    canBookAppointment: {
+        type: Boolean,
+        default: false,
+    },
+    defaultAppointmentService: {
+        type: Object,
+        default: () => ({
+            label: 'Serviço',
+            package_type: null,
         }),
     },
 });
@@ -249,6 +261,14 @@ onUnmounted(() => {
 
             <DashboardAlert
                 v-if="isAuthenticated"
+                :show="flashStatus === 'appointment-requested'"
+                variant="success"
+            >
+                Solicitação enviada. A barbearia vai confirmar seu horário na agenda.
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
                 :show="flashStatus === 'barbershop-signup-success'"
                 variant="success"
             >
@@ -359,6 +379,17 @@ onUnmounted(() => {
                     </Link>
                 </div>
             </DashboardAlert>
+
+            <section
+                v-if="canBookAppointment && isAuthenticated && !isOwner"
+                class="container barbershop-profile-notices text-center"
+            >
+                <BookAppointmentCard
+                    :username="profile.username"
+                    :default-service-label="defaultAppointmentService.label"
+                    :default-package-type="defaultAppointmentService.package_type"
+                />
+            </section>
 
             <section
                 v-show="!planCheckoutActive"

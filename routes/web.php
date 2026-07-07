@@ -6,6 +6,9 @@ use App\Http\Controllers\Admin\AcrylicQrOrderController as AdminAcrylicQrOrderCo
 use App\Http\Controllers\Admin\AdminBroadcastMessageController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BarbershopPlatformSubscribeController;
+use App\Http\Controllers\BarbershopAppointmentBookingController;
+use App\Http\Controllers\BarbershopAppointmentController;
+use App\Http\Controllers\BarbershopEmployeeController;
 use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\BarbershopPreferredHaircutDayController;
 use App\Http\Controllers\BarbershopServicePlanController;
@@ -62,6 +65,10 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
         ->name('barbershop.signup');
     Route::patch('/barbearias/{username}/preferred-haircut-day', [BarbershopPreferredHaircutDayController::class, 'update'])
         ->name('barbershop.preferred-haircut-day.update');
+    Route::get('/barbearias/{username}/agendamentos/disponibilidade', [BarbershopAppointmentBookingController::class, 'availability'])
+        ->name('barbershop.appointments.availability');
+    Route::post('/barbearias/{username}/agendamentos', [BarbershopAppointmentBookingController::class, 'store'])
+        ->name('barbershop.appointments.store');
     Route::get('/barbearias/{username}/subscription/return', [ProfileSubscribeController::class, 'return'])
         ->name('profile.subscribe.return');
     Route::post('/barbearias/{username}/service-plans/subscribe', [ServicePlanSubscribeController::class, 'store'])
@@ -163,6 +170,18 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
 
     Route::get('/subscriptions', [ProfileSubscriptionController::class, 'index'])
         ->name('subscriptions.index');
+    Route::get('/funcionarios', [BarbershopEmployeeController::class, 'index'])
+        ->name('employees.index');
+    Route::post('/funcionarios', [BarbershopEmployeeController::class, 'store'])
+        ->name('employees.store');
+    Route::patch('/funcionarios/{employee}', [BarbershopEmployeeController::class, 'update'])
+        ->name('employees.update');
+    Route::delete('/funcionarios/{employee}', [BarbershopEmployeeController::class, 'destroy'])
+        ->name('employees.destroy');
+    Route::get('/agenda', [BarbershopAppointmentController::class, 'index'])
+        ->name('agenda.index');
+    Route::patch('/agenda/{appointment}', [BarbershopAppointmentController::class, 'update'])
+        ->name('agenda.update');
     Route::delete('/subscriptions/{subscription}', [ProfileSubscriptionController::class, 'destroy'])
         ->name('subscriptions.destroy');
     Route::delete('/service-plan-subscriptions/{servicePlanSubscription}', [ServicePlanSubscriptionController::class, 'destroy'])

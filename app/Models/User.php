@@ -222,6 +222,21 @@ class User extends Authenticatable
         return $this->hasMany(BarbershopServiceAddon::class);
     }
 
+    public function employees(): HasMany
+    {
+        return $this->hasMany(BarbershopEmployee::class, 'barbershop_user_id');
+    }
+
+    public function barbershopAppointments(): HasMany
+    {
+        return $this->hasMany(BarbershopAppointment::class, 'barbershop_user_id');
+    }
+
+    public function clientAppointments(): HasMany
+    {
+        return $this->hasMany(BarbershopAppointment::class, 'client_user_id');
+    }
+
     public function servicePlanSubscribers(): HasMany
     {
         return $this->hasMany(ServicePlanSubscription::class, 'creator_user_id');

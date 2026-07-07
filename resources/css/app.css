@@ -1497,9 +1497,220 @@ li {
 
 /* Barbershop home dashboard: light background (schedule + empty state) */
 .app-content:has(.barbershop-dashboard),
-.app-content:has(.barbershop-empty-dashboard) {
+.app-content:has(.barbershop-empty-dashboard),
+.app-content:has(.barbershop-agenda-page) {
     background: #ffffff;
     color: #111111;
+}
+
+.barbershop-agenda-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.barbershop-agenda-toolbar__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.barbershop-agenda-toolbar__date {
+    min-width: 11rem;
+}
+
+.barbershop-agenda-week {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.barbershop-agenda-week__day {
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.65rem 0.35rem;
+    position: relative;
+}
+
+.barbershop-agenda-week__day--selected {
+    background: #111111;
+    border-color: #111111;
+    color: #ffffff;
+}
+
+.barbershop-agenda-week__day--today:not(.barbershop-agenda-week__day--selected) {
+    border-color: #111111;
+}
+
+.barbershop-agenda-week__weekday {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.barbershop-agenda-week__number {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.barbershop-agenda-week__badge {
+    background: #dc3545;
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 0.65rem;
+    line-height: 1;
+    min-width: 1.1rem;
+    padding: 0.15rem 0.35rem;
+    position: absolute;
+    right: 0.35rem;
+    top: 0.35rem;
+}
+
+.barbershop-agenda-request {
+    align-items: start;
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem;
+}
+
+.barbershop-agenda-request__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: min(100%, 18rem);
+}
+
+.barbershop-agenda-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.barbershop-agenda-slot {
+    border: 1px solid #e9ecef;
+    border-radius: 0.75rem;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 5rem 1fr;
+    padding: 0.85rem 1rem;
+}
+
+.barbershop-agenda-slot--past {
+    opacity: 0.65;
+}
+
+.barbershop-agenda-slot--free {
+    background: #f8fff9;
+}
+
+.barbershop-agenda-slot__time {
+    font-weight: 700;
+}
+
+.barbershop-agenda-slot__empty {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.barbershop-agenda-appointment {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.65rem;
+    padding: 0.75rem;
+}
+
+.barbershop-agenda-appointment + .barbershop-agenda-appointment {
+    margin-top: 0.5rem;
+}
+
+.barbershop-agenda-appointment__header {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+}
+
+.barbershop-agenda-appointment__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.book-appointment-card {
+    display: inline-block;
+}
+
+.book-appointment-modal {
+    inset: 0;
+    position: fixed;
+    z-index: 1080;
+}
+
+.book-appointment-modal__backdrop {
+    background: rgba(0, 0, 0, 0.45);
+    inset: 0;
+    position: absolute;
+}
+
+.book-appointment-modal__panel {
+    background: #ffffff;
+    border-radius: 1rem;
+    left: 50%;
+    max-height: calc(100vh - 2rem);
+    max-width: 32rem;
+    overflow: auto;
+    padding: 1.25rem;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100% - 2rem);
+}
+
+.book-appointment-slots {
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr));
+}
+
+.book-appointment-slots__item {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.35rem;
+}
+
+.book-appointment-slots__item--selected {
+    background: #111111;
+    border-color: #111111;
+    color: #ffffff;
+}
+
+.book-appointment-slots__item--disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+@media (max-width: 767.98px) {
+    .barbershop-agenda-week {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .barbershop-agenda-slot {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (min-width: 992px) {
