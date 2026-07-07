@@ -33,19 +33,19 @@
 
             .sheet-top-wrap {
                 background-color: #000000;
-                padding: 12px 0;
+                padding: 8px 0;
             }
 
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 20px 24px 16px;
+                padding: 14px 32px 10px;
             }
 
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
-                padding: 10px 24px 12px;
+                padding: 6px 24px 8px;
                 text-align: center;
             }
 
@@ -58,62 +58,62 @@
 
             h1 {
                 color: #ffffff;
-                font-size: 22px;
-                line-height: 1.2;
+                font-size: 24px;
+                line-height: 1.15;
                 margin: 0 0 4px;
             }
 
             .username {
                 color: #ffffff;
                 font-size: 13px;
-                margin: 0 0 12px;
+                margin: 0 0 10px;
             }
 
             .qr-frame {
                 background: #ffffff;
                 border: 2px solid #ffffff;
-                border-radius: 12px;
+                border-radius: 16px;
                 display: inline-block;
                 margin: 0 auto;
-                padding: 10px;
+                padding: 18px;
             }
 
             .qr-frame img {
                 display: block;
-                height: 250px;
-                width: 250px;
+                height: 320px;
+                width: 320px;
             }
 
             .profile-url {
                 color: #ffffff;
                 font-size: 12px;
-                line-height: 1.4;
-                margin: 12px 0 0;
+                line-height: 1.35;
+                margin: 10px 0 0;
                 word-break: break-all;
             }
 
             .hint {
                 color: #dddddd;
                 font-size: 11px;
-                line-height: 1.4;
-                margin: 8px 0 0;
+                line-height: 1.35;
+                margin: 6px 0 0;
             }
 
             .recipient {
                 border: 1px solid #cccccc;
                 border-radius: 10px;
                 color: #000000;
-                margin: 12px auto 0;
+                margin: 8px auto 0;
                 max-width: 420px;
-                padding: 10px 14px;
+                padding: 8px 12px;
                 text-align: left;
             }
 
             .recipient__title {
                 color: #000000;
-                font-size: 14px;
+                font-size: 12px;
                 font-weight: 700;
-                margin: 0 0 10px;
+                margin: 0 0 6px;
                 text-transform: uppercase;
             }
 
@@ -125,8 +125,8 @@
 
             .recipient__contact td {
                 color: #000000;
-                font-size: 13px;
-                line-height: 1.5;
+                font-size: 12px;
+                line-height: 1.4;
                 padding: 0;
                 vertical-align: top;
             }
@@ -143,13 +143,13 @@
 
             .recipient__line {
                 color: #000000;
-                font-size: 13px;
-                line-height: 1.5;
+                font-size: 12px;
+                line-height: 1.4;
                 margin: 0;
             }
 
             .mini-qr-row {
-                margin: 12px auto 0;
+                margin: 8px auto 0;
                 text-align: center;
                 width: 100%;
             }
@@ -167,7 +167,7 @@
             }
 
             .mini-qr-copy--second-row {
-                padding-top: 8px;
+                padding-top: 6px;
             }
 
             .mini-qr-cut {
@@ -194,8 +194,8 @@
 
             .mini-qr-frame img {
                 display: block;
-                height: 118px;
-                width: 118px;
+                height: 112px;
+                width: 112px;
             }
         </style>
     </head>
