@@ -33,6 +33,23 @@
                 vertical-align: top;
             }
 
+            .layout__gutter {
+                background-color: #ffffff;
+                text-align: center;
+            }
+
+            .sheet-content {
+                border-collapse: collapse;
+                margin: 0 auto;
+                text-align: center;
+                width: 504px;
+            }
+
+            .sheet-content td {
+                padding: 0;
+                vertical-align: top;
+            }
+
             .sheet-top-wrap {
                 background-color: #000000;
                 min-height: 178.2mm;
@@ -42,12 +59,11 @@
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 28px 32px;
+                padding: 28px 0;
             }
 
             .sheet-top__inner {
                 margin: 0 auto;
-                max-width: 520px;
                 text-align: center;
                 width: 100%;
             }
@@ -55,13 +71,12 @@
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
-                padding: 2px 14px 4px;
+                padding: 2px 0 4px;
                 text-align: center;
             }
 
             .content {
                 margin: 0 auto;
-                max-width: 520px;
                 text-align: center;
                 width: 100%;
             }
@@ -117,7 +132,6 @@
                 border-radius: 8px;
                 color: #000000;
                 margin: 2px auto 0;
-                max-width: 420px;
                 padding: 4px 8px;
                 text-align: left;
             }
@@ -170,13 +184,14 @@
             .mini-qr-row table {
                 border-collapse: collapse;
                 margin: 0 auto;
-                width: auto;
+                width: 100%;
             }
 
             .mini-qr-copy {
-                padding: 1px 3px;
+                padding: 1px 2px;
                 text-align: center;
                 vertical-align: top;
+                width: 33.33%;
             }
 
             .mini-qr-copy--follow-row {
@@ -186,15 +201,15 @@
             .mini-qr-cut {
                 border: 1px dashed #888888;
                 display: inline-block;
-                padding: 4px 5px 3px;
+                padding: 5px 5px 4px;
             }
 
             .mini-qr-label {
                 color: #000000;
-                font-size: 9px;
+                font-size: 10px;
                 font-weight: 700;
                 letter-spacing: 0.04em;
-                margin: 0 0 4px;
+                margin: 0 0 5px;
                 text-transform: uppercase;
             }
 
@@ -202,85 +217,107 @@
                 background: #ffffff;
                 border: 1px solid #bbbbbb;
                 display: inline-block;
-                padding: 4px;
+                padding: 5px;
             }
 
             .mini-qr-frame img {
                 display: block;
-                height: 118px;
-                width: 118px;
+                height: 142px;
+                width: 142px;
             }
         </style>
     </head>
     <body>
         <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; min-height: 178.2mm;" valign="middle">
-                    <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
-                        <div class="sheet-top__inner">
-                            <h1>{{ $barbershopName }}</h1>
+                <td class="layout__gutter">
+                    <table
+                        class="sheet-content"
+                        role="presentation"
+                        width="504"
+                        cellpadding="0"
+                        cellspacing="0"
+                        align="center"
+                    >
+                        <tr>
+                            <td
+                                bgcolor="#000000"
+                                class="sheet-top-wrap"
+                                style="background-color: #000000; min-height: 178.2mm;"
+                                valign="middle"
+                            >
+                                <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
+                                    <div class="sheet-top__inner">
+                                        <h1>{{ $barbershopName }}</h1>
 
-                            <p class="plan-label">Plano Mensal</p>
+                                        <p class="plan-label">Plano Mensal</p>
 
-                            <div class="qr-frame">
-                                <img src="{{ $qrCodeDataUri }}" alt="QR code do perfil" />
-                            </div>
+                                        <div class="qr-frame">
+                                            <img src="{{ $qrCodeDataUri }}" alt="QR code do perfil" />
+                                        </div>
 
-                            <p class="profile-url">{{ $profileUrl }}</p>
+                                        <p class="profile-url">{{ $profileUrl }}</p>
 
-                            <p class="hint">
-                                Escaneie o QR code para abrir o perfil público desta barbearia.
-                            </p>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td bgcolor="#ffffff" class="sheet-bottom" style="background-color: #ffffff; color: #000000;">
-                    <div class="content">
-                        @if ($recipient)
-                            <div class="recipient">
-                                <p class="recipient__title">Destinatário</p>
-                                <table class="recipient__contact" role="presentation">
-                                    <tr>
-                                        <td class="recipient__contact-name">
-                                            <strong>Nome:</strong> {{ $recipient['name'] }}
-                                        </td>
-                                        <td class="recipient__contact-phone">
-                                            <strong>Telefone:</strong> {{ $recipient['phone'] }}
-                                        </td>
-                                    </tr>
-                                </table>
-                                <p class="recipient__line">
-                                    <strong>Endereço:</strong> {{ $recipient['address'] }}
-                                </p>
-                            </div>
-                        @endif
+                                        <p class="hint">
+                                            Escaneie o QR code para abrir o perfil público desta barbearia.
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td
+                                bgcolor="#ffffff"
+                                class="sheet-bottom"
+                                style="background-color: #ffffff; color: #000000;"
+                            >
+                                <div class="content">
+                                    @if ($recipient)
+                                        <div class="recipient">
+                                            <p class="recipient__title">Destinatário</p>
+                                            <table class="recipient__contact" role="presentation">
+                                                <tr>
+                                                    <td class="recipient__contact-name">
+                                                        <strong>Nome:</strong> {{ $recipient['name'] }}
+                                                    </td>
+                                                    <td class="recipient__contact-phone">
+                                                        <strong>Telefone:</strong> {{ $recipient['phone'] }}
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                            <p class="recipient__line">
+                                                <strong>Endereço:</strong> {{ $recipient['address'] }}
+                                            </p>
+                                        </div>
+                                    @endif
 
-                        <div class="mini-qr-row">
-                            <table role="presentation" align="center" cellpadding="0" cellspacing="0">
-                                @foreach (range(1, 3) as $row)
-                                    <tr>
-                                        @foreach (range(1, 3) as $copy)
-                                            <td
-                                                class="mini-qr-copy{{ $row > 1 ? ' mini-qr-copy--follow-row' : '' }}"
-                                            >
-                                                <div class="mini-qr-cut">
-                                                    <p class="mini-qr-label">Plano Mensal</p>
-                                                    <div class="mini-qr-frame">
-                                                        <img
-                                                            src="{{ $miniQrCodeDataUri }}"
-                                                            alt="QR code Plano Mensal"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        @endforeach
-                                    </tr>
-                                @endforeach
-                            </table>
-                        </div>
-                    </div>
+                                    <div class="mini-qr-row">
+                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                            @foreach (range(1, 3) as $row)
+                                                <tr>
+                                                    @foreach (range(1, 3) as $copy)
+                                                        <td
+                                                            class="mini-qr-copy{{ $row > 1 ? ' mini-qr-copy--follow-row' : '' }}"
+                                                        >
+                                                            <div class="mini-qr-cut">
+                                                                <p class="mini-qr-label">Plano Mensal</p>
+                                                                <div class="mini-qr-frame">
+                                                                    <img
+                                                                        src="{{ $miniQrCodeDataUri }}"
+                                                                        alt="QR code Plano Mensal"
+                                                                    />
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                    @endforeach
+                                                </tr>
+                                            @endforeach
+                                        </table>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>
