@@ -35,7 +35,7 @@
 
             .sheet-top-wrap {
                 background-color: #000000;
-                min-height: 148.5mm;
+                min-height: 178.2mm;
                 vertical-align: middle;
             }
 
@@ -55,7 +55,7 @@
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
-                padding: 6px 24px 8px;
+                padding: 4px 18px 6px;
                 text-align: center;
             }
 
@@ -113,9 +113,9 @@
                 border: 1px solid #cccccc;
                 border-radius: 10px;
                 color: #000000;
-                margin: 8px auto 0;
+                margin: 4px auto 0;
                 max-width: 420px;
-                padding: 8px 12px;
+                padding: 6px 10px;
                 text-align: left;
             }
 
@@ -159,7 +159,7 @@
             }
 
             .mini-qr-row {
-                margin: 8px auto 0;
+                margin: 4px auto 0;
                 text-align: center;
                 width: 100%;
             }
@@ -171,19 +171,19 @@
             }
 
             .mini-qr-copy {
-                padding: 4px 6px;
+                padding: 2px 4px;
                 text-align: center;
                 vertical-align: top;
             }
 
             .mini-qr-copy--second-row {
-                padding-top: 6px;
+                padding-top: 4px;
             }
 
             .mini-qr-cut {
                 border: 1px dashed #888888;
                 display: inline-block;
-                padding: 8px 8px 6px;
+                padding: 6px 6px 4px;
             }
 
             .mini-qr-label {
@@ -199,20 +199,20 @@
                 background: #ffffff;
                 border: 1px solid #bbbbbb;
                 display: inline-block;
-                padding: 6px;
+                padding: 5px;
             }
 
             .mini-qr-frame img {
                 display: block;
-                height: 112px;
-                width: 112px;
+                height: 142px;
+                width: 142px;
             }
         </style>
     </head>
     <body>
         <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; min-height: 148.5mm;" valign="middle">
+                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; min-height: 178.2mm;" valign="middle">
                     <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
                         <div class="sheet-top__inner">
                             <h1>{{ $barbershopName }}</h1>
