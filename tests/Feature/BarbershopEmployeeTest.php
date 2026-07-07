@@ -42,6 +42,7 @@ class BarbershopEmployeeTest extends TestCase
             ->post(route('employees.store'), [
                 'name' => 'Carlos',
                 'commission_percent' => 35,
+                'color' => '#10B981',
                 'is_active' => true,
             ])
             ->assertRedirect()
@@ -54,12 +55,14 @@ class BarbershopEmployeeTest extends TestCase
             'barbershop_user_id' => $barbershop->id,
             'name' => 'Carlos',
             'commission_percent' => 35,
+            'color' => '#10B981',
         ]);
 
         $this->actingAs($barbershop)
             ->patch(route('employees.update', $employee), [
                 'name' => 'Carlos Silva',
                 'commission_percent' => 50,
+                'color' => '#EF4444',
                 'is_active' => false,
             ])
             ->assertRedirect()
@@ -69,6 +72,7 @@ class BarbershopEmployeeTest extends TestCase
             'id' => $employee->id,
             'name' => 'Carlos Silva',
             'commission_percent' => 50,
+            'color' => '#EF4444',
             'is_active' => false,
         ]);
 

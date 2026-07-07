@@ -31,7 +31,7 @@ class BarbershopEmployeeService
     }
 
     /**
-     * @param  array{name: string, commission_percent: float|int|string, is_active?: bool}  $data
+     * @param  array{name: string, commission_percent: float|int|string, color?: string|null, is_active?: bool}  $data
      */
     public function createFor(User $barbershop, array $data): BarbershopEmployee
     {
@@ -40,13 +40,14 @@ class BarbershopEmployeeService
         return $barbershop->employees()->create([
             'name' => trim($data['name']),
             'commission_percent' => $data['commission_percent'],
+            'color' => $data['color'] ?? $this->defaultColorFor($barbershop),
             'is_active' => $data['is_active'] ?? true,
             'sort_order' => $nextSortOrder,
         ]);
     }
 
     /**
-     * @param  array{name?: string, commission_percent?: float|int|string, is_active?: bool}  $data
+     * @param  array{name?: string, commission_percent?: float|int|string, color?: string|null, is_active?: bool}  $data
      */
     public function update(BarbershopEmployee $employee, array $data): BarbershopEmployee
     {
@@ -60,6 +61,10 @@ class BarbershopEmployeeService
             $attributes['commission_percent'] = $data['commission_percent'];
         }
 
+        if (array_key_exists('color', $data)) {
+            $attributes['color'] = $data['color'];
+        }
+
         if (array_key_exists('is_active', $data)) {
             $attributes['is_active'] = (bool) $data['is_active'];
         }
@@ -69,6 +74,14 @@ class BarbershopEmployeeService
         }
 
         return $employee->fresh();
+    }
+
+    public function defaultColorFor(User $barbershop): string
+    {
+        $count = $barbershop->employees()->count();
+        $colors = BarbershopEmployee::DEFAULT_COLORS;
+
+        return $colors[$count % count($colors)];
     }
 
     public function delete(BarbershopEmployee $employee): void

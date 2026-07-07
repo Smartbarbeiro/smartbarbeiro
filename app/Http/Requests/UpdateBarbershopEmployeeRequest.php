@@ -33,6 +33,7 @@ class UpdateBarbershopEmployeeRequest extends FormRequest
                     ->ignore($employee->id),
             ],
             'commission_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'color' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'is_active' => ['required', 'boolean'],
         ];
     }

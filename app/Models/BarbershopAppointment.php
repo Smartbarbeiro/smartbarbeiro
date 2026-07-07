@@ -139,6 +139,7 @@ class BarbershopAppointment extends Model
             'employee' => $this->employee ? [
                 'id' => $this->employee->id,
                 'name' => $this->employee->name,
+                'color' => $this->employee->color,
                 'commission_percent' => (float) $this->employee->commission_percent,
             ] : null,
             'service_amount' => $this->service_amount !== null ? (float) $this->service_amount : null,

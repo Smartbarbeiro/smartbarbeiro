@@ -53,6 +53,7 @@ class BarbershopAppointmentTest extends TestCase
             'barbershop_user_id' => $barbershop->id,
             'name' => 'Pedro',
             'commission_percent' => 40,
+            'color' => '#8B5CF6',
             'is_active' => true,
             'sort_order' => 0,
         ]);
@@ -88,6 +89,13 @@ class BarbershopAppointmentTest extends TestCase
             'status' => BarbershopAppointment::STATUS_CONFIRMED,
             'barbershop_employee_id' => $employee->id,
         ]);
+
+        $this->actingAs($barbershop)
+            ->get(route('agenda.index', ['date' => '2026-07-07']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Appointments/Index')
+                ->where('agenda.slots.6.appointments.0.employee.color', '#8B5CF6'));
 
         Carbon::setTestNow();
     }

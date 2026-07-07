@@ -8,11 +8,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BarbershopEmployee extends Model
 {
+    /** @var list<string> */
+    public const DEFAULT_COLORS = [
+        '#3B82F6',
+        '#10B981',
+        '#F59E0B',
+        '#8B5CF6',
+        '#EF4444',
+        '#06B6D4',
+        '#EC4899',
+        '#84CC16',
+    ];
+
     protected $fillable = [
         'barbershop_user_id',
         'user_id',
         'name',
         'commission_percent',
+        'color',
         'is_active',
         'sort_order',
     ];
@@ -56,6 +69,7 @@ class BarbershopEmployee extends Model
             'name' => $this->name,
             'commission_percent' => (float) $this->commission_percent,
             'formatted_commission_percent' => $this->formattedCommissionPercent(),
+            'color' => $this->color,
             'is_active' => $this->is_active,
             'sort_order' => $this->sort_order,
         ];

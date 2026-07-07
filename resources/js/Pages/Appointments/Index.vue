@@ -95,6 +95,51 @@ const performerLabel = (appointment) => {
 
     return 'Proprietário';
 };
+
+const hexToRgba = (hex, alpha) => {
+    if (!hex) {
+        return null;
+    }
+
+    const normalized = hex.replace('#', '');
+    const red = Number.parseInt(normalized.slice(0, 2), 16);
+    const green = Number.parseInt(normalized.slice(2, 4), 16);
+    const blue = Number.parseInt(normalized.slice(4, 6), 16);
+
+    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
+
+const slotEmployeeColor = (slot) => {
+    const appointment = slot.appointments.find((item) => item.employee?.color);
+
+    return appointment?.employee?.color ?? null;
+};
+
+const slotStyle = (slot) => {
+    const color = slotEmployeeColor(slot);
+
+    if (!color) {
+        return {};
+    }
+
+    return {
+        backgroundColor: hexToRgba(color, 0.2),
+        borderColor: hexToRgba(color, 0.5),
+    };
+};
+
+const appointmentStyle = (appointment) => {
+    const color = appointment.employee?.color;
+
+    if (!color) {
+        return {};
+    }
+
+    return {
+        borderLeftColor: color,
+        backgroundColor: hexToRgba(color, 0.12),
+    };
+};
 </script>
 
 <template>
@@ -259,6 +304,23 @@ const performerLabel = (appointment) => {
                 title="Horários do dia"
                 description="Clique em um horário livre para agendar. Grade de 30 em 30 minutos, das 08:00 às 20:00."
             >
+                <div
+                    v-if="agenda.employees.some((employee) => employee.is_active)"
+                    class="barbershop-agenda-legend mb-3"
+                >
+                    <span
+                        v-for="employee in agenda.employees.filter((item) => item.is_active)"
+                        :key="`legend-${employee.id}`"
+                        class="barbershop-agenda-legend__item"
+                    >
+                        <span
+                            class="employee-color-swatch"
+                            :style="{ backgroundColor: employee.color }"
+                        />
+                        {{ employee.name }}
+                    </span>
+                </div>
+
                 <div class="barbershop-agenda-slots">
                     <article
                         v-for="slot in agenda.slots"
@@ -268,7 +330,9 @@ const performerLabel = (appointment) => {
                             'barbershop-agenda-slot--past': slot.is_past,
                             'barbershop-agenda-slot--free': slot.is_available,
                             'barbershop-agenda-slot--clickable': slot.is_available,
+                            'barbershop-agenda-slot--assigned': !!slotEmployeeColor(slot),
                         }"
+                        :style="slotStyle(slot)"
                         @click="slot.is_available ? openScheduleModal(slot.time) : null"
                     >
                         <div class="barbershop-agenda-slot__time">
@@ -298,6 +362,11 @@ const performerLabel = (appointment) => {
                                 v-for="appointment in slot.appointments"
                                 :key="appointment.id"
                                 class="barbershop-agenda-appointment"
+                                :class="{
+                                    'barbershop-agenda-appointment--employee':
+                                        !!appointment.employee?.color,
+                                }"
+                                :style="appointmentStyle(appointment)"
                                 @click.stop
                             >
                                 <div

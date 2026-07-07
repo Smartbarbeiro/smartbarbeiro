@@ -26,6 +26,7 @@ class StoreBarbershopEmployeeRequest extends FormRequest
                     ->where('barbershop_user_id', $this->user()->id),
             ],
             'commission_percent' => ['required', 'numeric', 'min:0', 'max:100'],
+            'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'is_active' => ['nullable', 'boolean'],
         ];
     }

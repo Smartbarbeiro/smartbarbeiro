@@ -23,12 +23,14 @@ const editingId = ref(null);
 const createForm = useForm({
     name: '',
     commission_percent: '',
+    color: '#3B82F6',
     is_active: true,
 });
 
 const editForm = useForm({
     name: '',
     commission_percent: '',
+    color: '#3B82F6',
     is_active: true,
 });
 
@@ -57,6 +59,7 @@ const startEdit = (employee) => {
     editForm.clearErrors();
     editForm.name = employee.name;
     editForm.commission_percent = String(employee.commission_percent);
+    editForm.color = employee.color ?? '#3B82F6';
     editForm.is_active = employee.is_active;
 };
 
@@ -71,6 +74,7 @@ const submitCreate = () => {
         preserveScroll: true,
         onSuccess: () => {
             createForm.reset();
+            createForm.color = '#3B82F6';
             createForm.is_active = true;
         },
     });
@@ -119,7 +123,7 @@ const deleteEmployee = (employee) => {
             <DashboardContentCard
                 icon="users"
                 title="Equipe da barbearia"
-                description="Cadastre os barbeiros que trabalham com você e defina a comissão de cada um sobre os serviços realizados."
+                description="Cadastre os barbeiros que trabalham com você, defina a comissão e escolha a cor de cada um na agenda."
             >
                 <p class="small text-secondary mb-3">
                     <Link :href="route('commissions.index')" class="link-primary">
@@ -129,7 +133,7 @@ const deleteEmployee = (employee) => {
                 </p>
 
                 <form class="row g-3 align-items-end" @submit.prevent="submitCreate">
-                    <div class="col-md-5">
+                    <div class="col-md-4">
                         <InputLabel for="employee-name" value="Nome" />
                         <TextInput
                             id="employee-name"
@@ -142,7 +146,7 @@ const deleteEmployee = (employee) => {
                         <InputError class="mt-1" :message="createForm.errors.name" />
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <InputLabel for="employee-commission" value="Comissão (%)" />
                         <TextInput
                             id="employee-commission"
@@ -156,6 +160,18 @@ const deleteEmployee = (employee) => {
                             required
                         />
                         <InputError class="mt-1" :message="createForm.errors.commission_percent" />
+                    </div>
+
+                    <div class="col-md-2">
+                        <InputLabel for="employee-color" value="Cor na agenda" />
+                        <input
+                            id="employee-color"
+                            v-model="createForm.color"
+                            type="color"
+                            class="form-control form-control-color mt-1 w-100 employee-color-input"
+                            title="Cor do funcionário na agenda"
+                        />
+                        <InputError class="mt-1" :message="createForm.errors.color" />
                     </div>
 
                     <div class="col-md-2">
@@ -202,6 +218,7 @@ const deleteEmployee = (employee) => {
                     <table class="table align-middle mb-0">
                         <thead>
                             <tr>
+                                <th>Cor</th>
                                 <th>Nome</th>
                                 <th class="text-end">Comissão</th>
                                 <th class="text-center">Status</th>
@@ -211,6 +228,15 @@ const deleteEmployee = (employee) => {
                         <tbody>
                             <tr v-for="employee in employees" :key="employee.id">
                                 <template v-if="editingId === employee.id">
+                                    <td>
+                                        <input
+                                            v-model="editForm.color"
+                                            type="color"
+                                            class="form-control form-control-color employee-color-input"
+                                            title="Cor do funcionário na agenda"
+                                        />
+                                        <InputError class="mt-1" :message="editForm.errors.color" />
+                                    </td>
                                     <td>
                                         <TextInput
                                             v-model="editForm.name"
@@ -267,6 +293,13 @@ const deleteEmployee = (employee) => {
                                 </template>
 
                                 <template v-else>
+                                    <td>
+                                        <span
+                                            class="employee-color-swatch"
+                                            :style="{ backgroundColor: employee.color }"
+                                            :title="`Cor de ${employee.name}`"
+                                        />
+                                    </td>
                                     <td class="fw-semibold">{{ employee.name }}</td>
                                     <td class="text-end">
                                         {{ employee.formatted_commission_percent }}

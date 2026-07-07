@@ -18,6 +18,9 @@ class BarbershopAppointmentService
 
     public const SLOT_MINUTES = 30;
 
+    /** @var list<string> */
+    private const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
     public function __construct(
         private BarbershopCommissionReportService $commissionReportService,
         private BarbershopServicePlanService $servicePlanService,
@@ -359,7 +362,7 @@ class BarbershopAppointmentService
                 return [
                     'date' => $day->toDateString(),
                     'day' => $day->day,
-                    'weekday_label' => mb_strtoupper($day->locale('pt_BR')->translatedFormat('ddd')),
+                    'weekday_label' => self::WEEKDAY_LABELS[$day->dayOfWeek],
                     'is_selected' => $day->isSameDay($selectedDate),
                     'is_today' => $day->isToday(),
                     'appointment_count' => $count,
