@@ -98,6 +98,13 @@ class BarbershopPlatformSubscribeController extends Controller
             }
         }
 
+        if ($subscription?->isActive()) {
+            return redirect()
+                ->route('profile.edit')
+                ->with('status', 'platform-subscription-active')
+                ->with('prompt_profile_photo', true);
+        }
+
         return Inertia::render('Platform/SubscribeReturn', [
             'subscription' => $subscription ? [
                 'status' => $subscription->status,

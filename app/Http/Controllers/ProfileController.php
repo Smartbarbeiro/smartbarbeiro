@@ -34,6 +34,9 @@ class ProfileController extends Controller
         $props = [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
+            'promptProfilePhoto' => $user->isBarbershop()
+                && ! $user->hasCustomProfilePhoto()
+                && (bool) $request->session()->pull('prompt_profile_photo', false),
             'isBarbershop' => $user->isBarbershop(),
             'profileUrl' => $user->profileUrl(),
             'subscribeUrl' => $user->subscribeUrl(),

@@ -88,10 +88,16 @@ class BarbershopSignupPaymentFlowTest extends TestCase
         ]);
 
         $this->get(route('platform.subscribe.return'))
+            ->assertRedirect(route('profile.edit', absolute: false))
+            ->assertSessionHas('status', 'platform-subscription-active')
+            ->assertSessionHas('prompt_profile_photo', true);
+
+        $this->actingAs($user->fresh())
+            ->get(route('profile.edit'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->component('Platform/SubscribeReturn')
-                ->where('subscription.is_active', true));
+                ->component('Profile/Edit')
+                ->where('promptProfilePhoto', true));
 
         $user->refresh();
         $this->assertDatabaseHas('barbershop_platform_subscriptions', [

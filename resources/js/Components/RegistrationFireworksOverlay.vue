@@ -197,5 +197,8 @@ onUnmounted(() => {
         <p class="registration-fireworks-overlay__message">
             Cadastro realizado!
         </p>
+        <p class="registration-fireworks-overlay__subtitle">
+            Você já está conectado. Redirecionando...
+        </p>
     </div>
 </template>

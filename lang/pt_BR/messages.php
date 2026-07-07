@@ -51,6 +51,7 @@ return [
         'service-plan-checkout-authorized' => 'Assinatura ativada com sucesso.',
         'platform-plan-updated' => 'Plano da plataforma atualizado.',
         'platform-subscription-pending' => 'Cadastro realizado. Confirme o pagamento quando os pagamentos estiverem disponíveis.',
+        'platform-subscription-active' => 'Pagamento confirmado! Sua assinatura da plataforma está ativa.',
         'verification-link-sent' => 'Um novo link de verificação foi enviado para o seu e-mail.',
     ],
 

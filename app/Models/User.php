@@ -310,6 +310,11 @@ class User extends Authenticatable
         });
     }
 
+    public function hasCustomProfilePhoto(): bool
+    {
+        return filled($this->profile_photo_path);
+    }
+
     public function deleteProfilePhoto(): void
     {
         if (! $this->profile_photo_path) {

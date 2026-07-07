@@ -8,8 +8,10 @@ import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import ManageServicePlansForm from './Partials/ManageServicePlansForm.vue';
 import SubscribersList from './Partials/SubscribersList.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
+
+const page = usePage();
 
 defineProps({
     mustVerifyEmail: {
@@ -62,12 +64,24 @@ defineProps({
         type: Boolean,
         default: false,
     },
+    promptProfilePhoto: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 onMounted(() => {
     if (window.location.hash === '#planos-de-servico') {
         document
             .getElementById('planos-de-servico')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        return;
+    }
+
+    if (page.props.promptProfilePhoto) {
+        document
+            .getElementById('logo-barbearia')
             ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 });
@@ -82,6 +96,13 @@ onMounted(() => {
         </template>
 
         <div class="d-flex flex-column gap-4 profile-edit-stack">
+            <DashboardAlert
+                :show="page.props.flash?.status === 'platform-subscription-active'"
+                variant="success"
+            >
+                {{ page.props.flash?.statusMessage }}
+            </DashboardAlert>
+
             <DashboardContentCard
                 icon="profile-info"
                 title="Informações do perfil"
@@ -95,6 +116,7 @@ onMounted(() => {
                     :is-barbershop="isBarbershop"
                     :barbershop-memberships="barbershopMemberships"
                     :acrylic-qr-order="acrylicQrOrder"
+                    :prompt-profile-photo="promptProfilePhoto"
                 />
             </DashboardContentCard>
 

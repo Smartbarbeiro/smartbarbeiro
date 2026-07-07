@@ -3,7 +3,7 @@ import InputError from '@/Components/InputError.vue';
 import DashboardAlert from '@/Components/DashboardAlert.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
-import ProfileAvatar from '@/Components/ProfileAvatar.vue';
+import ProfilePhotoUploader from '@/Components/ProfilePhotoUploader.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import BarbershopNameInput from '@/Components/BarbershopNameInput.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -35,6 +35,10 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    promptProfilePhoto: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const user = usePage().props.auth.user;
@@ -48,10 +52,18 @@ const form = useForm({
 });
 
 const photoPreview = ref(user.profile_photo_url);
-const photoInput = ref(null);
+const showPhotoPrompt = ref(props.promptProfilePhoto);
+
 const showPasswordForm = ref(false);
 const usernameLocked = ref(true);
 const originalUsername = ref(user.username);
+
+const onPhotoSelected = (file) => {
+    form.profile_photo = file;
+    form.remove_profile_photo = false;
+    photoPreview.value = URL.createObjectURL(file);
+    showPhotoPrompt.value = false;
+};
 
 const unlockUsername = () => {
     usernameLocked.value = false;
@@ -83,22 +95,6 @@ const qrProfileUrl = computed(() => {
         return props.profileUrl;
     }
 });
-
-const onPhotoChange = (event) => {
-    const file = event.target.files?.[0];
-
-    if (!file) {
-        return;
-    }
-
-    form.profile_photo = file;
-    form.remove_profile_photo = false;
-    photoPreview.value = URL.createObjectURL(file);
-};
-
-const openPhotoPicker = () => {
-    photoInput.value?.click();
-};
 
 const submit = () => {
     form.transform((data) => ({
@@ -162,45 +158,39 @@ const submit = () => {
         </div>
 
         <form @submit.prevent="submit">
-            <div v-if="isBarbershop" class="mb-4">
+            <div v-if="isBarbershop" id="logo-barbearia" class="mb-4">
+                <DashboardAlert
+                    :show="showPhotoPrompt"
+                    variant="warning"
+                    class="mb-3"
+                >
+                    <strong>Próximo passo:</strong> envie o logo da sua
+                    barbearia. Clientes reconhecem sua marca no perfil público
+                    e no QR code.
+                </DashboardAlert>
+
                 <InputLabel value="Logo ou foto da barbearia" />
 
                 <div class="d-flex flex-wrap align-items-start gap-3 mt-2">
-                    <button
-                        type="button"
-                        class="profile-barbershop-photo-trigger"
-                        aria-label="Escolher logo ou foto da barbearia"
-                        @click="openPhotoPicker"
+                    <ProfilePhotoUploader
+                        :name="form.name || user.name"
+                        :photo-url="photoPreview"
+                        size="lg"
+                        :highlighted="showPhotoPrompt"
+                        @selected="onPhotoSelected"
+                    />
+
+                    <div
+                        v-if="qrProfileUrl"
+                        class="barbershop-owner-qr-panel barbershop-owner-qr-panel--aside"
                     >
-                        <ProfileAvatar
-                            :name="form.name || user.name"
-                            :photo-url="photoPreview"
-                            size="lg"
+                        <ProfileQrCode
+                            :url="qrProfileUrl"
+                            :filename="`${form.username || user.username}-profile`"
+                            owner-dashboard
+                            show-acrylic-order
+                            :acrylic-order="acrylicQrOrder"
                         />
-                    </button>
-
-                    <div class="d-flex flex-column gap-2">
-                        <input
-                            ref="photoInput"
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            class="form-control form-control-sm"
-                            style="max-width: 20rem"
-                            @change="onPhotoChange"
-                        />
-
-                        <div
-                            v-if="qrProfileUrl"
-                            class="barbershop-owner-qr-panel barbershop-owner-qr-panel--aside"
-                        >
-                            <ProfileQrCode
-                                :url="qrProfileUrl"
-                                :filename="`${form.username || user.username}-profile`"
-                                owner-dashboard
-                                show-acrylic-order
-                                :acrylic-order="acrylicQrOrder"
-                            />
-                        </div>
                     </div>
                 </div>
 

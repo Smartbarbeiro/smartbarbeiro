@@ -155,7 +155,7 @@ const startCelebration = () => {
 
 const finishCelebration = () => {
     if (props.redirectTo) {
-        router.visit(props.redirectTo);
+        router.visit(props.redirectTo, { replace: true });
     }
 };
 

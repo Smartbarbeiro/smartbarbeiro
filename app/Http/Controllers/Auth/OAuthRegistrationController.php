@@ -140,7 +140,7 @@ class OAuthRegistrationController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
+        Auth::login($user, remember: true);
 
         if (! $isCustomerSignup) {
             $request->session()->put(
