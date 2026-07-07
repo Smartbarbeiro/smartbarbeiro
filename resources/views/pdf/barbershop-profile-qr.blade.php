@@ -35,15 +35,14 @@
 
             .sheet-top-wrap {
                 background-color: #000000;
-                height: 213.84mm;
-                min-height: 213.84mm;
+                min-height: 178.2mm;
                 vertical-align: middle;
             }
 
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 0 32px;
+                padding: 28px 32px 0;
             }
 
             .sheet-top__inner {
@@ -56,7 +55,7 @@
             .sheet-bottom {
                 background-color: #ffffff;
                 color: #000000;
-                padding: 2px 14px 4px;
+                padding: 4px 18px 6px;
                 text-align: center;
             }
 
@@ -74,10 +73,13 @@
                 margin: 0 0 4px;
             }
 
-            .username {
+            .plan-label {
                 color: #ffffff;
                 font-size: 13px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
                 margin: 0 0 10px;
+                text-transform: uppercase;
             }
 
             .qr-frame {
@@ -114,9 +116,9 @@
                 border: 1px solid #cccccc;
                 border-radius: 10px;
                 color: #000000;
-                margin: 2px auto 0;
+                margin: 4px auto 0;
                 max-width: 420px;
-                padding: 4px 8px;
+                padding: 6px 10px;
                 text-align: left;
             }
 
@@ -160,7 +162,7 @@
             }
 
             .mini-qr-row {
-                margin: 2px auto 0;
+                margin: 4px auto 0;
                 text-align: center;
                 width: 100%;
             }
@@ -213,14 +215,12 @@
     <body>
         <table class="layout" role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; height: 213.84mm; min-height: 213.84mm;" valign="middle">
+                <td bgcolor="#000000" class="sheet-top-wrap" style="background-color: #000000; min-height: 178.2mm;" valign="middle">
                     <div class="sheet-top" style="background-color: #000000; color: #ffffff;">
                         <div class="sheet-top__inner">
                             <h1>{{ $barbershopName }}</h1>
 
-                            @if ($username)
-                                <p class="username">{{ '@'.$username }}</p>
-                            @endif
+                            <p class="plan-label">Plano Mensal</p>
 
                             <div class="qr-frame">
                                 <img src="{{ $qrCodeDataUri }}" alt="QR code do perfil" />

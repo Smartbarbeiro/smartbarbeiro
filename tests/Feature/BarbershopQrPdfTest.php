@@ -85,6 +85,8 @@ class BarbershopQrPdfTest extends TestCase
 
         $this->assertStringContainsString('Barbearia Centro', $html);
         $this->assertStringNotContainsString('Legacy Name', $html);
+        $this->assertStringNotContainsString('@barbearia_centro', $html);
+        $this->assertStringContainsString('class="plan-label">Plano Mensal</p>', $html);
         $this->assertStringContainsString('Destinatário', $html);
         $this->assertStringContainsString('João Barbeiro', $html);
         $this->assertStringContainsString('(67) 99999-9999', $html);
@@ -114,7 +116,8 @@ class BarbershopQrPdfTest extends TestCase
         $this->assertStringContainsString('height: 320px', $html);
         $this->assertStringContainsString('height: 142px', $html);
         $this->assertStringContainsString('sheet-top-wrap', $html);
-        $this->assertStringContainsString('min-height: 213.84mm', $html);
+        $this->assertStringContainsString('min-height: 178.2mm', $html);
+        $this->assertStringContainsString('padding: 28px 32px 0', $html);
         $this->assertStringContainsString('valign="middle"', $html);
         $this->assertStringContainsString('align="center"', $html);
         $this->assertStringContainsString('background-color: #000000', $html);
