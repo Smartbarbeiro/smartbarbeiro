@@ -42,7 +42,7 @@
             .sheet-top {
                 background-color: #000000;
                 color: #ffffff;
-                padding: 28px 32px 0;
+                padding: 28px 32px;
             }
 
             .sheet-top__inner {
