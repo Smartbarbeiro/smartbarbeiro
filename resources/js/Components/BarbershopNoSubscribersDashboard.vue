@@ -46,7 +46,7 @@ defineProps({
 
         <Link
             v-if="!hasConfiguredServicePlans"
-            :href="`${route('profile.edit')}#planos-de-servico`"
+            :href="route('services.index')"
             class="btn btn-dark barbershop-empty-dashboard__action-btn"
         >
             <i class="bi bi-scissors me-2" aria-hidden="true"></i>

@@ -1614,6 +1614,16 @@ li {
     background: #f8fff9;
 }
 
+.barbershop-agenda-slot--clickable {
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.barbershop-agenda-slot--clickable:hover {
+    background: #f0fff4;
+    border-color: #198754;
+}
+
 .barbershop-agenda-slot__time {
     font-weight: 700;
 }

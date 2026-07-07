@@ -533,7 +533,7 @@ onUnmounted(() => {
                         class="d-flex flex-wrap justify-content-center gap-2 mb-3"
                     >
                         <Link
-                            :href="`${route('profile.edit')}#planos-de-servico`"
+                            :href="route('services.index')"
                             class="btn btn-outline-secondary"
                         >
                             <i class="bi bi-pencil-square me-2"></i>

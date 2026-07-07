@@ -123,4 +123,71 @@ class BarbershopAppointmentTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_barbershop_owner_can_schedule_walk_in_appointment(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+
+        $employee = BarbershopEmployee::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'name' => 'Carlos',
+            'commission_percent' => 30,
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+
+        $scheduledAt = now()->setTime(14, 0)->seconds(0);
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Corte Cabelo',
+                'package_type' => 'cut',
+                'barbershop_employee_id' => $employee->id,
+                'guest_name' => 'Cliente Avulso',
+                'guest_phone' => '67999998888',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        $this->assertDatabaseHas('barbershop_appointments', [
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => null,
+            'guest_name' => 'Cliente Avulso',
+            'guest_phone' => '67999998888',
+            'barbershop_employee_id' => $employee->id,
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_barbershop_owner_can_schedule_for_self_without_registered_client(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+        $scheduledAt = now()->setTime(15, 30)->seconds(0);
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Barba',
+                'guest_name' => 'Walk-in',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        $this->assertDatabaseHas('barbershop_appointments', [
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => null,
+            'guest_name' => 'Walk-in',
+            'barbershop_employee_id' => null,
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+        ]);
+
+        Carbon::setTestNow();
+    }
 }

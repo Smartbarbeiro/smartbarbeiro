@@ -20,6 +20,7 @@ class BarbershopAppointmentService
 
     public function __construct(
         private BarbershopCommissionReportService $commissionReportService,
+        private BarbershopServicePlanService $servicePlanService,
     ) {}
 
     /**
@@ -49,7 +50,100 @@ class BarbershopAppointmentService
                 ->values()
                 ->all(),
             'employees' => app(BarbershopEmployeeService::class)->payloadFor($barbershop),
+            'owner' => [
+                'id' => $barbershop->id,
+                'name' => $barbershop->name,
+            ],
+            'services' => $this->servicesForAgenda($barbershop),
+            'clients' => app(BarbershopClientAudienceService::class)
+                ->clientsFor($barbershop)
+                ->map(fn (User $client) => [
+                    'id' => $client->id,
+                    'name' => $client->name,
+                ])
+                ->values()
+                ->all(),
         ];
+    }
+
+    /**
+     * @param  array{
+     *     scheduled_at: string,
+     *     service_label: string,
+     *     package_type?: string|null,
+     *     barbershop_employee_id?: int|null,
+     *     client_user_id?: int|null,
+     *     guest_name?: string|null,
+     *     guest_phone?: string|null,
+     *     client_notes?: string|null
+     * }  $data
+     */
+    public function createOwnerBooking(User $barbershop, array $data): BarbershopAppointment
+    {
+        $scheduledAt = Carbon::parse($data['scheduled_at'])->seconds(0);
+
+        $this->assertSlotIsBookable($barbershop, $scheduledAt);
+
+        $employeeId = $data['barbershop_employee_id'] ?? null;
+
+        if ($employeeId !== null) {
+            $employee = BarbershopEmployee::query()->findOrFail($employeeId);
+            abort_unless($employee->barbershop_user_id === $barbershop->id, 422);
+            abort_unless($employee->is_active, 422);
+        }
+
+        return BarbershopAppointment::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => $data['client_user_id'] ?? null,
+            'guest_name' => filled($data['guest_name'] ?? null)
+                ? trim((string) $data['guest_name'])
+                : null,
+            'guest_phone' => filled($data['guest_phone'] ?? null)
+                ? trim((string) $data['guest_phone'])
+                : null,
+            'barbershop_employee_id' => $employeeId,
+            'scheduled_at' => $scheduledAt,
+            'duration_minutes' => self::SLOT_MINUTES,
+            'service_label' => trim($data['service_label']),
+            'package_type' => $data['package_type'] ?? null,
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+            'client_notes' => filled($data['client_notes'] ?? null)
+                ? trim((string) $data['client_notes'])
+                : null,
+        ]);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function servicesForAgenda(User $barbershop): array
+    {
+        $packages = collect($this->servicePlanService->packagesPayload($barbershop))
+            ->map(fn (array $package) => [
+                'key' => 'package:'.$package['type'],
+                'label' => $package['label'],
+                'package_type' => $package['type'],
+            ]);
+
+        $addons = collect($this->servicePlanService->addonsPayload($barbershop))
+            ->map(fn (array $addon) => [
+                'key' => 'addon:'.$addon['id'],
+                'label' => $addon['name'],
+                'package_type' => null,
+            ]);
+
+        return $packages
+            ->merge($addons)
+            ->when(
+                $packages->isEmpty() && $addons->isEmpty(),
+                fn ($collection) => $collection->push([
+                    'key' => 'service:generic',
+                    'label' => 'Serviço',
+                    'package_type' => null,
+                ]),
+            )
+            ->values()
+            ->all();
     }
 
     /**

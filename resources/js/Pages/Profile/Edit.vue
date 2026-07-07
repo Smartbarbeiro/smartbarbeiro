@@ -5,7 +5,6 @@ import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import BarbershopPaymentStatusCard from './Partials/BarbershopPaymentStatusCard.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
-import ManageServicePlansForm from './Partials/ManageServicePlansForm.vue';
 import SubscribersList from './Partials/SubscribersList.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import { Head, usePage } from '@inertiajs/vue3';
@@ -52,10 +51,6 @@ defineProps({
         type: Array,
         default: () => [],
     },
-    servicePlans: {
-        type: Object,
-        default: null,
-    },
     acrylicQrOrder: {
         type: Object,
         default: null,
@@ -71,14 +66,6 @@ defineProps({
 });
 
 onMounted(() => {
-    if (window.location.hash === '#planos-de-servico') {
-        document
-            .getElementById('planos-de-servico')
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        return;
-    }
-
     if (page.props.promptProfilePhoto) {
         document
             .getElementById('logo-barbearia')
@@ -128,15 +115,6 @@ onMounted(() => {
                 Seu perfil público permanece ativo sem a assinatura mensal no
                 Mercado Pago.
             </DashboardAlert>
-
-            <DashboardContentCard
-                v-if="isBarbershop && servicePlans"
-                icon="service-plans"
-                title="Planos de serviço"
-                description="Monte pacotes e opcionais para seus clientes assinarem."
-            >
-                <ManageServicePlansForm :service-plans="servicePlans" />
-            </DashboardContentCard>
 
             <DashboardContentCard
                 v-if="isBarbershop"

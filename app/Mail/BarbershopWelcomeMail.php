@@ -31,7 +31,7 @@ class BarbershopWelcomeMail extends Mailable
             with: [
                 'barbershopName' => $this->barbershop->name,
                 'platformSubscribeUrl' => route('platform.subscribe'),
-                'servicePlansUrl' => route('profile.edit').'#planos-de-servico',
+                'servicePlansUrl' => route('services.index'),
                 'profileUrl' => route('profile.edit'),
                 'dashboardUrl' => route('dashboard'),
             ],

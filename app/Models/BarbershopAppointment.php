@@ -20,6 +20,8 @@ class BarbershopAppointment extends Model
     protected $fillable = [
         'barbershop_user_id',
         'client_user_id',
+        'guest_name',
+        'guest_phone',
         'barbershop_employee_id',
         'scheduled_at',
         'duration_minutes',
@@ -85,6 +87,32 @@ class BarbershopAppointment extends Model
         };
     }
 
+    public function displayName(): string
+    {
+        if ($this->relationLoaded('client') && $this->client !== null) {
+            return $this->client->name;
+        }
+
+        if ($this->client_user_id !== null) {
+            return $this->client?->name ?? 'Cliente';
+        }
+
+        return filled($this->guest_name) ? $this->guest_name : 'Cliente';
+    }
+
+    public function performerName(): ?string
+    {
+        if ($this->relationLoaded('employee') && $this->employee !== null) {
+            return $this->employee->name;
+        }
+
+        if ($this->barbershop_employee_id !== null) {
+            return $this->employee?->name;
+        }
+
+        return null;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -102,9 +130,12 @@ class BarbershopAppointment extends Model
             'status_label' => $this->statusLabel(),
             'client_notes' => $this->client_notes,
             'client' => [
-                'id' => $this->client->id,
-                'name' => $this->client->name,
+                'id' => $this->client_user_id,
+                'name' => $this->displayName(),
             ],
+            'guest_name' => $this->guest_name,
+            'guest_phone' => $this->guest_phone,
+            'performer_name' => $this->performerName(),
             'employee' => $this->employee ? [
                 'id' => $this->employee->id,
                 'name' => $this->employee->name,

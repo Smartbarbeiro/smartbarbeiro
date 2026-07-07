@@ -46,6 +46,14 @@ class BarbershopServicePlanTest extends TestCase
         $barbershop = User::factory()->create();
 
         $this->actingAs($barbershop)
+            ->get(route('services.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Services/Index')
+                ->has('servicePlans.packages', 2)
+                ->has('servicePlans.addons'));
+
+        $this->actingAs($barbershop)
             ->put(route('profile.service-plans.update'), [
                 'packages' => [
                     'cut' => [

@@ -129,6 +129,12 @@ const navItems = computed(() => {
             label: 'Funcionários',
         });
         items.push({
+            href: route('services.index'),
+            active: route().current('services.*'),
+            icon: 'scissors',
+            label: 'Serviços',
+        });
+        items.push({
             href: route('commissions.index'),
             active: route().current('commissions.*'),
             icon: 'cash-stack',
@@ -349,6 +355,11 @@ const mobileNavItems = computed(() => {
                                     <li>
                                         <Link :href="route('profile.edit')" class="dropdown-item">
                                             <i class="bi bi-person me-2"></i>Perfil
+                                        </Link>
+                                    </li>
+                                    <li v-if="user?.is_barbershop">
+                                        <Link :href="route('services.index')" class="dropdown-item">
+                                            <i class="bi bi-scissors me-2"></i>Serviços
                                         </Link>
                                     </li>
                                     <li v-if="user?.is_barbershop">

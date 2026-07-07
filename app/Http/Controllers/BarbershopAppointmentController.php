@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreBarbershopOwnerAppointmentRequest;
 use App\Http\Requests\UpdateBarbershopAppointmentRequest;
 use App\Models\BarbershopAppointment;
 use App\Models\BarbershopEmployee;
@@ -22,6 +23,15 @@ class BarbershopAppointmentController extends Controller
         return Inertia::render('Appointments/Index', [
             'agenda' => $appointmentService->agendaPayload($user, $request->string('date')->toString() ?: null),
         ]);
+    }
+
+    public function store(
+        StoreBarbershopOwnerAppointmentRequest $request,
+        BarbershopAppointmentService $appointmentService,
+    ): RedirectResponse {
+        $appointmentService->createOwnerBooking($request->user(), $request->validated());
+
+        return back()->with('status', 'appointment-created');
     }
 
     public function update(

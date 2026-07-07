@@ -12,6 +12,7 @@ use App\Http\Controllers\BarbershopCommissionController;
 use App\Http\Controllers\BarbershopEmployeeController;
 use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\BarbershopPreferredHaircutDayController;
+use App\Http\Controllers\BarbershopServiceController;
 use App\Http\Controllers\BarbershopServicePlanController;
 use App\Http\Controllers\ClientHaircutPhotoController;
 use App\Http\Controllers\CepLookupController;
@@ -183,8 +184,12 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
         ->name('commissions.index');
     Route::get('/agenda', [BarbershopAppointmentController::class, 'index'])
         ->name('agenda.index');
+    Route::post('/agenda', [BarbershopAppointmentController::class, 'store'])
+        ->name('agenda.store');
     Route::patch('/agenda/{appointment}', [BarbershopAppointmentController::class, 'update'])
         ->name('agenda.update');
+    Route::get('/servicos', [BarbershopServiceController::class, 'index'])
+        ->name('services.index');
     Route::delete('/subscriptions/{subscription}', [ProfileSubscriptionController::class, 'destroy'])
         ->name('subscriptions.destroy');
     Route::delete('/service-plan-subscriptions/{servicePlanSubscription}', [ServicePlanSubscriptionController::class, 'destroy'])

@@ -3,8 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
+import ScheduleOwnerAppointmentModal from '@/Components/ScheduleOwnerAppointmentModal.vue';
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     agenda: {
@@ -14,10 +15,16 @@ const props = defineProps({
 });
 
 const page = usePage();
+const selectedSlotTime = ref(null);
+const scheduleModalOpen = ref(false);
 
 const statusMessage = computed(() => {
     if (page.props.flash?.status === 'appointment-updated') {
         return 'Agendamento atualizado com sucesso.';
+    }
+
+    if (page.props.flash?.status === 'appointment-created') {
+        return 'Agendamento criado com sucesso.';
     }
 
     return null;
@@ -65,6 +72,28 @@ const onDatePick = (event) => {
     if (event.target.value) {
         visitDate(event.target.value);
     }
+};
+
+const openScheduleModal = (time) => {
+    selectedSlotTime.value = time;
+    scheduleModalOpen.value = true;
+};
+
+const closeScheduleModal = () => {
+    scheduleModalOpen.value = false;
+    selectedSlotTime.value = null;
+};
+
+const performerLabel = (appointment) => {
+    if (appointment.employee) {
+        return appointment.employee.name;
+    }
+
+    if (appointment.performer_name) {
+        return appointment.performer_name;
+    }
+
+    return 'Proprietário';
 };
 </script>
 
@@ -195,7 +224,7 @@ const onDatePick = (event) => {
                                 :id="`employee-${appointment.id}`"
                                 class="form-select form-select-sm"
                             >
-                                <option value="">Sem funcionário</option>
+                                <option value="">Proprietário</option>
                                 <option
                                     v-for="employee in agenda.employees.filter((item) => item.is_active)"
                                     :key="employee.id"
@@ -228,7 +257,7 @@ const onDatePick = (event) => {
             <DashboardContentCard
                 icon="dashboard"
                 title="Horários do dia"
-                description="Grade de 30 em 30 minutos, das 08:00 às 20:00."
+                description="Clique em um horário livre para agendar. Grade de 30 em 30 minutos, das 08:00 às 20:00."
             >
                 <div class="barbershop-agenda-slots">
                     <article
@@ -238,28 +267,38 @@ const onDatePick = (event) => {
                         :class="{
                             'barbershop-agenda-slot--past': slot.is_past,
                             'barbershop-agenda-slot--free': slot.is_available,
+                            'barbershop-agenda-slot--clickable': slot.is_available,
                         }"
+                        @click="slot.is_available ? openScheduleModal(slot.time) : null"
                     >
                         <div class="barbershop-agenda-slot__time">
                             {{ slot.label }}
                         </div>
 
                         <div class="barbershop-agenda-slot__content">
-                            <p
-                                v-if="slot.appointments.length === 0"
-                                class="barbershop-agenda-slot__empty mb-0"
-                            >
-                                {{
-                                    slot.is_past
-                                        ? 'Horário passado'
-                                        : 'Livre'
-                                }}
-                            </p>
+                            <template v-if="slot.appointments.length === 0">
+                                <p class="barbershop-agenda-slot__empty mb-2">
+                                    {{
+                                        slot.is_past
+                                            ? 'Horário passado'
+                                            : 'Livre'
+                                    }}
+                                </p>
+                                <button
+                                    v-if="slot.is_available"
+                                    type="button"
+                                    class="btn btn-sm btn-dark"
+                                    @click.stop="openScheduleModal(slot.time)"
+                                >
+                                    Agendar
+                                </button>
+                            </template>
 
                             <div
                                 v-for="appointment in slot.appointments"
                                 :key="appointment.id"
                                 class="barbershop-agenda-appointment"
+                                @click.stop
                             >
                                 <div
                                     class="barbershop-agenda-appointment__header"
@@ -286,12 +325,8 @@ const onDatePick = (event) => {
                                     {{ appointment.service_label }}
                                 </p>
 
-                                <div
-                                    v-if="appointment.employee"
-                                    class="small text-secondary mb-2"
-                                >
-                                    Funcionário:
-                                    {{ appointment.employee.name }}
+                                <div class="small text-secondary mb-2">
+                                    Atendimento: {{ performerLabel(appointment) }}
                                 </div>
 
                                 <div
@@ -303,7 +338,7 @@ const onDatePick = (event) => {
                                         class="form-select form-select-sm"
                                         :value="appointment.employee?.id ?? ''"
                                     >
-                                        <option value="">Sem funcionário</option>
+                                        <option value="">Proprietário</option>
                                         <option
                                             v-for="employee in agenda.employees.filter((item) => item.is_active)"
                                             :key="`assign-${appointment.id}-${employee.id}`"
@@ -343,5 +378,16 @@ const onDatePick = (event) => {
                 </div>
             </DashboardContentCard>
         </div>
+
+        <ScheduleOwnerAppointmentModal
+            :show="scheduleModalOpen"
+            :date="agenda.date"
+            :time="selectedSlotTime"
+            :owner="agenda.owner"
+            :employees="agenda.employees"
+            :services="agenda.services"
+            :clients="agenda.clients"
+            @close="closeScheduleModal"
+        />
     </AuthenticatedLayout>
 </template>

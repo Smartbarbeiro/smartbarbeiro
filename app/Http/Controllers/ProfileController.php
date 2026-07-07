@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\AcrylicQrOrderService;
-use App\Services\BarbershopServicePlanService;
 use App\Services\DeleteUserAccountService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +23,7 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request, BarbershopServicePlanService $servicePlanService, AcrylicQrOrderService $acrylicQrOrderService): Response
+    public function edit(Request $request, AcrylicQrOrderService $acrylicQrOrderService): Response
     {
         $user = $request->user()->load([
             'subscriptionPlan',
@@ -81,10 +80,6 @@ class ProfileController extends Controller
                             'username' => $subscription->subscriber->username,
                         ],
                     ]),
-                'servicePlans' => [
-                    'packages' => $servicePlanService->packagesPayload($user),
-                    'addons' => $servicePlanService->addonsPayload($user),
-                ],
                 'platformSubscriptionExempt' => $user->isExemptFromPlatformSubscription(),
             ];
         }
