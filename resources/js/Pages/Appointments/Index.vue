@@ -109,11 +109,10 @@ const hexToRgba = (hex, alpha) => {
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 };
 
-const slotEmployeeColor = (slot) => {
-    const appointment = slot.appointments.find((item) => item.employee?.color);
+const primaryAppointment = (slot) => slot.appointments[0] ?? null;
 
-    return appointment?.employee?.color ?? null;
-};
+const slotEmployeeColor = (slot) =>
+    primaryAppointment(slot)?.employee?.color ?? null;
 
 const slotStyle = (slot) => {
     const color = slotEmployeeColor(slot);
@@ -123,23 +122,19 @@ const slotStyle = (slot) => {
     }
 
     return {
-        backgroundColor: hexToRgba(color, 0.2),
-        borderColor: hexToRgba(color, 0.5),
+        '--slot-accent': color,
+        '--slot-fill': hexToRgba(color, 0.24),
+        '--slot-border': hexToRgba(color, 0.55),
     };
 };
 
-const appointmentStyle = (appointment) => {
-    const color = appointment.employee?.color;
-
-    if (!color) {
-        return {};
-    }
-
-    return {
-        borderLeftColor: color,
-        backgroundColor: hexToRgba(color, 0.12),
-    };
-};
+const slotClasses = (slot) => ({
+    'barbershop-agenda-slot--past': slot.is_past,
+    'barbershop-agenda-slot--free': slot.is_available,
+    'barbershop-agenda-slot--clickable': slot.is_available,
+    'barbershop-agenda-slot--assigned': !!slotEmployeeColor(slot),
+    'barbershop-agenda-slot--booked': slot.appointments.length > 0,
+});
 </script>
 
 <template>
@@ -326,22 +321,19 @@ const appointmentStyle = (appointment) => {
                         v-for="slot in agenda.slots"
                         :key="slot.time"
                         class="barbershop-agenda-slot"
-                        :class="{
-                            'barbershop-agenda-slot--past': slot.is_past,
-                            'barbershop-agenda-slot--free': slot.is_available,
-                            'barbershop-agenda-slot--clickable': slot.is_available,
-                            'barbershop-agenda-slot--assigned': !!slotEmployeeColor(slot),
-                        }"
+                        :class="slotClasses(slot)"
                         :style="slotStyle(slot)"
                         @click="slot.is_available ? openScheduleModal(slot.time) : null"
                     >
                         <div class="barbershop-agenda-slot__time">
-                            {{ slot.label }}
+                            <span class="barbershop-agenda-slot__time-label">{{
+                                slot.label
+                            }}</span>
                         </div>
 
                         <div class="barbershop-agenda-slot__content">
                             <template v-if="slot.appointments.length === 0">
-                                <p class="barbershop-agenda-slot__empty mb-2">
+                                <p class="barbershop-agenda-slot__empty">
                                     {{
                                         slot.is_past
                                             ? 'Horário passado'
@@ -351,7 +343,7 @@ const appointmentStyle = (appointment) => {
                                 <button
                                     v-if="slot.is_available"
                                     type="button"
-                                    class="btn btn-sm btn-dark"
+                                    class="btn btn-sm btn-dark barbershop-agenda-slot__book-btn"
                                     @click.stop="openScheduleModal(slot.time)"
                                 >
                                     Agendar
@@ -362,25 +354,25 @@ const appointmentStyle = (appointment) => {
                                 v-for="appointment in slot.appointments"
                                 :key="appointment.id"
                                 class="barbershop-agenda-appointment"
-                                :class="{
-                                    'barbershop-agenda-appointment--employee':
-                                        !!appointment.employee?.color,
-                                }"
-                                :style="appointmentStyle(appointment)"
                                 @click.stop
                             >
-                                <div
-                                    class="barbershop-agenda-appointment__header"
-                                >
-                                    <strong>{{ appointment.client.name }}</strong>
+                                <div class="barbershop-agenda-appointment__header">
+                                    <div>
+                                        <p class="barbershop-agenda-appointment__client mb-0">
+                                            {{ appointment.client.name }}
+                                        </p>
+                                        <p class="barbershop-agenda-appointment__service mb-0">
+                                            {{ appointment.service_label }}
+                                        </p>
+                                    </div>
                                     <span
-                                        class="badge"
+                                        class="barbershop-agenda-appointment__status"
                                         :class="{
-                                            'bg-warning text-dark':
+                                            'barbershop-agenda-appointment__status--pending':
                                                 appointment.status === 'pending',
-                                            'bg-success':
+                                            'barbershop-agenda-appointment__status--confirmed':
                                                 appointment.status === 'confirmed',
-                                            'bg-secondary':
+                                            'barbershop-agenda-appointment__status--done':
                                                 appointment.status === 'completed' ||
                                                 appointment.status === 'cancelled' ||
                                                 appointment.status === 'rejected',
@@ -390,13 +382,28 @@ const appointmentStyle = (appointment) => {
                                     </span>
                                 </div>
 
-                                <p class="small mb-2">
-                                    {{ appointment.service_label }}
+                                <p
+                                    class="barbershop-agenda-appointment__performer mb-0"
+                                    :class="{
+                                        'barbershop-agenda-appointment__performer--employee':
+                                            !!appointment.employee?.color,
+                                    }"
+                                    :style="
+                                        appointment.employee?.color
+                                            ? {
+                                                  '--performer-accent':
+                                                      appointment.employee.color,
+                                              }
+                                            : {}
+                                    "
+                                >
+                                    <span
+                                        v-if="appointment.employee?.color"
+                                        class="barbershop-agenda-appointment__performer-dot"
+                                        aria-hidden="true"
+                                    />
+                                    {{ performerLabel(appointment) }}
                                 </p>
-
-                                <div class="small text-secondary mb-2">
-                                    Atendimento: {{ performerLabel(appointment) }}
-                                </div>
 
                                 <div
                                     v-if="appointment.status === 'confirmed'"
