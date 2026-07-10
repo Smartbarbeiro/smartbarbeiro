@@ -32,8 +32,11 @@ const loadingSlots = ref(false);
 const availabilityError = ref(null);
 const morningExpanded = ref(false);
 const afternoonExpanded = ref(false);
+const viewDate = ref(new Date());
 
 const MORNING_CUTOFF_HOUR = 12;
+const MONTHS_AHEAD = 2;
+const weekdayShortLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 const form = useForm({
     scheduled_at: '',
@@ -132,6 +135,122 @@ const selectedDateLabel = computed(() =>
     formatBookingDateLabel(selectedDate.value),
 );
 
+const currentMonthStart = computed(() => {
+    const now = new Date();
+
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+});
+
+const maxMonthStart = computed(() => {
+    const now = new Date();
+
+    return new Date(now.getFullYear(), now.getMonth() + MONTHS_AHEAD, 1);
+});
+
+const maxBookingDate = computed(() => {
+    const now = new Date();
+
+    return formatDateInput(
+        new Date(now.getFullYear(), now.getMonth() + MONTHS_AHEAD + 1, 0),
+    );
+});
+
+const canGoToPreviousMonth = computed(() => {
+    const viewed = new Date(
+        viewDate.value.getFullYear(),
+        viewDate.value.getMonth(),
+        1,
+    );
+
+    return viewed > currentMonthStart.value;
+});
+
+const canGoToNextMonth = computed(() => {
+    const viewed = new Date(
+        viewDate.value.getFullYear(),
+        viewDate.value.getMonth(),
+        1,
+    );
+
+    return viewed < maxMonthStart.value;
+});
+
+const monthLabel = computed(() =>
+    viewDate.value.toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric',
+    }),
+);
+
+const calendarDates = computed(() => {
+    const year = viewDate.value.getFullYear();
+    const month = viewDate.value.getMonth();
+    const startWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = todayDate();
+    const latest = maxDate.value || maxBookingDate.value;
+    const cells = [];
+
+    for (let index = 0; index < startWeekday; index += 1) {
+        cells.push({
+            type: 'empty',
+            key: `empty-${year}-${month}-${index}`,
+        });
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+        const date = formatDateInput(new Date(year, month, day));
+        const isDisabled = date < today || (latest && date > latest);
+
+        cells.push({
+            type: 'current',
+            day,
+            date,
+            key: `day-${date}`,
+            isToday: date === today,
+            isSelected: selectedDate.value === date,
+            isDisabled,
+        });
+    }
+
+    return cells;
+});
+
+const goToPreviousMonth = () => {
+    if (!canGoToPreviousMonth.value) {
+        return;
+    }
+
+    viewDate.value = new Date(
+        viewDate.value.getFullYear(),
+        viewDate.value.getMonth() - 1,
+        1,
+    );
+};
+
+const goToNextMonth = () => {
+    if (!canGoToNextMonth.value) {
+        return;
+    }
+
+    viewDate.value = new Date(
+        viewDate.value.getFullYear(),
+        viewDate.value.getMonth() + 1,
+        1,
+    );
+};
+
+const selectCalendarDate = (date, isDisabled) => {
+    if (isDisabled || loadingSlots.value || selectedDate.value === date) {
+        return;
+    }
+
+    selectedDate.value = date;
+    selectedTime.value = '';
+    syncScheduledAt();
+    loadSlotsForDate(date);
+};
+
 function mergeSlots(apiSlots) {
     const defaults = buildDefaultSlots();
 
@@ -227,9 +346,24 @@ const loadSlotsForDate = async (date) => {
 
         availableSlots.value = mergeSlots(data.slots ?? []);
         minDate.value = data.min_date ?? todayDate();
-        maxDate.value = data.max_date ?? '';
+        maxDate.value = data.max_date
+            ? data.max_date < maxBookingDate.value
+                ? data.max_date
+                : maxBookingDate.value
+            : maxBookingDate.value;
         selectedDate.value = data.date ?? date;
         selectedTime.value = '';
+
+        const selected = parseLocalDate(selectedDate.value);
+
+        if (selected) {
+            viewDate.value = new Date(
+                selected.getFullYear(),
+                selected.getMonth(),
+                1,
+            );
+        }
+
         syncScheduledAt();
     } catch {
         availableSlots.value = buildDefaultSlots();
@@ -243,11 +377,13 @@ const loadSlotsForDate = async (date) => {
 
 const resetPicker = () => {
     const today = todayDate();
+    const now = new Date();
 
     minDate.value = today;
-    maxDate.value = '';
+    maxDate.value = maxBookingDate.value;
     selectedDate.value = today;
     selectedTime.value = '';
+    viewDate.value = new Date(now.getFullYear(), now.getMonth(), 1);
     availableSlots.value = buildDefaultSlots();
     availabilityError.value = null;
     morningExpanded.value = false;
@@ -271,12 +407,6 @@ watch(
 watch(selectedTime, () => {
     syncScheduledAt();
 });
-
-const onDateChange = () => {
-    selectedTime.value = '';
-    syncScheduledAt();
-    loadSlotsForDate(selectedDate.value);
-};
 
 const pickTime = (time) => {
     const slot = availableSlots.value.find((item) => item.time === time);
@@ -353,28 +483,80 @@ const submit = () => {
 
                 <form class="d-flex flex-column gap-3" @submit.prevent="submit">
                     <div class="book-appointment-modal__field">
-                        <label class="form-label" for="booking-date">Dia</label>
-                        <div class="book-appointment-date-picker">
-                            <span
-                                class="book-appointment-date-picker__display"
-                                aria-hidden="true"
-                            >
-                                {{ selectedDateLabel }}
-                            </span>
-                            <input
-                                id="booking-date"
-                                v-model="selectedDate"
-                                type="date"
-                                class="form-control book-appointment-modal__input book-appointment-date-picker__input"
-                                :min="minDate || todayDate()"
-                                :max="maxDate || undefined"
-                                :disabled="loadingSlots"
-                                :aria-label="selectedDateLabel"
-                                required
-                                @change="onDateChange"
-                                @input="onDateChange"
-                            />
+                        <label class="form-label">Dia</label>
+                        <div class="preferred-haircut-calendar book-appointment-calendar">
+                            <div class="preferred-haircut-calendar__header">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    :disabled="!canGoToPreviousMonth"
+                                    aria-label="Mês anterior"
+                                    @click="goToPreviousMonth"
+                                >
+                                    ‹
+                                </button>
+                                <p class="preferred-haircut-calendar__month mb-0">
+                                    {{ monthLabel }}
+                                </p>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    :disabled="!canGoToNextMonth"
+                                    aria-label="Próximo mês"
+                                    @click="goToNextMonth"
+                                >
+                                    ›
+                                </button>
+                            </div>
+
+                            <ul class="preferred-haircut-calendar__days">
+                                <li
+                                    v-for="label in weekdayShortLabels"
+                                    :key="label"
+                                >
+                                    {{ label }}
+                                </li>
+                            </ul>
+
+                            <ul class="preferred-haircut-calendar__dates">
+                                <li
+                                    v-for="cell in calendarDates"
+                                    :key="cell.key"
+                                    :class="{
+                                        empty: cell.type === 'empty',
+                                        today: cell.isToday,
+                                        selected: cell.isSelected,
+                                        disabled: cell.isDisabled,
+                                    }"
+                                >
+                                    <button
+                                        v-if="cell.type === 'current'"
+                                        type="button"
+                                        class="preferred-haircut-calendar__date-btn"
+                                        :aria-label="
+                                            formatBookingDateLabel(cell.date)
+                                        "
+                                        :aria-pressed="cell.isSelected"
+                                        :disabled="
+                                            cell.isDisabled || loadingSlots
+                                        "
+                                        @click="
+                                            selectCalendarDate(
+                                                cell.date,
+                                                cell.isDisabled,
+                                            )
+                                        "
+                                    >
+                                        {{ cell.day }}
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
+                        <p
+                            class="preferred-haircut-calendar__selection small mb-0 mt-2"
+                        >
+                            {{ selectedDateLabel }}
+                        </p>
                     </div>
 
                     <div class="book-appointment-modal__field">
