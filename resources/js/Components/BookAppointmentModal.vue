@@ -30,6 +30,10 @@ const minDate = ref('');
 const maxDate = ref('');
 const loadingSlots = ref(false);
 const availabilityError = ref(null);
+const morningExpanded = ref(true);
+const afternoonExpanded = ref(true);
+
+const MORNING_CUTOFF_HOUR = 12;
 
 const form = useForm({
     scheduled_at: '',
@@ -83,6 +87,21 @@ function mergeSlots(apiSlots) {
 const hasAvailableSlots = computed(() =>
     availableSlots.value.some((slot) => slot.is_available),
 );
+
+const morningSlots = computed(() =>
+    availableSlots.value.filter(
+        (slot) => Number(slot.time.split(':')[0]) < MORNING_CUTOFF_HOUR,
+    ),
+);
+
+const afternoonSlots = computed(() =>
+    availableSlots.value.filter(
+        (slot) => Number(slot.time.split(':')[0]) >= MORNING_CUTOFF_HOUR,
+    ),
+);
+
+const availableCount = (slots) =>
+    slots.filter((slot) => slot.is_available).length;
 
 const syncScheduledAt = () => {
     if (selectedDate.value && selectedTime.value) {
@@ -150,6 +169,8 @@ const resetPicker = () => {
     selectedTime.value = '';
     availableSlots.value = buildDefaultSlots();
     availabilityError.value = null;
+    morningExpanded.value = true;
+    afternoonExpanded.value = true;
     syncScheduledAt();
 };
 
@@ -184,6 +205,14 @@ const pickTime = (time) => {
     }
 
     selectedTime.value = time;
+
+    const hour = Number(time.split(':')[0]);
+
+    if (hour < MORNING_CUTOFF_HOUR) {
+        morningExpanded.value = true;
+    } else {
+        afternoonExpanded.value = true;
+    }
 };
 
 const close = () => {
@@ -267,29 +296,169 @@ const submit = () => {
                             Atualizando horários livres...
                         </p>
                         <div
-                            class="book-appointment-time-grid"
+                            class="book-appointment-time-sections"
                             role="listbox"
                             aria-label="Horários disponíveis"
                         >
-                            <button
-                                v-for="slot in availableSlots"
-                                :key="slot.time"
-                                type="button"
-                                class="book-appointment-time-grid__item"
-                                :class="{
-                                    'book-appointment-time-grid__item--selected':
-                                        selectedTime === slot.time,
-                                    'book-appointment-time-grid__item--available':
-                                        slot.is_available,
-                                    'book-appointment-time-grid__item--busy':
-                                        !slot.is_available,
-                                }"
-                                :disabled="!slot.is_available || loadingSlots"
-                                :aria-selected="selectedTime === slot.time"
-                                @click="pickTime(slot.time)"
-                            >
-                                {{ slot.label }}
-                            </button>
+                            <section class="book-appointment-time-section">
+                                <button
+                                    type="button"
+                                    class="book-appointment-time-section__toggle"
+                                    :aria-expanded="morningExpanded"
+                                    :disabled="loadingSlots"
+                                    @click="
+                                        morningExpanded = !morningExpanded
+                                    "
+                                >
+                                    <span class="book-appointment-time-section__label">
+                                        <span>Manhã</span>
+                                        <span
+                                            class="book-appointment-time-section__range"
+                                        >
+                                            08:00 – 11:30
+                                            <template
+                                                v-if="
+                                                    !loadingSlots &&
+                                                    availableCount(
+                                                        morningSlots,
+                                                    ) > 0
+                                                "
+                                            >
+                                                ·
+                                                {{
+                                                    availableCount(morningSlots)
+                                                }}
+                                                livre{{
+                                                    availableCount(
+                                                        morningSlots,
+                                                    ) === 1
+                                                        ? ''
+                                                        : 's'
+                                                }}
+                                            </template>
+                                        </span>
+                                    </span>
+                                    <i
+                                        class="bi book-appointment-time-section__chevron"
+                                        :class="
+                                            morningExpanded
+                                                ? 'bi-chevron-up'
+                                                : 'bi-chevron-down'
+                                        "
+                                        aria-hidden="true"
+                                    />
+                                </button>
+
+                                <div
+                                    v-show="morningExpanded"
+                                    class="book-appointment-time-grid"
+                                >
+                                    <button
+                                        v-for="slot in morningSlots"
+                                        :key="slot.time"
+                                        type="button"
+                                        class="book-appointment-time-grid__item"
+                                        :class="{
+                                            'book-appointment-time-grid__item--selected':
+                                                selectedTime === slot.time,
+                                            'book-appointment-time-grid__item--available':
+                                                slot.is_available,
+                                            'book-appointment-time-grid__item--busy':
+                                                !slot.is_available,
+                                        }"
+                                        :disabled="
+                                            !slot.is_available || loadingSlots
+                                        "
+                                        :aria-selected="
+                                            selectedTime === slot.time
+                                        "
+                                        @click="pickTime(slot.time)"
+                                    >
+                                        {{ slot.label }}
+                                    </button>
+                                </div>
+                            </section>
+
+                            <section class="book-appointment-time-section">
+                                <button
+                                    type="button"
+                                    class="book-appointment-time-section__toggle"
+                                    :aria-expanded="afternoonExpanded"
+                                    :disabled="loadingSlots"
+                                    @click="
+                                        afternoonExpanded = !afternoonExpanded
+                                    "
+                                >
+                                    <span class="book-appointment-time-section__label">
+                                        <span>Tarde</span>
+                                        <span
+                                            class="book-appointment-time-section__range"
+                                        >
+                                            12:00 – 19:30
+                                            <template
+                                                v-if="
+                                                    !loadingSlots &&
+                                                    availableCount(
+                                                        afternoonSlots,
+                                                    ) > 0
+                                                "
+                                            >
+                                                ·
+                                                {{
+                                                    availableCount(
+                                                        afternoonSlots,
+                                                    )
+                                                }}
+                                                livre{{
+                                                    availableCount(
+                                                        afternoonSlots,
+                                                    ) === 1
+                                                        ? ''
+                                                        : 's'
+                                                }}
+                                            </template>
+                                        </span>
+                                    </span>
+                                    <i
+                                        class="bi book-appointment-time-section__chevron"
+                                        :class="
+                                            afternoonExpanded
+                                                ? 'bi-chevron-up'
+                                                : 'bi-chevron-down'
+                                        "
+                                        aria-hidden="true"
+                                    />
+                                </button>
+
+                                <div
+                                    v-show="afternoonExpanded"
+                                    class="book-appointment-time-grid"
+                                >
+                                    <button
+                                        v-for="slot in afternoonSlots"
+                                        :key="slot.time"
+                                        type="button"
+                                        class="book-appointment-time-grid__item"
+                                        :class="{
+                                            'book-appointment-time-grid__item--selected':
+                                                selectedTime === slot.time,
+                                            'book-appointment-time-grid__item--available':
+                                                slot.is_available,
+                                            'book-appointment-time-grid__item--busy':
+                                                !slot.is_available,
+                                        }"
+                                        :disabled="
+                                            !slot.is_available || loadingSlots
+                                        "
+                                        :aria-selected="
+                                            selectedTime === slot.time
+                                        "
+                                        @click="pickTime(slot.time)"
+                                    >
+                                        {{ slot.label }}
+                                    </button>
+                                </div>
+                            </section>
                         </div>
                         <p class="book-appointment-modal__hint small mb-0 mt-2">
                             Intervalos de 30 em 30 minutos, das 08:00 às 19:30.
