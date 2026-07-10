@@ -176,6 +176,40 @@ class BarbershopAppointmentTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_barbershop_agenda_keeps_same_day_slots_free_until_hour_ends(): void
+    {
+        Carbon::setTestNow('2026-07-07 14:20:00');
+
+        $barbershop = User::factory()->create();
+
+        $this->actingAs($barbershop)
+            ->get(route('agenda.index', ['date' => '2026-07-07']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Appointments/Index')
+                ->where('agenda.slots.10.time', '13:00')
+                ->where('agenda.slots.10.is_past', true)
+                ->where('agenda.slots.10.is_available', false)
+                ->where('agenda.slots.12.time', '14:00')
+                ->where('agenda.slots.12.is_past', false)
+                ->where('agenda.slots.12.is_available', true)
+                ->where('agenda.slots.13.time', '14:30')
+                ->where('agenda.slots.13.is_past', false)
+                ->where('agenda.slots.13.is_available', true));
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => now()->setTime(14, 0)->seconds(0)->toDateTimeString(),
+                'service_label' => 'Corte Cabelo',
+                'package_type' => 'cut',
+                'guest_name' => 'Cliente da Tarde',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        Carbon::setTestNow();
+    }
+
     public function test_barbershop_owner_can_schedule_walk_in_appointment(): void
     {
         Carbon::setTestNow('2026-07-07 09:00:00');

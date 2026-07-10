@@ -83,7 +83,7 @@ class BarbershopAppointmentService
     {
         $scheduledAt = Carbon::parse($data['scheduled_at'])->seconds(0);
 
-        $this->assertSlotIsBookable($barbershop, $scheduledAt);
+        $this->assertSlotIsBookable($barbershop, $scheduledAt, allowCurrentHour: true);
 
         $employeeId = $data['barbershop_employee_id'] ?? null;
 
@@ -513,12 +513,13 @@ class BarbershopAppointmentService
                 $slotMoment = $date->copy()->setTimeFromTimeString($time.':00');
                 $hasActiveBooking = $timeAppointments
                     ->contains(fn (BarbershopAppointment $appointment) => $appointment->isActive());
+                $isPast = $this->isSlotHourPast($slotMoment);
 
                 return [
                     'time' => $time,
                     'label' => $time,
-                    'is_past' => $slotMoment->isPast(),
-                    'is_available' => ! $hasActiveBooking && ! $slotMoment->isPast(),
+                    'is_past' => $isPast,
+                    'is_available' => ! $hasActiveBooking && ! $isPast,
                     'appointments' => $slotAppointments,
                 ];
             })
@@ -556,7 +557,7 @@ class BarbershopAppointmentService
             ->all();
     }
 
-    private function assertSlotIsBookable(User $barbershop, Carbon $scheduledAt): void
+    private function assertSlotIsBookable(User $barbershop, Carbon $scheduledAt, bool $allowCurrentHour = false): void
     {
         if ($scheduledAt->copy()->startOfDay()->lt($this->minBookingDate())) {
             throw ValidationException::withMessages([
@@ -564,7 +565,11 @@ class BarbershopAppointmentService
             ]);
         }
 
-        if ($scheduledAt->isPast()) {
+        $isPast = $allowCurrentHour
+            ? $this->isSlotHourPast($scheduledAt)
+            : $scheduledAt->isPast();
+
+        if ($isPast) {
             throw ValidationException::withMessages([
                 'scheduled_at' => 'Escolha um horário no futuro.',
             ]);
@@ -602,6 +607,15 @@ class BarbershopAppointmentService
                 'scheduled_at' => 'Este horário já está reservado.',
             ]);
         }
+    }
+
+    /**
+     * For barbershop agenda/owner booking: a same-day slot stays free until its hour ends.
+     * Example: at 14:20, both 14:00 and 14:30 remain available.
+     */
+    private function isSlotHourPast(Carbon $slotMoment): bool
+    {
+        return now()->gte($slotMoment->copy()->startOfHour()->addHour());
     }
 
     private function minBookingDate(): Carbon
