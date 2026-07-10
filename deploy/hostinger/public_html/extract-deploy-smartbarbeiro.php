@@ -50,7 +50,13 @@ function deletePath(string $path): void
 
 function normalizeRelativePath(string $path): string
 {
-    return str_replace('\\', '/', $path);
+    $path = str_replace('\\', '/', $path);
+
+    while (str_starts_with($path, './')) {
+        $path = substr($path, 2);
+    }
+
+    return $path;
 }
 
 function shouldExcludePath(string $relativePath, array $excludePrefixes): bool

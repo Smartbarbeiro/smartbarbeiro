@@ -42,6 +42,17 @@ function deletePath(string $path): void
     rmdir($path);
 }
 
+function normalizeZipEntryPath(string $name): string
+{
+    $name = str_replace('\\', '/', $name);
+
+    while (str_starts_with($name, './')) {
+        $name = substr($name, 2);
+    }
+
+    return $name;
+}
+
 try {
     if (! is_file($zipPath)) {
         throw new RuntimeException('Missing public_html.zip — upload it via FTP first.');
@@ -63,9 +74,9 @@ try {
     $extracted = 0;
 
     for ($index = 0; $index < $zip->numFiles; $index++) {
-        $name = str_replace('\\', '/', (string) $zip->getNameIndex($index));
+        $name = normalizeZipEntryPath((string) $zip->getNameIndex($index));
 
-        if ($name === false || $name === '' || ! str_starts_with($name, 'build/')) {
+        if ($name === '' || ! str_starts_with($name, 'build/')) {
             continue;
         }
 

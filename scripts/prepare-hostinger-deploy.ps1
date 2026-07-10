@@ -52,7 +52,7 @@ $zipPublic = Join-Path $DeployRoot "public_html.zip"
 if (Test-Path $zipLaravel) { Remove-Item $zipLaravel -Force }
 if (Test-Path $zipPublic) { Remove-Item $zipPublic -Force }
 
-Write-Host "==> Creating zip archives (tar — Linux-safe forward slashes)..."
+Write-Host "==> Creating zip archives (tar, Linux-safe forward slashes)..."
 function New-DeployZip([string]$SourceDir, [string]$ZipPath) {
     if (Test-Path $ZipPath) {
         Remove-Item $ZipPath -Force
