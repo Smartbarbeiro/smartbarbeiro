@@ -20,6 +20,10 @@
 
     RewriteEngine On
 
+    # Canonical host: keep OAuth redirect_uri and session cookies on www.
+    RewriteCond %{HTTP_HOST} ^smartbarbeiro\.com\.br$ [NC]
+    RewriteRule ^(.*)$ https://www.smartbarbeiro.com.br/$1 [L,R=301]
+
     # Profile photos / uploads: Hostinger disables symlink(); serve from laravel/storage/app/public
     RewriteCond %{REQUEST_URI} ^/uploads/(.+)$
     RewriteCond %{DOCUMENT_ROOT}/../laravel/storage/app/public/%1 -f

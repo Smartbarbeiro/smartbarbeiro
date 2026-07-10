@@ -59,7 +59,16 @@ class AppServiceProvider extends ServiceProvider
             }
 
             if (filled(config('services.google.client_id'))) {
-                config(['services.google.redirect' => url('/auth/google/callback')]);
+                // Keep the registered Google redirect URI stable. Using the
+                // current request host (www vs bare domain) causes Google 400
+                // redirect_uri_mismatch errors.
+                $redirect = config('services.google.redirect');
+
+                if (! filled($redirect)) {
+                    config([
+                        'services.google.redirect' => rtrim((string) config('app.url'), '/').'/auth/google/callback',
+                    ]);
+                }
 
                 if (class_exists(\Laravel\Socialite\Facades\Socialite::class)) {
                     \Laravel\Socialite\Facades\Socialite::forgetDrivers();
