@@ -102,6 +102,12 @@ Write-Host "==> Patching production URLs..."
 Invoke-DeployUrl "patch-mp-production-smartbarbeiro.php" | Out-Null
 
 Write-Host ""
+Write-Host "==> Syncing Laravel app from zip (Linux-safe paths)..."
+if (-not (Invoke-DeployUrl "sync-laravel-smartbarbeiro.php")) {
+    throw "Laravel sync failed."
+}
+
+Write-Host ""
 Write-Host "==> Patching Stripe Connect env..."
 Invoke-DeployUrl "patch-stripe-production-smartbarbeiro.php" | Out-Null
 
@@ -114,12 +120,6 @@ if (-not (Invoke-DeployUrl "migrate-smartbarbeiro.php")) {
 Write-Host ""
 Write-Host "==> Clearing Laravel cache..."
 Invoke-DeployUrl "clear-cache-smartbarbeiro.php" | Out-Null
-
-Write-Host ""
-Write-Host "==> Syncing Laravel app from zip (Linux-safe paths)..."
-if (-not (Invoke-DeployUrl "sync-laravel-smartbarbeiro.php")) {
-    throw "Laravel sync failed."
-}
 
 Write-Host ""
 Write-Host "==> Syncing Vite build assets..."
