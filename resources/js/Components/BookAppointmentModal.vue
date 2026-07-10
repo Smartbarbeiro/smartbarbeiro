@@ -323,6 +323,24 @@ const syncAccordionSections = () => {
     }
 };
 
+const toggleMorningSection = () => {
+    const next = !morningExpanded.value;
+    morningExpanded.value = next;
+
+    if (next) {
+        afternoonExpanded.value = false;
+    }
+};
+
+const toggleAfternoonSection = () => {
+    const next = !afternoonExpanded.value;
+    afternoonExpanded.value = next;
+
+    if (next) {
+        morningExpanded.value = false;
+    }
+};
+
 const syncScheduledAt = () => {
     if (selectedDate.value && selectedTime.value) {
         form.scheduled_at = `${selectedDate.value}T${selectedTime.value}:00`;
@@ -623,9 +641,7 @@ const submit = () => {
                                     class="book-appointment-time-section__toggle"
                                     :aria-expanded="morningExpanded"
                                     :disabled="loadingSlots"
-                                    @click="
-                                        morningExpanded = !morningExpanded
-                                    "
+                                    @click="toggleMorningSection"
                                 >
                                     <span class="book-appointment-time-section__label">
                                         <span>Manhã</span>
@@ -702,9 +718,7 @@ const submit = () => {
                                     class="book-appointment-time-section__toggle"
                                     :aria-expanded="afternoonExpanded"
                                     :disabled="loadingSlots"
-                                    @click="
-                                        afternoonExpanded = !afternoonExpanded
-                                    "
+                                    @click="toggleAfternoonSection"
                                 >
                                     <span class="book-appointment-time-section__label">
                                         <span>Tarde</span>

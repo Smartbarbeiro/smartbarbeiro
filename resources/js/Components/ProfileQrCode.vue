@@ -7,7 +7,7 @@ import TextInput from '@/Components/TextInput.vue';
 import QRCode from 'qrcode';
 import { formatPhone } from '@/utils/formatPhone';
 import { useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 const props = defineProps({
     url: {
@@ -55,6 +55,7 @@ const dataUrl = ref('');
 const error = ref('');
 const showOrderModal = ref(false);
 const expanded = defineModel('expanded', { type: Boolean, default: false });
+const qrPanel = ref(null);
 const cepLookupLoading = ref(false);
 const cepLookupError = ref('');
 const numberInput = ref(null);
@@ -123,6 +124,30 @@ const download = () => {
     link.download = `${props.filename}.png`;
     link.click();
 };
+
+const focusQrPanel = () => {
+    const el = qrPanel.value;
+
+    if (!el) {
+        return;
+    }
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+};
+
+const toggleShareQr = async () => {
+    expanded.value = !expanded.value;
+
+    if (!expanded.value) {
+        return;
+    }
+
+    await nextTick();
+    focusQrPanel();
+};
+
+defineExpose({ focusQrPanel });
 
 const openOrderModal = () => {
     orderForm.reset();
@@ -251,7 +276,7 @@ watch(
             type="button"
             class="btn-share-qrcode"
             :aria-expanded="expanded"
-            @click="expanded = !expanded"
+            @click="toggleShareQr"
         >
             <i class="bi bi-qr-code me-2" aria-hidden="true"></i>
             Compartilhar Qr-code
@@ -259,6 +284,8 @@ watch(
 
         <div
             v-show="expanded"
+            ref="qrPanel"
+            tabindex="-1"
             :class="
                 ownerDashboard
                     ? 'profile-qr-panel profile-qr-panel--owner-dashboard'

@@ -13,7 +13,7 @@ import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import ProfileQrCode from '@/Components/ProfileQrCode.vue';
 import { barbershopDisplayName } from '@/utils/barbershopDisplayName';
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 const props = defineProps({
     profile: {
@@ -162,7 +162,27 @@ const showMobileAppPromo = computed(
 const planCheckoutStep = ref(null);
 const planCheckoutActive = computed(() => Boolean(planCheckoutStep.value));
 const ownerQrExpanded = ref(false);
+const ownerQrPanel = ref(null);
 const preferredDayPickerOpen = ref(false);
+
+const toggleOwnerQr = async () => {
+    ownerQrExpanded.value = !ownerQrExpanded.value;
+
+    if (!ownerQrExpanded.value) {
+        return;
+    }
+
+    await nextTick();
+
+    const el = ownerQrPanel.value;
+
+    if (!el) {
+        return;
+    }
+
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+};
 
 const showPreferredDayPicker = computed(
     () =>
@@ -561,7 +581,7 @@ onUnmounted(() => {
                             type="button"
                             class="btn-share-qrcode"
                             :aria-expanded="ownerQrExpanded"
-                            @click="ownerQrExpanded = !ownerQrExpanded"
+                            @click="toggleOwnerQr"
                         >
                             <i class="bi bi-qr-code me-2" aria-hidden="true"></i>
                             Compartilhar Qr-code
@@ -570,6 +590,8 @@ onUnmounted(() => {
 
                     <div
                         v-if="isOwner && !showPaywall && ownerQrExpanded"
+                        ref="ownerQrPanel"
+                        tabindex="-1"
                         class="barbershop-owner-qr-panel mb-4 mx-auto"
                     >
                         <ProfileQrCode
