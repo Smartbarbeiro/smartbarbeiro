@@ -30,8 +30,8 @@ const minDate = ref('');
 const maxDate = ref('');
 const loadingSlots = ref(false);
 const availabilityError = ref(null);
-const morningExpanded = ref(true);
-const afternoonExpanded = ref(true);
+const morningExpanded = ref(false);
+const afternoonExpanded = ref(false);
 
 const MORNING_CUTOFF_HOUR = 12;
 
@@ -103,6 +103,24 @@ const afternoonSlots = computed(() =>
 const availableCount = (slots) =>
     slots.filter((slot) => slot.is_available).length;
 
+const syncAccordionSections = () => {
+    const morningAvailable = availableCount(morningSlots.value);
+    const afternoonAvailable = availableCount(afternoonSlots.value);
+
+    morningExpanded.value = false;
+    afternoonExpanded.value = false;
+
+    if (morningAvailable > 0) {
+        morningExpanded.value = true;
+
+        return;
+    }
+
+    if (afternoonAvailable > 0) {
+        afternoonExpanded.value = true;
+    }
+};
+
 const syncScheduledAt = () => {
     if (selectedDate.value && selectedTime.value) {
         form.scheduled_at = `${selectedDate.value}T${selectedTime.value}:00`;
@@ -157,6 +175,7 @@ const loadSlotsForDate = async (date) => {
             'Não foi possível atualizar a disponibilidade. Os horários padrão estão exibidos.';
     } finally {
         loadingSlots.value = false;
+        syncAccordionSections();
     }
 };
 
@@ -169,8 +188,8 @@ const resetPicker = () => {
     selectedTime.value = '';
     availableSlots.value = buildDefaultSlots();
     availabilityError.value = null;
-    morningExpanded.value = true;
-    afternoonExpanded.value = true;
+    morningExpanded.value = false;
+    afternoonExpanded.value = false;
     syncScheduledAt();
 };
 
