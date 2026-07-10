@@ -33,6 +33,7 @@ const availabilityError = ref(null);
 const morningExpanded = ref(false);
 const afternoonExpanded = ref(false);
 const viewDate = ref(new Date());
+const calendarOpen = ref(false);
 
 const MORNING_CUTOFF_HOUR = 12;
 const MONTHS_AHEAD = 2;
@@ -241,7 +242,13 @@ const goToNextMonth = () => {
 };
 
 const selectCalendarDate = (date, isDisabled) => {
-    if (isDisabled || loadingSlots.value || selectedDate.value === date) {
+    if (isDisabled || loadingSlots.value) {
+        return;
+    }
+
+    calendarOpen.value = false;
+
+    if (selectedDate.value === date) {
         return;
     }
 
@@ -249,6 +256,20 @@ const selectCalendarDate = (date, isDisabled) => {
     selectedTime.value = '';
     syncScheduledAt();
     loadSlotsForDate(date);
+};
+
+const toggleCalendar = () => {
+    if (loadingSlots.value) {
+        return;
+    }
+
+    calendarOpen.value = !calendarOpen.value;
+};
+
+const onPanelClick = (event) => {
+    if (!event.target.closest('.book-appointment-date-field')) {
+        calendarOpen.value = false;
+    }
 };
 
 function mergeSlots(apiSlots) {
@@ -388,6 +409,7 @@ const resetPicker = () => {
     availabilityError.value = null;
     morningExpanded.value = false;
     afternoonExpanded.value = false;
+    calendarOpen.value = false;
     syncScheduledAt();
 };
 
@@ -461,7 +483,7 @@ const submit = () => {
         >
             <div class="book-appointment-modal__backdrop" @click="close" />
 
-            <div class="book-appointment-modal__panel">
+            <div class="book-appointment-modal__panel" @click="onPanelClick">
                 <div
                     class="d-flex justify-content-between align-items-start gap-3 mb-3"
                 >
@@ -483,80 +505,103 @@ const submit = () => {
 
                 <form class="d-flex flex-column gap-3" @submit.prevent="submit">
                     <div class="book-appointment-modal__field">
-                        <label class="form-label">Dia</label>
-                        <div class="preferred-haircut-calendar book-appointment-calendar">
-                            <div class="preferred-haircut-calendar__header">
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-secondary"
-                                    :disabled="!canGoToPreviousMonth"
-                                    aria-label="Mês anterior"
-                                    @click="goToPreviousMonth"
-                                >
-                                    ‹
-                                </button>
-                                <p class="preferred-haircut-calendar__month mb-0">
-                                    {{ monthLabel }}
-                                </p>
-                                <button
-                                    type="button"
-                                    class="btn btn-sm btn-outline-secondary"
-                                    :disabled="!canGoToNextMonth"
-                                    aria-label="Próximo mês"
-                                    @click="goToNextMonth"
-                                >
-                                    ›
-                                </button>
-                            </div>
+                        <label class="form-label" for="booking-date-trigger">
+                            Dia
+                        </label>
+                        <div class="book-appointment-date-field">
+                            <button
+                                id="booking-date-trigger"
+                                type="button"
+                                class="book-appointment-date-field__trigger"
+                                :aria-expanded="calendarOpen"
+                                :aria-controls="'booking-date-calendar'"
+                                :disabled="loadingSlots"
+                                @click="toggleCalendar"
+                            >
+                                <span>{{ selectedDateLabel }}</span>
+                                <i
+                                    class="bi bi-calendar3"
+                                    aria-hidden="true"
+                                />
+                            </button>
 
-                            <ul class="preferred-haircut-calendar__days">
-                                <li
-                                    v-for="label in weekdayShortLabels"
-                                    :key="label"
-                                >
-                                    {{ label }}
-                                </li>
-                            </ul>
-
-                            <ul class="preferred-haircut-calendar__dates">
-                                <li
-                                    v-for="cell in calendarDates"
-                                    :key="cell.key"
-                                    :class="{
-                                        empty: cell.type === 'empty',
-                                        today: cell.isToday,
-                                        selected: cell.isSelected,
-                                        disabled: cell.isDisabled,
-                                    }"
-                                >
+                            <div
+                                v-show="calendarOpen"
+                                id="booking-date-calendar"
+                                class="preferred-haircut-calendar book-appointment-calendar"
+                            >
+                                <div class="preferred-haircut-calendar__header">
                                     <button
-                                        v-if="cell.type === 'current'"
                                         type="button"
-                                        class="preferred-haircut-calendar__date-btn"
-                                        :aria-label="
-                                            formatBookingDateLabel(cell.date)
-                                        "
-                                        :aria-pressed="cell.isSelected"
-                                        :disabled="
-                                            cell.isDisabled || loadingSlots
-                                        "
-                                        @click="
-                                            selectCalendarDate(
-                                                cell.date,
-                                                cell.isDisabled,
-                                            )
-                                        "
+                                        class="btn btn-sm btn-outline-secondary"
+                                        :disabled="!canGoToPreviousMonth"
+                                        aria-label="Mês anterior"
+                                        @click="goToPreviousMonth"
                                     >
-                                        {{ cell.day }}
+                                        ‹
                                     </button>
-                                </li>
-                            </ul>
+                                    <p
+                                        class="preferred-haircut-calendar__month mb-0"
+                                    >
+                                        {{ monthLabel }}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        :disabled="!canGoToNextMonth"
+                                        aria-label="Próximo mês"
+                                        @click="goToNextMonth"
+                                    >
+                                        ›
+                                    </button>
+                                </div>
+
+                                <ul class="preferred-haircut-calendar__days">
+                                    <li
+                                        v-for="label in weekdayShortLabels"
+                                        :key="label"
+                                    >
+                                        {{ label }}
+                                    </li>
+                                </ul>
+
+                                <ul class="preferred-haircut-calendar__dates">
+                                    <li
+                                        v-for="cell in calendarDates"
+                                        :key="cell.key"
+                                        :class="{
+                                            empty: cell.type === 'empty',
+                                            today: cell.isToday,
+                                            selected: cell.isSelected,
+                                            disabled: cell.isDisabled,
+                                        }"
+                                    >
+                                        <button
+                                            v-if="cell.type === 'current'"
+                                            type="button"
+                                            class="preferred-haircut-calendar__date-btn"
+                                            :aria-label="
+                                                formatBookingDateLabel(
+                                                    cell.date,
+                                                )
+                                            "
+                                            :aria-pressed="cell.isSelected"
+                                            :disabled="
+                                                cell.isDisabled || loadingSlots
+                                            "
+                                            @click="
+                                                selectCalendarDate(
+                                                    cell.date,
+                                                    cell.isDisabled,
+                                                )
+                                            "
+                                        >
+                                            {{ cell.day }}
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <p
-                            class="preferred-haircut-calendar__selection small mb-0 mt-2"
-                        >
-                            {{ selectedDateLabel }}
-                        </p>
                     </div>
 
                     <div class="book-appointment-modal__field">
