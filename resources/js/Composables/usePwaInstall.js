@@ -99,16 +99,39 @@ export function usePwaInstall() {
     };
 }
 
+export function ensureInstallManifest() {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    if (document.querySelector('link[rel="manifest"]')) {
+        return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = '/site.webmanifest';
+    document.head.appendChild(link);
+}
+
 export function registerServiceWorker() {
     bindInstallListeners();
+    ensureInstallManifest();
 
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
         return;
     }
 
-    window.addEventListener('load', () => {
+    const register = () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {
             // Installability still works on some browsers without SW registration success.
         });
-    });
+    };
+
+    if (document.readyState === 'complete') {
+        register();
+        return;
+    }
+
+    window.addEventListener('load', register, { once: true });
 }

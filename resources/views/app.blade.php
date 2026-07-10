@@ -17,7 +17,9 @@
         <meta name="apple-mobile-web-app-title" content="SmartBarbeiro" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <link rel="manifest" href="/site.webmanifest" />
+        @auth
+            <link rel="manifest" href="/site.webmanifest" />
+        @endauth
 
         <!-- Scripts -->
         @routes

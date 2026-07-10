@@ -5,12 +5,17 @@ import InstallAppBanner from '@/Components/InstallAppBanner.vue';
 import BookAppointmentFab from '@/Components/BookAppointmentFab.vue';
 import PlatformMessagePopups from '@/Components/PlatformMessagePopups.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
+import { registerServiceWorker } from '@/Composables/usePwaInstall';
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed, provide, ref } from 'vue';
+import { computed, onMounted, provide, ref } from 'vue';
 
 const dashboardAlertStack = ref(null);
 
 provide('dashboardAlertStack', dashboardAlertStack);
+
+onMounted(() => {
+    registerServiceWorker();
+});
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
