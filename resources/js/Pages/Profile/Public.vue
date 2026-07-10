@@ -207,6 +207,17 @@ const showPreferredDayNotice = computed(
 
 const hasPlanBuilder = computed(() => props.servicePlans.packages.length > 0);
 
+const hideAppTopbar = computed(
+    () =>
+        isAuthenticated.value &&
+        !props.isOwner &&
+        hasPlanBuilder.value,
+);
+
+const layoutProps = computed(() =>
+    isAuthenticated.value ? { hideTopbar: hideAppTopbar.value } : {},
+);
+
 const barbershopNameForDisplay = computed(() =>
     barbershopDisplayName(props.profile.username, props.profile.name),
 );
@@ -236,10 +247,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <component :is="layoutComponent">
+    <component :is="layoutComponent" v-bind="layoutProps">
         <Head :title="isOwner && isAuthenticated ? 'Sua Barbearia' : profile.name" />
 
-        <template v-if="isAuthenticated" #header>
+        <template v-if="isAuthenticated && !hideAppTopbar" #header>
             <DashboardPageHeader
                 :icon="isOwner ? 'barbershop' : 'profile'"
                 :title="isOwner ? 'Sua Barbearia' : profile.name"

@@ -9,6 +9,13 @@ import { registerServiceWorker } from '@/Composables/usePwaInstall';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, provide, ref } from 'vue';
 
+defineProps({
+    hideTopbar: {
+        type: Boolean,
+        default: false,
+    },
+});
+
 const dashboardAlertStack = ref(null);
 
 provide('dashboardAlertStack', dashboardAlertStack);
@@ -352,8 +359,11 @@ const mobileNavItems = computed(() => {
             </div>
         </aside>
 
-        <div class="app-main">
-            <header class="app-topbar">
+        <div
+            class="app-main"
+            :class="{ 'app-main--no-topbar': hideTopbar }"
+        >
+            <header v-if="!hideTopbar" class="app-topbar">
                 <div class="app-topbar-inner">
                     <div class="app-topbar-primary">
                         <Link
