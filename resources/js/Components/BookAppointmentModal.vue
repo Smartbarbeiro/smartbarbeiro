@@ -68,7 +68,69 @@ function formatDateInput(date) {
     return `${year}-${month}-${day}`;
 }
 
+const MONTH_LABELS = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro',
+];
+
+const WEEKDAY_LABELS = [
+    'Domingo',
+    'Segunda-feira',
+    'Terça-feira',
+    'Quarta-feira',
+    'Quinta-feira',
+    'Sexta-feira',
+    'Sábado',
+];
+
 const todayDate = () => formatDateInput(new Date());
+
+function parseLocalDate(dateStr) {
+    if (!dateStr) {
+        return null;
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+
+    if (!year || !month || !day) {
+        return null;
+    }
+
+    return new Date(year, month - 1, day);
+}
+
+function formatBookingDateLabel(dateStr) {
+    const date = parseLocalDate(dateStr);
+
+    if (!date) {
+        return 'Escolha o dia';
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = MONTH_LABELS[date.getMonth()];
+    const weekday = WEEKDAY_LABELS[date.getDay()];
+    const label = `${day} de ${month} - ${weekday}`;
+
+    if (dateStr === todayDate()) {
+        return `${label} (Hoje)`;
+    }
+
+    return label;
+}
+
+const selectedDateLabel = computed(() =>
+    formatBookingDateLabel(selectedDate.value),
+);
 
 function mergeSlots(apiSlots) {
     const defaults = buildDefaultSlots();
@@ -292,18 +354,27 @@ const submit = () => {
                 <form class="d-flex flex-column gap-3" @submit.prevent="submit">
                     <div class="book-appointment-modal__field">
                         <label class="form-label" for="booking-date">Dia</label>
-                        <input
-                            id="booking-date"
-                            v-model="selectedDate"
-                            type="date"
-                            class="form-control book-appointment-modal__input"
-                            :min="minDate || todayDate()"
-                            :max="maxDate || undefined"
-                            :disabled="loadingSlots"
-                            required
-                            @change="onDateChange"
-                            @input="onDateChange"
-                        />
+                        <div class="book-appointment-date-picker">
+                            <span
+                                class="book-appointment-date-picker__display"
+                                aria-hidden="true"
+                            >
+                                {{ selectedDateLabel }}
+                            </span>
+                            <input
+                                id="booking-date"
+                                v-model="selectedDate"
+                                type="date"
+                                class="form-control book-appointment-modal__input book-appointment-date-picker__input"
+                                :min="minDate || todayDate()"
+                                :max="maxDate || undefined"
+                                :disabled="loadingSlots"
+                                :aria-label="selectedDateLabel"
+                                required
+                                @change="onDateChange"
+                                @input="onDateChange"
+                            />
+                        </div>
                     </div>
 
                     <div class="book-appointment-modal__field">
