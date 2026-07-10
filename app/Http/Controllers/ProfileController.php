@@ -62,6 +62,8 @@ class ProfileController extends Controller
                 ...$props,
                 'acrylicQrOrder' => $acrylicQrOrderService->activeOrderPayloadFor($user),
                 'mercadopagoConfigured' => app(\App\Services\MercadoPagoService::class)->isConfigured(),
+                'stripeConnectEnabled' => app(\App\Services\StripeConnectService::class)->isEnabled(),
+                'stripeConnect' => $user->stripeConnectStatus(),
                 'subscriptionPlan' => $plan ? [
                     'is_enabled' => $plan->is_enabled,
                     'title' => $plan->title,

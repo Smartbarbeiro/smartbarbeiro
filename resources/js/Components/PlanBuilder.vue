@@ -715,8 +715,8 @@ onUnmounted(() => {
                         v-if="!isOwner && !stripeConfigured && (isGuest || isAuthenticated)"
                         class="small text-warning mt-4 mb-0"
                     >
-                        Pagamentos indisponíveis no momento. Volte aqui para
-                        confirmar o pagamento quando estiverem disponíveis.
+                        Pagamentos indisponíveis no momento. A barbearia ainda
+                        precisa concluir a configuração de recebimentos.
                     </p>
 
                     <div v-if="isGuest" class="mt-4">

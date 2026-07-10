@@ -44,6 +44,29 @@ class User extends Authenticatable
             'is_barbershop' => 'boolean',
             'is_frozen' => 'boolean',
             'platform_subscription_exempt' => 'boolean',
+            'stripe_connect_charges_enabled' => 'boolean',
+            'stripe_connect_payouts_enabled' => 'boolean',
+            'stripe_connect_details_submitted' => 'boolean',
+        ];
+    }
+
+    public function isStripeConnectReady(): bool
+    {
+        return filled($this->stripe_connect_account_id)
+            && (bool) $this->stripe_connect_charges_enabled;
+    }
+
+    /**
+     * @return array{account_id: ?string, charges_enabled: bool, payouts_enabled: bool, details_submitted: bool, ready: bool}
+     */
+    public function stripeConnectStatus(): array
+    {
+        return [
+            'account_id' => $this->stripe_connect_account_id,
+            'charges_enabled' => (bool) $this->stripe_connect_charges_enabled,
+            'payouts_enabled' => (bool) $this->stripe_connect_payouts_enabled,
+            'details_submitted' => (bool) $this->stripe_connect_details_submitted,
+            'ready' => $this->isStripeConnectReady(),
         ];
     }
 

@@ -11,5 +11,7 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         config(['mercadopago.back_url' => 'https://example.com']);
+        // Existing service-plan tests use platform Stripe without Connect accounts.
+        config(['stripe.connect_enabled' => false]);
     }
 }

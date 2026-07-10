@@ -24,13 +24,16 @@ if (! is_file($envPath)) {
     exit(".env not found at {$envPath}\nRun env-setup-smartbarbeiro.php first.\n");
 }
 
-// Set STRIPE_KEY in hPanel before running, or edit this line with pk_test_... from Stripe Dashboard.
+// Set STRIPE_KEY / STRIPE_SECRET in hPanel or fill below before visiting this helper.
 $updates = [
     'STRIPE_KEY' => '',
     'STRIPE_SECRET' => '',
     'STRIPE_CURRENCY' => 'brl',
     'STRIPE_MERCHANT_DISPLAY_NAME' => '"Smart Barbeiro"',
     'STRIPE_GOOGLE_PAY_TEST_ENV' => 'true',
+    'STRIPE_CONNECT_ENABLED' => 'true',
+    'STRIPE_CONNECT_COUNTRY' => 'BR',
+    'STRIPE_APPLICATION_FEE_PERCENT' => '10',
 ];
 
 $content = file_get_contents($envPath);

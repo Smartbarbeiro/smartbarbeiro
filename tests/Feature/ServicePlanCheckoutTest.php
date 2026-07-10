@@ -45,6 +45,7 @@ class ServicePlanCheckoutTest extends TestCase
 
         $this->mock(StripeServicePlanService::class, function ($mock) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('acceptsPaymentsFor')->andReturn(true);
             $mock->shouldReceive('findOrCreateCustomer')->andReturn('cus_test');
             $mock->shouldReceive('createWebCheckoutSession')->once()->andReturn('https://stripe.test/checkout-guest');
         });
@@ -197,6 +198,7 @@ class ServicePlanCheckoutTest extends TestCase
 
         $this->mock(StripeServicePlanService::class, function ($mock) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('acceptsPaymentsFor')->andReturn(true);
             $mock->shouldReceive('findOrCreateCustomer')->andReturn('cus_test');
             $mock->shouldReceive('createWebCheckoutSession')->once()->andReturn('https://stripe.test/checkout');
         });

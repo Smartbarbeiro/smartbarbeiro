@@ -22,6 +22,7 @@ use App\Http\Controllers\ServicePlanSubscriptionController;
 use App\Http\Controllers\ServicePlanSubscriptionPaymentController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\StripeConnectController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProfilePaymentEmailController;
 use App\Http\Controllers\ProfileSubscribeController;
@@ -155,6 +156,12 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/stripe-connect', [StripeConnectController::class, 'start'])
+        ->name('stripe-connect.start');
+    Route::get('/profile/stripe-connect/return', [StripeConnectController::class, 'return'])
+        ->name('stripe-connect.return');
+    Route::get('/profile/stripe-connect/refresh', [StripeConnectController::class, 'refresh'])
+        ->name('stripe-connect.refresh');
     Route::put('/profile/subscription-plan', [ProfileSubscriptionPlanController::class, 'update'])
         ->name('profile.subscription-plan.update');
     Route::put('/profile/service-plans', [BarbershopServicePlanController::class, 'update'])

@@ -28,7 +28,25 @@ class StripeServicePlanService
         return filled(config('stripe.secret')) && filled(config('stripe.key'));
     }
 
-    private function ensureConfigured(): void
+    public function connectEnabled(): bool
+    {
+        return $this->isConfigured() && (bool) config('stripe.connect_enabled', true);
+    }
+
+    public function acceptsPaymentsFor(User $barbershop): bool
+    {
+        if (! $this->isConfigured()) {
+            return false;
+        }
+
+        if (! $this->connectEnabled()) {
+            return true;
+        }
+
+        return $barbershop->isStripeConnectReady();
+    }
+
+    public function ensureConfigured(): void
     {
         if (! $this->isConfigured()) {
             throw new \RuntimeException('Stripe is not configured.');
@@ -38,7 +56,7 @@ class StripeServicePlanService
     /**
      * @return array<string, mixed>|null
      */
-    public function mobilePaymentConfig(): ?array
+    public function mobilePaymentConfig(?User $barbershop = null): ?array
     {
         if (! $this->isConfigured()) {
             return null;
@@ -50,7 +68,9 @@ class StripeServicePlanService
             'merchant_display_name' => (string) config('stripe.merchant_display_name'),
             'apple_pay_merchant_id' => config('stripe.apple_pay_merchant_id'),
             'google_pay_test_env' => (bool) config('stripe.google_pay_test_env', true),
+            // Destination charges stay on the platform account.
             'stripe_account' => null,
+            'connect_ready' => $barbershop ? $this->acceptsPaymentsFor($barbershop) : null,
         ];
     }
 
@@ -96,9 +116,16 @@ class StripeServicePlanService
         ServicePlanSubscription $subscription,
         User $subscriber,
         array $selection,
+        ?User $barbershop = null,
     ): array {
+        $barbershop ??= $subscription->creator;
         $customerId = $this->findOrCreateCustomer($subscriber);
-        $stripeSubscription = $this->createIncompleteSubscription($subscription, $customerId, $selection);
+        $stripeSubscription = $this->createIncompleteSubscription(
+            $subscription,
+            $customerId,
+            $selection,
+            $barbershop,
+        );
 
         $paymentIntent = $stripeSubscription->latest_invoice->payment_intent ?? null;
         $clientSecret = is_object($paymentIntent) ? $paymentIntent->client_secret : null;
@@ -124,7 +151,9 @@ class StripeServicePlanService
         array $selection,
         string $successUrl,
         string $cancelUrl,
+        ?User $barbershop = null,
     ): string {
+        $barbershop ??= $subscription->creator;
         $customerId = $this->findOrCreateCustomer($subscriber);
 
         $session = $this->client()->checkout->sessions->create([
@@ -140,9 +169,7 @@ class StripeServicePlanService
                 'external_reference' => $subscription->external_reference,
                 'service_plan_subscription_id' => (string) $subscription->id,
             ],
-            'subscription_data' => [
-                'metadata' => $this->subscriptionMetadata($subscription),
-            ],
+            'subscription_data' => $this->subscriptionData($subscription, $barbershop),
         ]);
 
         if (! is_string($session->url) || $session->url === '') {
@@ -192,8 +219,9 @@ class StripeServicePlanService
         ServicePlanSubscription $subscription,
         string $customerId,
         array $selection,
+        ?User $barbershop = null,
     ): Subscription {
-        $stripeSubscription = $this->client()->subscriptions->create([
+        $params = [
             'customer' => $customerId,
             'items' => [[
                 'price_data' => $this->lineItemPriceData($selection),
@@ -204,7 +232,15 @@ class StripeServicePlanService
             ],
             'expand' => ['latest_invoice.payment_intent'],
             'metadata' => $this->subscriptionMetadata($subscription),
-        ]);
+        ];
+
+        $destination = $this->destinationChargeParams($barbershop ?? $subscription->creator);
+
+        if ($destination !== []) {
+            $params = [...$params, ...$destination];
+        }
+
+        $stripeSubscription = $this->client()->subscriptions->create($params);
 
         $subscription->update([
             'stripe_subscription_id' => $stripeSubscription->id,
@@ -212,6 +248,41 @@ class StripeServicePlanService
         ]);
 
         return $stripeSubscription;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function subscriptionData(ServicePlanSubscription $subscription, ?User $barbershop): array
+    {
+        return [
+            'metadata' => $this->subscriptionMetadata($subscription),
+            ...$this->destinationChargeParams($barbershop),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function destinationChargeParams(?User $barbershop): array
+    {
+        if (! $barbershop || ! $this->connectEnabled() || ! $barbershop->isStripeConnectReady()) {
+            return [];
+        }
+
+        $params = [
+            'transfer_data' => [
+                'destination' => (string) $barbershop->stripe_connect_account_id,
+            ],
+        ];
+
+        $feePercent = (float) config('stripe.application_fee_percent', 10);
+
+        if ($feePercent > 0) {
+            $params['application_fee_percent'] = min(100, max(0, $feePercent));
+        }
+
+        return $params;
     }
 
     /**

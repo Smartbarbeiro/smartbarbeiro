@@ -29,6 +29,10 @@ class ServicePlanCheckoutService
             throw new \InvalidArgumentException(__('messages.payments_not_configured'));
         }
 
+        if (! $this->stripe->acceptsPaymentsFor($barbershop)) {
+            throw new \InvalidArgumentException(__('messages.stripe_connect_not_ready'));
+        }
+
         $selection = $this->servicePlanService->validateCheckoutSelection(
             $barbershop,
             $packageType,
@@ -51,6 +55,7 @@ class ServicePlanCheckoutService
             $selection,
             $successUrl,
             $cancelUrl,
+            $barbershop,
         );
 
         return [
@@ -78,6 +83,10 @@ class ServicePlanCheckoutService
             throw new \InvalidArgumentException(__('messages.payments_not_configured'));
         }
 
+        if (! $this->stripe->acceptsPaymentsFor($barbershop)) {
+            throw new \InvalidArgumentException(__('messages.stripe_connect_not_ready'));
+        }
+
         $selection = $this->servicePlanService->validateCheckoutSelection(
             $barbershop,
             $packageType,
@@ -91,7 +100,12 @@ class ServicePlanCheckoutService
             $addonIds,
         );
 
-        $prepared = $this->stripe->prepareMobileSubscription($subscription, $subscriber, $selection);
+        $prepared = $this->stripe->prepareMobileSubscription(
+            $subscription,
+            $subscriber,
+            $selection,
+            $barbershop,
+        );
 
         return [
             ...$prepared,

@@ -48,6 +48,16 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function stripeConnectReady(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'stripe_connect_account_id' => 'acct_test_'.Str::lower(Str::random(10)),
+            'stripe_connect_charges_enabled' => true,
+            'stripe_connect_payouts_enabled' => true,
+            'stripe_connect_details_submitted' => true,
+        ]);
+    }
+
     /**
      * Indicate that the model's email address should be unverified.
      */

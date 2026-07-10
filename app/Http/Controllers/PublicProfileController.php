@@ -101,7 +101,7 @@ class PublicProfileController extends Controller
                 ? $activeServicePlanSubscription->toSummaryArray()
                 : null,
             'mercadopagoConfigured' => app(\App\Services\MercadoPagoService::class)->isConfigured(),
-            'stripeConfigured' => app(\App\Services\StripeServicePlanService::class)->isConfigured(),
+            'stripeConfigured' => app(\App\Services\StripeServicePlanService::class)->acceptsPaymentsFor($user),
             'requiresPayment' => (bool) ($user->subscriptionPlan?->is_enabled),
             'hasSignedUp' => $hasSignedUp,
             'needsPreferredHaircutDay' => $needsPreferredHaircutDay,

@@ -48,6 +48,13 @@ class ServicePlanSubscribeController extends Controller
                 ]);
         }
 
+        if (! $stripe->acceptsPaymentsFor($barbershop)) {
+            return $this->redirectToServicePlanPayment($username)
+                ->withErrors([
+                    'checkout' => __('messages.stripe_connect_not_ready'),
+                ]);
+        }
+
         try {
             $checkout = $checkoutService->startCheckout(
                 $barbershop,
@@ -119,7 +126,7 @@ class ServicePlanSubscribeController extends Controller
 
         Auth::login($user);
 
-        if (! $stripe->isConfigured()) {
+        if (! $stripe->isConfigured() || ! $stripe->acceptsPaymentsFor($barbershop)) {
             try {
                 $checkoutService->savePendingSelection(
                     $barbershop,
@@ -135,7 +142,12 @@ class ServicePlanSubscribeController extends Controller
             }
 
             return $this->redirectToServicePlanPayment($username)
-                ->with('status', 'service-plan-signup-pending');
+                ->with('status', 'service-plan-signup-pending')
+                ->withErrors([
+                    'checkout' => $stripe->isConfigured()
+                        ? __('messages.stripe_connect_not_ready')
+                        : __('messages.payments_not_configured'),
+                ]);
         }
 
         try {

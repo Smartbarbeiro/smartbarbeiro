@@ -8,6 +8,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Portal ↔ barbershop billing continues to use Mercado Pago.
+    | With Connect enabled, client payments use destination charges so each
+    | barbershop receives funds on their Express account minus the platform fee.
     |
     */
 
@@ -26,5 +28,11 @@ return [
     'google_pay_test_env' => env('STRIPE_GOOGLE_PAY_TEST_ENV', true),
 
     'api_version' => env('STRIPE_API_VERSION'),
+
+    'connect_enabled' => env('STRIPE_CONNECT_ENABLED', true),
+
+    'connect_country' => env('STRIPE_CONNECT_COUNTRY', 'BR'),
+
+    'application_fee_percent' => (float) env('STRIPE_APPLICATION_FEE_PERCENT', 10),
 
 ];

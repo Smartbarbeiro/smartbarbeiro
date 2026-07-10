@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Services\ServicePlanSubscriptionPaymentService;
 use App\Services\ServicePlanSubscriptionSyncService;
+use App\Services\StripeConnectService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Stripe\Account;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Invoice;
 use Stripe\Webhook;
@@ -17,6 +19,7 @@ class StripeWebhookController extends Controller
         Request $request,
         ServicePlanSubscriptionSyncService $servicePlanSyncService,
         ServicePlanSubscriptionPaymentService $paymentService,
+        StripeConnectService $connectService,
     ): Response {
         $secret = config('stripe.webhook_secret');
 
@@ -55,6 +58,8 @@ class StripeWebhookController extends Controller
                 'invoice.paid',
                 'invoice.payment_failed',
                 'invoice.finalized' => $this->handleInvoiceEvent($event->data->object, $paymentService),
+                'account.updated' => $this->handleAccountUpdated($event->data->object, $connectService),
+                'account.application.deauthorized' => $this->handleAccountDeauthorized($event->data->object, $connectService),
                 default => null,
             };
         } catch (\Throwable $exception) {
@@ -127,5 +132,39 @@ class StripeWebhookController extends Controller
         }
 
         $paymentService->syncFromStripeInvoice($subscription, $invoice);
+    }
+
+    private function handleAccountUpdated(object $account, StripeConnectService $connectService): void
+    {
+        $accountId = is_string($account->id ?? null) ? $account->id : null;
+
+        if (! filled($accountId)) {
+            return;
+        }
+
+        if ($account instanceof Account) {
+            $connectService->syncAccountById($accountId);
+
+            return;
+        }
+
+        $connectService->syncAccountById($accountId);
+    }
+
+    private function handleAccountDeauthorized(object $account, StripeConnectService $connectService): void
+    {
+        $accountId = is_string($account->id ?? null) ? $account->id : null;
+
+        if (! filled($accountId)) {
+            return;
+        }
+
+        $barbershop = \App\Models\User::query()
+            ->where('stripe_connect_account_id', $accountId)
+            ->first();
+
+        if ($barbershop) {
+            $connectService->clearAccount($barbershop);
+        }
     }
 }

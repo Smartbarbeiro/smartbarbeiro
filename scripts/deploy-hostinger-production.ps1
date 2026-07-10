@@ -102,6 +102,16 @@ Write-Host "==> Patching production URLs..."
 Invoke-DeployUrl "patch-mp-production-smartbarbeiro.php" | Out-Null
 
 Write-Host ""
+Write-Host "==> Patching Stripe Connect env..."
+Invoke-DeployUrl "patch-stripe-production-smartbarbeiro.php" | Out-Null
+
+Write-Host ""
+Write-Host "==> Running migrations..."
+if (-not (Invoke-DeployUrl "migrate-smartbarbeiro.php")) {
+    throw "Migration step failed."
+}
+
+Write-Host ""
 Write-Host "==> Clearing Laravel cache..."
 Invoke-DeployUrl "clear-cache-smartbarbeiro.php" | Out-Null
 

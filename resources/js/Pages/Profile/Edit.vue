@@ -5,6 +5,7 @@ import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import PaymentEmailMismatchCard from '@/Components/PaymentEmailMismatchCard.vue';
 import BarbershopPaymentStatusCard from './Partials/BarbershopPaymentStatusCard.vue';
+import StripeConnectCard from './Partials/StripeConnectCard.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import SubscribersList from './Partials/SubscribersList.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
@@ -35,6 +36,14 @@ defineProps({
     mercadopagoConfigured: {
         type: Boolean,
         default: false,
+    },
+    stripeConnectEnabled: {
+        type: Boolean,
+        default: false,
+    },
+    stripeConnect: {
+        type: Object,
+        default: null,
     },
     subscriptionPlan: {
         type: Object,
@@ -96,6 +105,27 @@ onMounted(() => {
             </DashboardAlert>
 
             <DashboardAlert
+                :show="
+                    page.props.flash?.status === 'stripe-connect-ready' ||
+                    page.props.flash?.status === 'stripe-connect-pending'
+                "
+                :variant="
+                    page.props.flash?.status === 'stripe-connect-ready'
+                        ? 'success'
+                        : 'info'
+                "
+            >
+                {{ page.props.flash?.statusMessage }}
+            </DashboardAlert>
+
+            <DashboardAlert
+                :show="Boolean(page.props.errors?.stripe_connect)"
+                variant="danger"
+            >
+                {{ page.props.errors?.stripe_connect }}
+            </DashboardAlert>
+
+            <DashboardAlert
                 :show="Boolean(paymentEmailMismatch)"
                 variant="warning"
             >
@@ -131,6 +161,18 @@ onMounted(() => {
                 Seu perfil público permanece ativo sem a assinatura mensal no
                 Mercado Pago.
             </DashboardAlert>
+
+            <DashboardContentCard
+                v-if="isBarbershop"
+                icon="payment"
+                title="Recebimentos Stripe"
+                description="Conecte sua conta para receber pagamentos dos planos de serviço dos clientes."
+            >
+                <StripeConnectCard
+                    :enabled="stripeConnectEnabled"
+                    :connect="stripeConnect"
+                />
+            </DashboardContentCard>
 
             <DashboardContentCard
                 v-if="isBarbershop"

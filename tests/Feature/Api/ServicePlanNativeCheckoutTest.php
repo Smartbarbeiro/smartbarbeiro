@@ -34,6 +34,7 @@ class ServicePlanNativeCheckoutTest extends TestCase
 
         $this->mock(StripeServicePlanService::class, function ($mock) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('acceptsPaymentsFor')->andReturn(true);
             $mock->shouldReceive('prepareMobileSubscription')->once()->andReturn([
                 'customer_id' => 'cus_test',
                 'customer_ephemeral_key_secret' => 'ek_test',

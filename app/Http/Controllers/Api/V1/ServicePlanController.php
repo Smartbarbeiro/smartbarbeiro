@@ -27,7 +27,7 @@ class ServicePlanController extends Controller
             'addon_ids.*' => ['integer'],
         ]);
 
-        if (! $stripe->isConfigured()) {
+        if (! $stripe->isConfigured() || ! $stripe->acceptsPaymentsFor($barbershop)) {
             try {
                 $checkoutService->savePendingSelection(
                     $barbershop,
@@ -40,7 +40,9 @@ class ServicePlanController extends Controller
             }
 
             return response()->json([
-                'message' => __('messages.status.service-plan-signup-pending'),
+                'message' => $stripe->isConfigured()
+                    ? __('messages.stripe_connect_not_ready')
+                    : __('messages.status.service-plan-signup-pending'),
             ], 422);
         }
 

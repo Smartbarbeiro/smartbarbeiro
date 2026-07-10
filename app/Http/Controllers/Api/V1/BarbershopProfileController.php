@@ -33,8 +33,8 @@ class BarbershopProfileController extends Controller
                 'member_since' => $barbershop->created_at->translatedFormat('F Y'),
             ],
             'service_plans' => $servicePlanService->publicPlansPayload($barbershop),
-            'stripe_configured' => $stripe->isConfigured(),
-            'payment_config' => $stripe->mobilePaymentConfig(),
+            'stripe_configured' => $stripe->acceptsPaymentsFor($barbershop),
+            'payment_config' => $stripe->mobilePaymentConfig($barbershop),
         ]);
     }
 }
