@@ -52,6 +52,11 @@ return [
         'platform-plan-updated' => 'Plano da plataforma atualizado.',
         'platform-subscription-pending' => 'Cadastro realizado. Confirme o pagamento quando os pagamentos estiverem disponíveis.',
         'platform-subscription-active' => 'Pagamento confirmado! Sua assinatura da plataforma está ativa.',
+        'payment-email-billing-saved' => 'E-mail de pagamento salvo. Usaremos esse endereço nas próximas cobranças do Mercado Pago.',
+        'payment-email-account-updated' => 'E-mail da conta atualizado para coincidir com o Mercado Pago.',
+        'appointment-requested' => 'Solicitação de agendamento enviada. A barbearia vai confirmar em breve.',
+        'appointment-created' => 'Agendamento criado com sucesso.',
+        'appointment-updated' => 'Agendamento atualizado com sucesso.',
         'verification-link-sent' => 'Um novo link de verificação foi enviado para o seu e-mail.',
     ],
 

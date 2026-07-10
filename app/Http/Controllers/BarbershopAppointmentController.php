@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateBarbershopAppointmentRequest;
 use App\Models\BarbershopAppointment;
 use App\Models\BarbershopEmployee;
 use App\Services\BarbershopAppointmentService;
+use App\Services\BarbershopAppointmentNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,6 +39,7 @@ class BarbershopAppointmentController extends Controller
         UpdateBarbershopAppointmentRequest $request,
         BarbershopAppointment $appointment,
         BarbershopAppointmentService $appointmentService,
+        BarbershopAppointmentNotificationService $notificationService,
     ): RedirectResponse {
         $employee = null;
 
@@ -45,14 +47,24 @@ class BarbershopAppointmentController extends Controller
             $employee = BarbershopEmployee::query()->findOrFail($request->integer('barbershop_employee_id'));
         }
 
-        match ($request->string('action')->toString()) {
-            'confirm' => $appointmentService->confirm($appointment, $employee),
-            'reject' => $appointmentService->reject($appointment),
-            'cancel' => $appointmentService->cancel($appointment),
-            'complete' => $appointmentService->complete($appointment),
-            'assign' => $appointmentService->assignEmployee($appointment, $employee),
+        $action = $request->string('action')->toString();
+
+        match ($action) {
+            'confirm' => $appointment = $appointmentService->confirm($appointment, $employee),
+            'reject' => $appointment = $appointmentService->reject($appointment),
+            'cancel' => $appointment = $appointmentService->cancel($appointment),
+            'complete' => $appointment = $appointmentService->complete($appointment),
+            'assign' => $appointment = $appointmentService->assignEmployee($appointment, $employee),
             default => abort(422),
         };
+
+        if ($action === 'confirm') {
+            $notificationService->notifyConfirmed($appointment);
+        }
+
+        if ($action === 'reject') {
+            $notificationService->notifyRejected($appointment);
+        }
 
         return back()->with('status', 'appointment-updated');
     }

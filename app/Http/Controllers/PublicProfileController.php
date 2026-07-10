@@ -9,6 +9,7 @@ use App\Services\AcrylicQrOrderService;
 use App\Services\BarbershopAppointmentService;
 use App\Services\BarbershopClientAccessService;
 use App\Services\BarbershopServicePlanService;
+use App\Services\PaymentEmailService;
 use App\Services\ProfileAccessService;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,8 +21,12 @@ class PublicProfileController extends Controller
         private BarbershopClientAccessService $clientAccess,
     ) {}
 
-    public function show(string $username, BarbershopServicePlanService $servicePlanService, AcrylicQrOrderService $acrylicQrOrderService): Response
-    {
+    public function show(
+        string $username,
+        BarbershopServicePlanService $servicePlanService,
+        AcrylicQrOrderService $acrylicQrOrderService,
+        PaymentEmailService $paymentEmailService,
+    ): Response {
         $user = User::with('subscriptionPlan')
             ->where('username', $username)
             ->firstOrFail();
@@ -61,6 +66,13 @@ class PublicProfileController extends Controller
         $needsPreferredHaircutDay = $viewer
             ? $this->clientAccess->needsPreferredHaircutDay($user, $viewer)
             : false;
+
+        $paymentEmailMismatch = ($viewer && $viewer->id !== $user->id)
+            ? $paymentEmailService->mismatchForPayerEmail(
+                $viewer,
+                $activeSubscription?->payer_email,
+            )
+            : null;
 
         return Inertia::render('Profile/Public', [
             'profile' => [
@@ -103,6 +115,7 @@ class PublicProfileController extends Controller
                 $activeServicePlanSubscription,
                 $servicePlanService,
             ),
+            'paymentEmailMismatch' => $paymentEmailMismatch,
             'mobileApp' => [
                 'name' => config('mobile_app.name'),
                 'play_store_url' => config('mobile_app.play_store_url'),

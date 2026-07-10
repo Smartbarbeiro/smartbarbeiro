@@ -1,11 +1,11 @@
 <script setup>
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
 import Modal from '@/Components/Modal.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import QRCode from 'qrcode';
+import { formatPhone } from '@/utils/formatPhone';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 
@@ -231,6 +231,17 @@ watch(
         }
     },
 );
+
+watch(
+    () => orderForm.phone,
+    (value) => {
+        const formatted = formatPhone(value);
+
+        if (formatted !== value) {
+            orderForm.phone = formatted;
+        }
+    },
+);
 </script>
 
 <template>
@@ -391,54 +402,72 @@ watch(
             </template>
         </div>
 
-        <Modal :show="showOrderModal" max-width="lg" @close="closeOrderModal">
-            <form @submit.prevent="submitOrder">
-                <div class="modal-header border-secondary">
-                    <h2 class="modal-title h5">Pedir qr-code físico</h2>
+        <Modal
+            :show="showOrderModal"
+            max-width="lg"
+            variant="light"
+            @close="closeOrderModal"
+        >
+            <form class="acrylic-qr-order-modal" @submit.prevent="submitOrder">
+                <div class="modal-header border-secondary-subtle">
+                    <h2 class="modal-title h5 mb-0">Pedir QR code físico</h2>
                     <button
                         type="button"
-                        class="btn-close btn-close-white"
+                        class="btn-close"
                         aria-label="Fechar"
                         @click="closeOrderModal"
                     />
                 </div>
                 <div class="modal-body">
-                    <p class="small text-secondary">
-                        Informe o endereço de entrega. Nossa equipe produzirá
-                        seu QR code em acrílico e enviará pelos Correios.
-                    </p>
+                    <div class="acrylic-qr-order-modal__hero">
+                        <img
+                            src="/images/acrylic-qr-stand.png"
+                            alt="Suporte de acrílico com QR code"
+                            class="acrylic-qr-order-modal__image"
+                            width="320"
+                            height="320"
+                        />
+                        <p class="acrylic-qr-order-modal__lead mb-0">
+                            Enviaremos grátis seu QR code em suporte de acrílico.
+                        </p>
+                    </div>
 
-                    <div class="row g-3">
+                    <div class="row g-3 acrylic-qr-order-modal__fields">
                         <div class="col-md-6">
-                            <InputLabel for="recipient_name" value="Nome do destinatário" />
                             <TextInput
                                 id="recipient_name"
                                 v-model="orderForm.recipient_name"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
+                                placeholder="Nome do destinatário"
+                                aria-label="Nome do destinatário"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.recipient_name" />
                         </div>
                         <div class="col-md-6">
-                            <InputLabel for="phone" value="Telefone" />
                             <TextInput
                                 id="phone"
                                 v-model="orderForm.phone"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
+                                inputmode="tel"
+                                autocomplete="tel"
+                                maxlength="15"
+                                placeholder="(67) 99999-9999"
+                                aria-label="Telefone"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.phone" />
                         </div>
                         <div class="col-md-4">
-                            <InputLabel for="postal_code" value="CEP" />
                             <TextInput
                                 id="postal_code"
                                 v-model="orderForm.postal_code"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
                                 inputmode="numeric"
                                 autocomplete="postal-code"
                                 maxlength="9"
-                                placeholder="00000-000"
+                                placeholder="CEP"
+                                aria-label="CEP"
                                 required
                                 @blur="lookupPostalCode"
                             />
@@ -458,75 +487,81 @@ watch(
                             <InputError class="mt-2" :message="orderForm.errors.postal_code" />
                         </div>
                         <div class="col-md-8">
-                            <InputLabel for="street" value="Rua" />
                             <TextInput
                                 id="street"
                                 v-model="orderForm.street"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
                                 autocomplete="address-line1"
+                                placeholder="Rua"
+                                aria-label="Rua"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.street" />
                         </div>
                         <div class="col-md-3">
-                            <InputLabel for="number" value="Número" />
                             <TextInput
                                 id="number"
                                 ref="numberInput"
                                 v-model="orderForm.number"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
                                 autocomplete="off"
+                                placeholder="Número"
+                                aria-label="Número"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.number" />
                         </div>
                         <div class="col-md-5">
-                            <InputLabel for="complement" value="Complemento" />
                             <TextInput
                                 id="complement"
                                 v-model="orderForm.complement"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
                                 autocomplete="address-line2"
+                                placeholder="Complemento (opcional)"
+                                aria-label="Complemento"
                             />
                             <InputError class="mt-2" :message="orderForm.errors.complement" />
                         </div>
                         <div class="col-md-4">
-                            <InputLabel for="neighborhood" value="Bairro" />
                             <TextInput
                                 id="neighborhood"
                                 v-model="orderForm.neighborhood"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
                                 autocomplete="address-level3"
+                                placeholder="Bairro"
+                                aria-label="Bairro"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.neighborhood" />
                         </div>
                         <div class="col-md-8">
-                            <InputLabel for="city" value="Cidade" />
                             <TextInput
                                 id="city"
                                 v-model="orderForm.city"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
                                 autocomplete="address-level2"
+                                placeholder="Cidade"
+                                aria-label="Cidade"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.city" />
                         </div>
                         <div class="col-md-4">
-                            <InputLabel for="state" value="UF" />
                             <TextInput
                                 id="state"
                                 v-model="orderForm.state"
-                                class="mt-1 w-100"
+                                class="acrylic-qr-order-modal__input w-100"
                                 maxlength="2"
                                 autocomplete="address-level1"
+                                placeholder="UF"
+                                aria-label="UF"
                                 required
                             />
                             <InputError class="mt-2" :message="orderForm.errors.state" />
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-secondary">
+                <div class="modal-footer border-secondary-subtle">
                     <SecondaryButton type="button" @click="closeOrderModal">
                         Cancelar
                     </SecondaryButton>

@@ -63,6 +63,21 @@ const onPhotoSelected = (file) => {
     form.remove_profile_photo = false;
     photoPreview.value = URL.createObjectURL(file);
     showPhotoPrompt.value = false;
+
+    form.transform((data) => ({
+        ...data,
+        _method: 'patch',
+    })).post(route('profile.update'), {
+        forceFormData: props.isBarbershop,
+        preserveScroll: true,
+        onSuccess: () => {
+            form.profile_photo = null;
+            form.remove_profile_photo = false;
+            photoPreview.value = usePage().props.auth.user.profile_photo_url;
+            originalUsername.value = usePage().props.auth.user.username;
+            usernameLocked.value = true;
+        },
+    });
 };
 
 const unlockUsername = () => {
@@ -177,6 +192,7 @@ const submit = () => {
                         :photo-url="photoPreview"
                         size="lg"
                         :highlighted="showPhotoPrompt"
+                        :disabled="form.processing"
                         @selected="onPhotoSelected"
                     />
 

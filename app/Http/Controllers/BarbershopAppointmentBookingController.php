@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBarbershopAppointmentRequest;
 use App\Models\User;
 use App\Services\BarbershopAppointmentService;
+use App\Services\BarbershopAppointmentNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 
 class BarbershopAppointmentBookingController extends Controller
 {
@@ -23,12 +23,11 @@ class BarbershopAppointmentBookingController extends Controller
 
         abort_unless($barbershop->hasPublicProfile(), 404);
 
-        $date = Carbon::parse($request->string('date')->toString() ?: now()->toDateString())->startOfDay();
+        $requestedDate = $request->string('date')->toString() ?: null;
 
-        return response()->json([
-            'date' => $date->toDateString(),
-            'slots' => $appointmentService->availableSlotsForDate($barbershop, $date),
-        ]);
+        return response()->json(
+            $appointmentService->bookingAvailabilityPayload($barbershop, $requestedDate),
+        );
     }
 
     public function store(
@@ -42,12 +41,16 @@ class BarbershopAppointmentBookingController extends Controller
 
         abort_unless($barbershop->hasPublicProfile(), 404);
 
-        $appointmentService->createBooking(
+        $appointment = $appointmentService->createBooking(
             $barbershop,
             $request->user(),
             $request->validated(),
         );
 
-        return back()->with('status', 'appointment-requested');
+        app(BarbershopAppointmentNotificationService::class)->notifyRequested($appointment);
+
+        return redirect()
+            ->route('client.appointments.index')
+            ->with('status', 'appointment-requested');
     }
 }

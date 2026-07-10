@@ -1,7 +1,6 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
 import Modal from '@/Components/Modal.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
@@ -35,6 +34,49 @@ const viewDate = ref(new Date());
 
 const weekdayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
+const currentMonthStart = computed(() => {
+    const now = new Date();
+
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+});
+
+const canGoToPreviousMonth = computed(() => {
+    const viewed = new Date(
+        viewDate.value.getFullYear(),
+        viewDate.value.getMonth(),
+        1,
+    );
+
+    return viewed > currentMonthStart.value;
+});
+
+const monthLabel = computed(() =>
+    viewDate.value.toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric',
+    }),
+);
+
+const goToPreviousMonth = () => {
+    if (!canGoToPreviousMonth.value) {
+        return;
+    }
+
+    viewDate.value = new Date(
+        viewDate.value.getFullYear(),
+        viewDate.value.getMonth() - 1,
+        1,
+    );
+};
+
+const goToNextMonth = () => {
+    viewDate.value = new Date(
+        viewDate.value.getFullYear(),
+        viewDate.value.getMonth() + 1,
+        1,
+    );
+};
+
 const today = computed(() => {
     const now = new Date();
 
@@ -50,15 +92,12 @@ const calendarDates = computed(() => {
     const month = viewDate.value.getMonth();
     const startWeekday = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const lastDayWeekday = new Date(year, month, daysInMonth).getDay();
-    const daysInPreviousMonth = new Date(year, month, 0).getDate();
     const cells = [];
 
-    for (let index = startWeekday; index > 0; index -= 1) {
+    for (let index = 0; index < startWeekday; index += 1) {
         cells.push({
-            type: 'old',
-            day: daysInPreviousMonth - index + 1,
-            key: `prev-${index}`,
+            type: 'empty',
+            key: `empty-${index}`,
         });
     }
 
@@ -75,16 +114,6 @@ const calendarDates = computed(() => {
         });
     }
 
-    if (lastDayWeekday < 6) {
-        for (let day = 1; day <= 6 - lastDayWeekday; day += 1) {
-            cells.push({
-                type: 'old',
-                day,
-                key: `next-${day}`,
-            });
-        }
-    }
-
     return cells;
 });
 
@@ -97,8 +126,46 @@ const selectedDayLabel = computed(() => {
 });
 
 const selectDay = (day) => {
+    if (form.processing) {
+        return;
+    }
+
     form.preferred_haircut_day = day;
     form.clearErrors('preferred_haircut_day');
+    submit();
+};
+
+const close = () => {
+    if (form.processing) {
+        return;
+    }
+
+    emit('close');
+};
+
+const submit = () => {
+    if (!form.preferred_haircut_day || form.processing) {
+        if (!form.preferred_haircut_day) {
+            form.setError(
+                'preferred_haircut_day',
+                'Selecione um dia do mês no calendário.',
+            );
+        }
+
+        return;
+    }
+
+    form.patch(
+        route('barbershop.preferred-haircut-day.update', {
+            username: props.barbershopUsername,
+        }),
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                close();
+            },
+        },
+    );
 };
 
 const resetPicker = () => {
@@ -118,35 +185,8 @@ const resetPicker = () => {
         return;
     }
 
-    form.preferred_haircut_day = now.getDate();
-    viewDate.value = now;
-};
-
-const close = () => {
-    emit('close');
-};
-
-const submit = () => {
-    if (!form.preferred_haircut_day) {
-        form.setError(
-            'preferred_haircut_day',
-            'Selecione um dia do mês no calendário.',
-        );
-
-        return;
-    }
-
-    form.patch(
-        route('barbershop.preferred-haircut-day.update', {
-            username: props.barbershopUsername,
-        }),
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                close();
-            },
-        },
-    );
+    form.preferred_haircut_day = null;
+    viewDate.value = new Date();
 };
 
 watch(
@@ -179,11 +219,34 @@ watch(
             <h2 class="h5 fw-semibold mb-2">Dia preferido para o corte</h2>
 
             <p class="text-secondary small mb-4">
-                Escolha o dia do mês em que prefere fazer o corte nesta
-                barbearia.
+                Toque no dia do mês em que prefere fazer o corte nesta
+                barbearia. A preferência é salva automaticamente.
             </p>
 
             <div class="preferred-haircut-calendar">
+                <div class="preferred-haircut-calendar__header">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        :disabled="!canGoToPreviousMonth"
+                        aria-label="Mês anterior"
+                        @click="goToPreviousMonth"
+                    >
+                        ‹
+                    </button>
+                    <p class="preferred-haircut-calendar__month mb-0">
+                        {{ monthLabel }}
+                    </p>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        aria-label="Próximo mês"
+                        @click="goToNextMonth"
+                    >
+                        ›
+                    </button>
+                </div>
+
                 <ul class="preferred-haircut-calendar__days">
                     <li
                         v-for="label in weekdayLabels"
@@ -198,7 +261,7 @@ watch(
                         v-for="cell in calendarDates"
                         :key="cell.key"
                         :class="{
-                            old: cell.type === 'old',
+                            empty: cell.type === 'empty',
                             today: cell.isToday,
                             selected: cell.isSelected,
                         }"
@@ -209,17 +272,23 @@ watch(
                             class="preferred-haircut-calendar__date-btn"
                             :aria-label="`Dia ${cell.day}`"
                             :aria-pressed="cell.isSelected"
+                            :disabled="form.processing"
                             @click="selectDay(cell.day)"
                         >
                             {{ cell.day }}
                         </button>
-                        <span v-else>{{ cell.day }}</span>
                     </li>
                 </ul>
             </div>
 
             <p
-                v-if="selectedDayLabel"
+                v-if="form.processing"
+                class="preferred-haircut-calendar__selection small mb-0 mt-3 text-secondary"
+            >
+                Salvando preferência...
+            </p>
+            <p
+                v-else-if="selectedDayLabel"
                 class="preferred-haircut-calendar__selection small mb-0 mt-3"
             >
                 {{ selectedDayLabel }}
@@ -231,20 +300,16 @@ watch(
             />
 
             <div
-                class="d-flex justify-content-end gap-2 mt-4"
-                :class="{ 'justify-content-between': closeable }"
+                v-if="closeable"
+                class="d-flex justify-content-end mt-4"
             >
                 <SecondaryButton
-                    v-if="closeable"
                     type="button"
+                    :disabled="form.processing"
                     @click="close"
                 >
                     Cancelar
                 </SecondaryButton>
-
-                <PrimaryButton :disabled="form.processing">
-                    Salvar preferência
-                </PrimaryButton>
             </div>
         </form>
     </Modal>

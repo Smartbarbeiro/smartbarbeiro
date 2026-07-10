@@ -7,6 +7,74 @@ header('Content-Type: text/plain; charset=utf-8');
 $laravel = dirname(__DIR__).'/laravel';
 $publicHtml = dirname(__DIR__).'/public_html';
 
+function deletePath(string $path): void
+{
+    if (! file_exists($path)) {
+        return;
+    }
+
+    if (is_file($path) || is_link($path)) {
+        unlink($path);
+
+        return;
+    }
+
+    $items = scandir($path);
+    if ($items === false) {
+        return;
+    }
+
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+
+        deletePath($path.DIRECTORY_SEPARATOR.$item);
+    }
+
+    rmdir($path);
+}
+
+function copyDirectory(string $src, string $dest): void
+{
+    if (! is_dir($src)) {
+        return;
+    }
+
+    if (! is_dir($dest) && ! mkdir($dest, 0755, true) && ! is_dir($dest)) {
+        throw new RuntimeException("Cannot create {$dest}");
+    }
+
+    $items = scandir($src);
+    if ($items === false) {
+        return;
+    }
+
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+
+        $srcPath = $src.DIRECTORY_SEPARATOR.$item;
+        $destPath = $dest.DIRECTORY_SEPARATOR.$item;
+
+        if (is_dir($srcPath)) {
+            copyDirectory($srcPath, $destPath);
+
+            continue;
+        }
+
+        $destDir = dirname($destPath);
+        if (! is_dir($destDir) && ! mkdir($destDir, 0755, true) && ! is_dir($destDir)) {
+            throw new RuntimeException("Cannot create {$destDir}");
+        }
+
+        if (! copy($srcPath, $destPath)) {
+            throw new RuntimeException("Cannot copy {$srcPath} to {$destPath}");
+        }
+    }
+}
+
 echo "=== Fix Vite manifest ===\n\n";
 
 // 1. Clear config cache (env() stops working after config:cache)
@@ -70,16 +138,18 @@ $provider = str_replace(
 file_put_contents($providerFile, $provider);
 echo "Patched AppServiceProvider.php\n";
 
-// 5. Fallback: also link/copy manifest into laravel/public/build
+// 5. Keep laravel/public/build in sync with public_html/build
 $fallbackDir = $laravel.'/public/build';
-if (! is_dir($fallbackDir)) {
-    mkdir($fallbackDir, 0755, true);
+$sourceBuildDir = $publicHtml.'/build';
+
+if (! is_dir($sourceBuildDir)) {
+    echo "\nFAIL: {$sourceBuildDir} not found.\n";
+    exit;
 }
-$fallbackManifest = $fallbackDir.'/manifest.json';
-if (! is_file($fallbackManifest)) {
-    copy($manifest, $fallbackManifest);
-    echo "Copied manifest to laravel/public/build/ (fallback)\n";
-}
+
+deletePath($fallbackDir);
+copyDirectory($sourceBuildDir, $fallbackDir);
+echo "Synced laravel/public/build/ from public_html/build/\n";
 
 echo "\nDone. Open https://www.smartbarbeiro.com.br\n";
 echo "DELETE fix-vite-smartbarbeiro.php when the site works.\n";

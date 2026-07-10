@@ -3,6 +3,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
+import { formatPhone } from '@/utils/formatPhone';
 import { useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 
@@ -87,6 +88,17 @@ watch(
     { immediate: true },
 );
 
+watch(
+    () => form.guest_phone,
+    (value) => {
+        const formatted = formatPhone(value);
+
+        if (formatted !== value) {
+            form.guest_phone = formatted;
+        }
+    },
+);
+
 const submit = () => {
     form
         .transform((data) => ({
@@ -125,7 +137,7 @@ const submit = () => {
                     <h2 id="schedule-owner-title" class="h5 mb-1">
                         Agendar horário
                     </h2>
-                    <p class="small text-secondary mb-0">
+                    <p class="book-appointment-modal__subtitle mb-0">
                         {{ time }} · {{ date }}
                     </p>
                 </div>
@@ -137,13 +149,13 @@ const submit = () => {
                 />
             </div>
 
-            <form class="d-flex flex-column gap-3" @submit.prevent="submit">
+            <form class="book-appointment-modal__form d-flex flex-column gap-3" @submit.prevent="submit">
                 <div>
                     <InputLabel for="schedule-service" value="Serviço" />
                     <select
                         id="schedule-service"
                         v-model="form.service_key"
-                        class="form-select mt-1"
+                        class="form-select book-appointment-modal__select mt-1"
                         required
                     >
                         <option
@@ -162,7 +174,7 @@ const submit = () => {
                     <select
                         id="schedule-assignee"
                         v-model="form.assignee"
-                        class="form-select mt-1"
+                        class="form-select book-appointment-modal__select mt-1"
                         required
                     >
                         <option value="owner">{{ owner.name }} (proprietário)</option>
@@ -181,7 +193,7 @@ const submit = () => {
                     <select
                         id="schedule-client"
                         v-model="form.client_user_id"
-                        class="form-select mt-1"
+                        class="form-select book-appointment-modal__select mt-1"
                     >
                         <option value="">Cliente avulso</option>
                         <option
@@ -200,7 +212,7 @@ const submit = () => {
                         id="schedule-guest-name"
                         v-model="form.guest_name"
                         type="text"
-                        class="mt-1 w-100"
+                        class="book-appointment-modal__input mt-1 w-100"
                         placeholder="Ex.: João Silva"
                         required
                     />
@@ -213,7 +225,10 @@ const submit = () => {
                         id="schedule-guest-phone"
                         v-model="form.guest_phone"
                         type="text"
-                        class="mt-1 w-100"
+                        class="book-appointment-modal__input mt-1 w-100"
+                        inputmode="tel"
+                        autocomplete="tel"
+                        maxlength="15"
                         placeholder="(67) 99999-9999"
                     />
                 </div>
@@ -223,7 +238,7 @@ const submit = () => {
                     <textarea
                         id="schedule-notes"
                         v-model="form.client_notes"
-                        class="form-control mt-1"
+                        class="form-control book-appointment-modal__input mt-1"
                         rows="2"
                         maxlength="500"
                     />

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Services\AdminBroadcastMessageService;
+use App\Services\BarbershopAppointmentService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -65,6 +66,12 @@ class HandleInertiaRequests extends Middleware
             'platformMessages' => fn () => $user && ! $user->isAdmin()
                 ? app(AdminBroadcastMessageService::class)->pendingPopupsFor($user)
                 : [],
+            'clientBooking' => fn () => $user
+                ? app(BarbershopAppointmentService::class)->clientBookingPayload($user)
+                : null,
+            'pendingAgendaCount' => fn () => $user?->isBarbershop()
+                ? app(BarbershopAppointmentService::class)->pendingAppointmentsCount($user)
+                : 0,
         ];
     }
 }

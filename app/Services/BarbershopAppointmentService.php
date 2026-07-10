@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BarbershopAppointment;
 use App\Models\BarbershopEmployee;
 use App\Models\BarbershopServicePackage;
+use App\Models\ServicePlanSubscription;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -47,11 +48,8 @@ class BarbershopAppointmentService
             'next_day_date' => $selectedDate->copy()->addDay()->toDateString(),
             'week_days' => $this->weekDaysPayload($barbershop, $weekStart, $selectedDate),
             'slots' => $this->slotsPayload($barbershop, $selectedDate, $appointments),
-            'pending_appointments' => $appointments
-                ->filter(fn (BarbershopAppointment $appointment) => $appointment->isPending())
-                ->map(fn (BarbershopAppointment $appointment) => $appointment->toPayload())
-                ->values()
-                ->all(),
+            'pending_appointments' => $this->pendingAppointmentsPayload($barbershop),
+            'pending_appointments_count' => $this->pendingAppointmentsCount($barbershop),
             'employees' => app(BarbershopEmployeeService::class)->payloadFor($barbershop),
             'owner' => [
                 'id' => $barbershop->id,
@@ -154,6 +152,10 @@ class BarbershopAppointmentService
      */
     public function availableSlotsForDate(User $barbershop, Carbon $date): array
     {
+        if ($date->lt($this->minBookingDate())) {
+            return [];
+        }
+
         $appointments = $this->appointmentsForDate($barbershop, $date);
         $takenTimes = $appointments
             ->filter(fn (BarbershopAppointment $appointment) => $appointment->isActive())
@@ -174,6 +176,64 @@ class BarbershopAppointmentService
             })
             ->values()
             ->all();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function availableBookingDays(User $barbershop, int $lookaheadDays = 28): array
+    {
+        $days = [];
+
+        for ($offset = 0; $offset < $lookaheadDays; $offset++) {
+            $date = $this->minBookingDate()->copy()->addDays($offset);
+            $availableCount = collect($this->availableSlotsForDate($barbershop, $date))
+                ->where('is_available', true)
+                ->count();
+
+            if ($availableCount === 0) {
+                continue;
+            }
+
+            $days[] = [
+                'date' => $date->toDateString(),
+                'label' => $date->locale('pt_BR')->translatedFormat('D, d/m'),
+                'weekday_label' => self::WEEKDAY_LABELS[$date->dayOfWeek],
+                'day' => $date->day,
+                'month_label' => $date->locale('pt_BR')->translatedFormat('M'),
+                'available_slots_count' => $availableCount,
+            ];
+        }
+
+        return $days;
+    }
+
+    /**
+     * @return array{days: list<array<string, mixed>>, date: ?string, slots: list<array{time: string, label: string, is_available: bool}>}
+     */
+    public function bookingAvailabilityPayload(User $barbershop, ?string $requestedDate = null): array
+    {
+        $minDate = $this->minBookingDate();
+        $maxDate = $minDate->copy()->addDays(60);
+
+        $selectedDate = filled($requestedDate)
+            ? Carbon::parse($requestedDate)->startOfDay()
+            : $minDate->copy();
+
+        if ($selectedDate->lt($minDate)) {
+            $selectedDate = $minDate->copy();
+        }
+
+        if ($selectedDate->gt($maxDate)) {
+            $selectedDate = $maxDate->copy();
+        }
+
+        return [
+            'date' => $selectedDate->toDateString(),
+            'min_date' => $minDate->toDateString(),
+            'max_date' => $maxDate->toDateString(),
+            'slots' => $this->availableSlotsForDate($barbershop, $selectedDate),
+        ];
     }
 
     /**
@@ -271,6 +331,125 @@ class BarbershopAppointmentService
         };
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function clientAppointmentsPayload(User $client, User $barbershop): array
+    {
+        return BarbershopAppointment::query()
+            ->with(['employee', 'barbershop:id,name,username'])
+            ->where('barbershop_user_id', $barbershop->id)
+            ->where('client_user_id', $client->id)
+            ->orderByDesc('scheduled_at')
+            ->limit(30)
+            ->get()
+            ->map(function (BarbershopAppointment $appointment) use ($barbershop) {
+                return [
+                    ...$appointment->toPayload(),
+                    'formatted_scheduled_at' => $appointment->scheduled_at
+                        ->timezone(config('app.timezone'))
+                        ->locale('pt_BR')
+                        ->translatedFormat('d/m/Y \à\s H:i'),
+                    'barbershop' => [
+                        'name' => $barbershop->name,
+                        'username' => $barbershop->username,
+                    ],
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    public function pendingAppointmentsCount(User $barbershop): int
+    {
+        return BarbershopAppointment::query()
+            ->where('barbershop_user_id', $barbershop->id)
+            ->where('status', BarbershopAppointment::STATUS_PENDING)
+            ->where('scheduled_at', '>=', now()->startOfDay())
+            ->count();
+    }
+
+    /**
+     * @return array{
+     *     username: string,
+     *     barbershopName: string,
+     *     defaultServiceLabel: string,
+     *     defaultPackageType: string|null
+     * }|null
+     */
+    public function clientBookingPayload(User $client): ?array
+    {
+        if ($client->isBarbershop() || $client->isAdmin()) {
+            return null;
+        }
+
+        $barbershop = $client->primaryBarbershop();
+
+        if ($barbershop === null) {
+            return null;
+        }
+
+        if (! app(BarbershopClientAccessService::class)->hasSignedUp($barbershop, $client)) {
+            return null;
+        }
+
+        $activeServicePlanSubscription = ServicePlanSubscription::query()
+            ->where('creator_user_id', $barbershop->id)
+            ->where('subscriber_user_id', $client->id)
+            ->whereIn('status', ServicePlanSubscription::activeStatuses())
+            ->latest()
+            ->first();
+
+        $packageType = $activeServicePlanSubscription?->isActive()
+            ? $activeServicePlanSubscription->package_type
+            : null;
+
+        if ($packageType !== null) {
+            return [
+                'username' => $barbershop->username,
+                'barbershopName' => $barbershop->name,
+                'defaultServiceLabel' => $this->serviceLabelForPackageType($packageType),
+                'defaultPackageType' => $packageType,
+            ];
+        }
+
+        $enabledPackage = collect(
+            app(BarbershopServicePlanService::class)->publicPlansPayload($barbershop)['packages'] ?? [],
+        )->first(fn (array $package) => $package['is_enabled'] ?? false);
+
+        return [
+            'username' => $barbershop->username,
+            'barbershopName' => $barbershop->name,
+            'defaultServiceLabel' => $enabledPackage['label'] ?? 'Serviço',
+            'defaultPackageType' => $enabledPackage['type'] ?? null,
+        ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function pendingAppointmentsPayload(User $barbershop): array
+    {
+        return BarbershopAppointment::query()
+            ->with(['client:id,name', 'employee'])
+            ->where('barbershop_user_id', $barbershop->id)
+            ->where('status', BarbershopAppointment::STATUS_PENDING)
+            ->where('scheduled_at', '>=', now()->startOfDay())
+            ->orderBy('scheduled_at')
+            ->get()
+            ->map(function (BarbershopAppointment $appointment) {
+                return [
+                    ...$appointment->toPayload(),
+                    'formatted_scheduled_at' => $appointment->scheduled_at
+                        ->timezone(config('app.timezone'))
+                        ->locale('pt_BR')
+                        ->translatedFormat('d/m/Y \à\s H:i'),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     private function resolveDate(?string $date): Carbon
     {
         if (blank($date)) {
@@ -323,18 +502,23 @@ class BarbershopAppointmentService
 
         return collect($this->slotTimes())
             ->map(function (string $time) use ($date, $appointmentsByTime, $barbershop) {
-                $slotAppointments = ($appointmentsByTime[$time] ?? collect())
+                $timeAppointments = $appointmentsByTime[$time] ?? collect();
+
+                $slotAppointments = $timeAppointments
+                    ->filter(fn (BarbershopAppointment $appointment) => $appointment->isVisibleOnAgenda())
                     ->map(fn (BarbershopAppointment $appointment) => $appointment->toPayload())
                     ->values()
                     ->all();
 
                 $slotMoment = $date->copy()->setTimeFromTimeString($time.':00');
+                $hasActiveBooking = $timeAppointments
+                    ->contains(fn (BarbershopAppointment $appointment) => $appointment->isActive());
 
                 return [
                     'time' => $time,
                     'label' => $time,
                     'is_past' => $slotMoment->isPast(),
-                    'is_available' => $slotAppointments === [] && ! $slotMoment->isPast(),
+                    'is_available' => ! $hasActiveBooking && ! $slotMoment->isPast(),
                     'appointments' => $slotAppointments,
                 ];
             })
@@ -374,6 +558,12 @@ class BarbershopAppointmentService
 
     private function assertSlotIsBookable(User $barbershop, Carbon $scheduledAt): void
     {
+        if ($scheduledAt->copy()->startOfDay()->lt($this->minBookingDate())) {
+            throw ValidationException::withMessages([
+                'scheduled_at' => 'Escolha uma data a partir de hoje.',
+            ]);
+        }
+
         if ($scheduledAt->isPast()) {
             throw ValidationException::withMessages([
                 'scheduled_at' => 'Escolha um horário no futuro.',
@@ -412,5 +602,32 @@ class BarbershopAppointmentService
                 'scheduled_at' => 'Este horário já está reservado.',
             ]);
         }
+    }
+
+    private function minBookingDate(): Carbon
+    {
+        return now()->startOfDay();
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $days
+     */
+    private function resolveBookingDate(?string $requestedDate, array $days): ?Carbon
+    {
+        if ($days === []) {
+            return null;
+        }
+
+        if (filled($requestedDate)) {
+            $requested = Carbon::parse($requestedDate)->startOfDay();
+
+            foreach ($days as $day) {
+                if ($day['date'] === $requested->toDateString()) {
+                    return $requested;
+                }
+            }
+        }
+
+        return Carbon::parse($days[0]['date'])->startOfDay();
     }
 }

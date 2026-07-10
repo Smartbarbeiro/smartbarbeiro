@@ -28,39 +28,33 @@ defineProps({
             src="/images/barbearia-empty-state.png"
             alt="Ilustração de uma barbearia"
             class="barbershop-empty-dashboard__icon"
-            width="560"
-            height="420"
+            width="800"
+            height="602"
         />
 
         <p class="barbershop-empty-dashboard__message mb-0">
             Sua barbearia ainda não tem assinantes...
         </p>
 
-        <Link
-            :href="route('agenda.index')"
-            class="btn btn-outline-dark barbershop-empty-dashboard__action-btn mt-3"
-        >
-            <i class="bi bi-journal-bookmark me-2" aria-hidden="true"></i>
-            Abrir agenda
-        </Link>
+        <div class="barbershop-empty-dashboard__actions">
+            <Link
+                v-if="!hasConfiguredServicePlans"
+                :href="route('services.index')"
+                class="btn btn-dark barbershop-empty-dashboard__action-btn"
+            >
+                <i class="bi bi-scissors me-2" aria-hidden="true"></i>
+                Crie seus planos
+            </Link>
 
-        <Link
-            v-if="!hasConfiguredServicePlans"
-            :href="route('services.index')"
-            class="btn btn-dark barbershop-empty-dashboard__action-btn"
-        >
-            <i class="bi bi-scissors me-2" aria-hidden="true"></i>
-            Crie seus planos
-        </Link>
-
-        <ProfileQrCode
-            v-else
-            class="barbershop-empty-dashboard__qr mt-4"
-            :url="profileUrl"
-            :filename="`${profileUsername}-profile`"
-            owner-dashboard
-            show-acrylic-order
-            :acrylic-order="acrylicQrOrder"
-        />
+            <ProfileQrCode
+                v-else
+                class="barbershop-empty-dashboard__qr"
+                :url="profileUrl"
+                :filename="`${profileUsername}-profile`"
+                owner-dashboard
+                show-acrylic-order
+                :acrylic-order="acrylicQrOrder"
+            />
+        </div>
     </section>
 </template>

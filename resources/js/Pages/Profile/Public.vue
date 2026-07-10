@@ -6,6 +6,7 @@ import CancelSubscriptionButton from '@/Components/CancelSubscriptionButton.vue'
 import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import MobileAppPromo from '@/Components/MobileAppPromo.vue';
+import PaymentEmailMismatchCard from '@/Components/PaymentEmailMismatchCard.vue';
 import PlanBuilder from '@/Components/PlanBuilder.vue';
 import PreferredHaircutDayPicker from '@/Components/PreferredHaircutDayPicker.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
@@ -105,6 +106,10 @@ const props = defineProps({
             label: 'Serviço',
             package_type: null,
         }),
+    },
+    paymentEmailMismatch: {
+        type: Object,
+        default: null,
     },
 });
 
@@ -303,6 +308,18 @@ onUnmounted(() => {
             >
                 Plano ativo: {{ activeServicePlanSubscription.package_label }}
                 ({{ activeServicePlanSubscription.formatted_total }}/mês)
+            </DashboardAlert>
+
+            <DashboardAlert
+                v-if="isAuthenticated"
+                :show="Boolean(paymentEmailMismatch) && !isOwner"
+                variant="warning"
+            >
+                <PaymentEmailMismatchCard
+                    v-if="paymentEmailMismatch"
+                    :mismatch="paymentEmailMismatch"
+                    compact
+                />
             </DashboardAlert>
 
             <DashboardAlert

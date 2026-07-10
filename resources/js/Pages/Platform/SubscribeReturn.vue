@@ -1,11 +1,16 @@
 <script setup>
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
+import PaymentEmailMismatchCard from '@/Components/PaymentEmailMismatchCard.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
     subscription: {
+        type: Object,
+        default: null,
+    },
+    paymentEmailMismatch: {
         type: Object,
         default: null,
     },
@@ -26,6 +31,13 @@ defineProps({
             description="Confirmação do pagamento e liberação de acesso."
             card-class="dashboard-content-card--narrow"
         >
+            <div
+                v-if="paymentEmailMismatch"
+                class="alert alert-warning mb-3"
+            >
+                <PaymentEmailMismatchCard :mismatch="paymentEmailMismatch" />
+            </div>
+
             <p
                 v-if="subscription?.is_active"
                 class="text-success mb-3"

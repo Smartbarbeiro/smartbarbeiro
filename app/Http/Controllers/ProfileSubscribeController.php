@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ProfileSubscription;
 use App\Models\User;
 use App\Services\MercadoPagoService;
+use App\Services\PaymentEmailService;
 use App\Services\ProfileSubscriptionSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,7 @@ class ProfileSubscribeController extends Controller
         }
 
         $externalReference = 'profile-'.$creator->id.'-'.$subscriber->id.'-'.Str::lower(Str::random(8));
+        $payerEmail = app(PaymentEmailService::class)->preferredPayerEmail($subscriber);
 
         $subscription = ProfileSubscription::updateOrCreate(
             [
@@ -66,7 +68,7 @@ class ProfileSubscribeController extends Controller
                 'subscriber_user_id' => $subscriber->id,
             ],
             [
-                'payer_email' => $subscriber->email,
+                'payer_email' => $payerEmail,
                 'external_reference' => $externalReference,
                 'status' => ProfileSubscription::STATUS_PENDING,
             ],
@@ -77,7 +79,7 @@ class ProfileSubscribeController extends Controller
         try {
             $preapproval = $mercadoPago->createSubscriptionCheckout(
                 reason: $plan->title,
-                payerEmail: $subscriber->email,
+                payerEmail: $payerEmail,
                 externalReference: $subscription->external_reference,
                 backUrl: $backUrl,
                 amount: (float) $plan->monthly_amount,
@@ -107,6 +109,7 @@ class ProfileSubscribeController extends Controller
         string $username,
         Request $request,
         ProfileSubscriptionSyncService $syncService,
+        PaymentEmailService $paymentEmailService,
     ): Response {
         $creator = User::query()
             ->where('username', $username)
@@ -139,6 +142,10 @@ class ProfileSubscribeController extends Controller
                 'status' => $subscription->status,
                 'is_active' => $subscription->isActive(),
             ] : null,
+            'paymentEmailMismatch' => $paymentEmailService->mismatchForPayerEmail(
+                $subscriber,
+                $subscription?->payer_email,
+            ),
         ]);
     }
 }

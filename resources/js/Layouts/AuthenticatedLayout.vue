@@ -2,6 +2,7 @@
 import SidebarNavLink from '@/Components/SidebarNavLink.vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import InstallAppBanner from '@/Components/InstallAppBanner.vue';
+import BookAppointmentFab from '@/Components/BookAppointmentFab.vue';
 import PlatformMessagePopups from '@/Components/PlatformMessagePopups.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
@@ -13,6 +14,8 @@ provide('dashboardAlertStack', dashboardAlertStack);
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const clientBooking = computed(() => page.props.clientBooking);
+const pendingAgendaCount = computed(() => page.props.pendingAgendaCount ?? 0);
 
 const isClient = computed(
     () =>
@@ -20,6 +23,13 @@ const isClient = computed(
         !user.value.is_barbershop &&
         !user.value.is_administrator &&
         user.value.primary_barbershop_username,
+);
+
+const showClientBookingFab = computed(
+    () =>
+        isClient.value &&
+        clientBooking.value &&
+        !route().current('client.appointments.*'),
 );
 
 const clientBarbershopProfileUrl = computed(() => {
@@ -81,6 +91,12 @@ const clientNavItems = computed(() => {
             label: 'Plano',
         },
         {
+            href: route('client.appointments.index'),
+            active: route().current('client.appointments.*'),
+            icon: 'journal-bookmark',
+            label: 'Agendamentos',
+        },
+        {
             href: route('haircuts.index'),
             active: route().current('haircuts.*'),
             icon: 'scissors',
@@ -121,6 +137,7 @@ const navItems = computed(() => {
             active: route().current('agenda.*'),
             icon: 'journal-bookmark',
             label: 'Agenda',
+            badge: pendingAgendaCount.value,
         });
         items.push({
             href: route('employees.index'),
@@ -193,7 +210,10 @@ const mobileNavItems = computed(() => {
     if (clientNavItems.value) {
         return clientNavItems.value.map((item) => ({
             ...item,
-            label: item.label.toUpperCase(),
+            label:
+                item.label === 'Agendamentos'
+                    ? 'Agendar'
+                    : item.label.toUpperCase(),
         }));
     }
 
@@ -212,6 +232,7 @@ const mobileNavItems = computed(() => {
                 active: route().current('agenda.*'),
                 icon: 'journal-bookmark',
                 label: 'Agenda',
+                badge: pendingAgendaCount.value,
             },
             {
                 href: route('subscriptions.index'),
@@ -253,8 +274,14 @@ const mobileNavItems = computed(() => {
         {
             href: route('subscriptions.index'),
             active: route().current('subscriptions.index'),
+            icon: 'credit-card',
+            label: 'Plano',
+        },
+        {
+            href: route('client.appointments.index'),
+            active: route().current('client.appointments.*'),
             icon: 'journal-bookmark',
-            label: 'Agenda',
+            label: 'Agendar',
         },
         {
             href: barbeariasHref,
@@ -427,5 +454,12 @@ const mobileNavItems = computed(() => {
         </nav>
 
         <PlatformMessagePopups />
+
+        <BookAppointmentFab
+            v-if="showClientBookingFab"
+            :username="clientBooking.username"
+            :default-service-label="clientBooking.defaultServiceLabel"
+            :default-package-type="clientBooking.defaultPackageType"
+        />
     </div>
 </template>

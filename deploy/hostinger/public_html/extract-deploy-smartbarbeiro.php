@@ -154,7 +154,31 @@ function extractZip(string $zipPath, string $destDir): void
         throw new RuntimeException("Cannot create {$destDir}");
     }
 
-    $zip->extractTo($destDir);
+    for ($index = 0; $index < $zip->numFiles; $index++) {
+        $name = str_replace('\\', '/', (string) $zip->getNameIndex($index));
+
+        if ($name === '' || str_ends_with($name, '/')) {
+            continue;
+        }
+
+        $target = $destDir.'/'.$name;
+        $targetDir = dirname($target);
+
+        if (! is_dir($targetDir) && ! mkdir($targetDir, 0755, true) && ! is_dir($targetDir)) {
+            throw new RuntimeException("Cannot create {$targetDir}");
+        }
+
+        $contents = $zip->getFromIndex($index);
+
+        if ($contents === false) {
+            throw new RuntimeException("Cannot read {$name} from zip");
+        }
+
+        if (file_put_contents($target, $contents) === false) {
+            throw new RuntimeException("Cannot write {$target}");
+        }
+    }
+
     $zip->close();
 }
 
@@ -202,6 +226,8 @@ try {
     echo "\nExtracting public_html.zip...\n";
     echo "Backing up public_html/images/ ...\n";
     backupDirectory($publicRoot.'/images', $imagesBackup);
+    echo "Removing stale public_html/build/ (Vite assets)...\n";
+    deletePath($publicRoot.'/build');
     extractZip($publicRoot.'/public_html.zip', $publicRoot);
     echo "Restoring public_html/images/ from backup...\n";
     restoreDirectory($imagesBackup, $publicRoot.'/images');

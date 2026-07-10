@@ -18,7 +18,7 @@ trait RedirectsAfterAuth
             '/registrar/oauth',
             '/auth/google/redirect',
             '/auth/google/callback',
-            '/forgot-password',
+            '/lembrar-senha',
             '/confirm-password',
             '/verify-email',
         ];

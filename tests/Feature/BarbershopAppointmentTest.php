@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Mail\BarbershopAppointmentRequestedMail;
+use App\Mail\ClientAppointmentConfirmedMail;
+use App\Mail\ClientAppointmentRejectedMail;
 use App\Models\BarbershopAppointment;
 use App\Models\BarbershopEmployee;
 use App\Models\BarbershopMembership;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class BarbershopAppointmentTest extends TestCase
@@ -32,7 +36,7 @@ class BarbershopAppointmentTest extends TestCase
                 'service_label' => 'Corte Cabelo',
                 'package_type' => 'cut',
             ])
-            ->assertRedirect()
+            ->assertRedirect(route('client.appointments.index'))
             ->assertSessionHas('status', 'appointment-requested');
 
         $this->assertDatabaseHas('barbershop_appointments', [
@@ -106,11 +110,12 @@ class BarbershopAppointmentTest extends TestCase
 
         $barbershop = User::factory()->create();
         $client = User::factory()->customer()->create();
+        $tomorrow = now()->addDay()->toDateString();
 
         BarbershopAppointment::query()->create([
             'barbershop_user_id' => $barbershop->id,
             'client_user_id' => $client->id,
-            'scheduled_at' => now()->setTime(10, 0),
+            'scheduled_at' => now()->addDay()->setTime(10, 0),
             'duration_minutes' => 30,
             'service_label' => 'Corte Cabelo',
             'status' => BarbershopAppointment::STATUS_CONFIRMED,
@@ -118,16 +123,55 @@ class BarbershopAppointmentTest extends TestCase
 
         $response = $this->getJson(route('barbershop.appointments.availability', [
             'username' => $barbershop->username,
-            'date' => '2026-07-07',
+            'date' => $tomorrow,
         ]));
 
-        $response->assertOk();
+        $response->assertOk()
+            ->assertJsonPath('date', $tomorrow);
 
+        $slotTimes = collect($response->json('slots'))->pluck('time')->all();
         $tenAm = collect($response->json('slots'))->firstWhere('time', '10:00');
         $elevenAm = collect($response->json('slots'))->firstWhere('time', '11:00');
 
         $this->assertFalse($tenAm['is_available']);
         $this->assertTrue($elevenAm['is_available']);
+        $this->assertContains('10:00', $slotTimes);
+        $this->assertContains('11:00', $slotTimes);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_cancelled_appointment_shows_slot_as_available_on_agenda(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+        $client = User::factory()->customer()->create();
+
+        $appointment = BarbershopAppointment::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => $client->id,
+            'scheduled_at' => now()->setTime(11, 0),
+            'duration_minutes' => 30,
+            'service_label' => 'Corte Cabelo',
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+        ]);
+
+        $this->actingAs($barbershop)
+            ->patch(route('agenda.update', $appointment), [
+                'action' => 'cancel',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-updated');
+
+        $this->actingAs($barbershop)
+            ->get(route('agenda.index', ['date' => '2026-07-07']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Appointments/Index')
+                ->where('agenda.slots.6.time', '11:00')
+                ->where('agenda.slots.6.is_available', true)
+                ->has('agenda.slots.6.appointments', 0));
 
         Carbon::setTestNow();
     }
@@ -197,5 +241,142 @@ class BarbershopAppointmentTest extends TestCase
         ]);
 
         Carbon::setTestNow();
+    }
+
+    public function test_client_can_view_appointments_page(): void
+    {
+        $barbershop = User::factory()->create();
+        $client = User::factory()->customer()->create();
+
+        BarbershopMembership::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $client->id,
+        ]);
+
+        $this->actingAs($client)
+            ->get(route('client.appointments.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Appointments/ClientIndex')
+                ->where('barbershop.username', $barbershop->username));
+    }
+
+    public function test_booking_sends_email_to_barbershop_and_confirm_sends_email_to_client(): void
+    {
+        Mail::fake();
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create(['email' => 'barbearia@example.com']);
+        $client = User::factory()->customer()->create(['email' => 'cliente@example.com']);
+
+        BarbershopMembership::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $client->id,
+        ]);
+
+        $scheduledAt = now()->addDay()->setTime(10, 0)->seconds(0);
+
+        $this->actingAs($client)
+            ->post(route('barbershop.appointments.store', $barbershop->username), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Corte Cabelo',
+                'package_type' => 'cut',
+            ])
+            ->assertRedirect(route('client.appointments.index'))
+            ->assertSessionHas('status', 'appointment-requested');
+            return $mail->hasTo($barbershop->email);
+        });
+
+        $appointment = BarbershopAppointment::query()->firstOrFail();
+
+        $this->actingAs($barbershop)
+            ->patch(route('agenda.update', $appointment), [
+                'action' => 'confirm',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-updated');
+
+        Mail::assertSent(ClientAppointmentConfirmedMail::class, function ($mail) use ($client) {
+            return $mail->hasTo($client->email);
+        });
+
+        Carbon::setTestNow();
+    }
+
+    public function test_rejecting_appointment_sends_email_to_client(): void
+    {
+        Mail::fake();
+
+        $barbershop = User::factory()->create();
+        $client = User::factory()->customer()->create(['email' => 'cliente@example.com']);
+
+        $appointment = BarbershopAppointment::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => $client->id,
+            'scheduled_at' => now()->addDay()->setTime(11, 0),
+            'duration_minutes' => 30,
+            'service_label' => 'Corte Cabelo',
+            'status' => BarbershopAppointment::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($barbershop)
+            ->patch(route('agenda.update', $appointment), [
+                'action' => 'reject',
+            ])
+            ->assertRedirect();
+
+        Mail::assertSent(ClientAppointmentRejectedMail::class, function ($mail) use ($client) {
+            return $mail->hasTo($client->email);
+        });
+    }
+
+    public function test_client_can_cancel_pending_appointment(): void
+    {
+        $barbershop = User::factory()->create();
+        $client = User::factory()->customer()->create();
+
+        BarbershopMembership::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'member_user_id' => $client->id,
+        ]);
+
+        $appointment = BarbershopAppointment::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => $client->id,
+            'scheduled_at' => now()->addDay()->setTime(14, 0),
+            'duration_minutes' => 30,
+            'service_label' => 'Corte Cabelo',
+            'status' => BarbershopAppointment::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($client)
+            ->patch(route('client.appointments.cancel', $appointment))
+            ->assertRedirect(route('client.appointments.index'))
+            ->assertSessionHas('status', 'appointment-cancelled');
+
+        $this->assertDatabaseHas('barbershop_appointments', [
+            'id' => $appointment->id,
+            'status' => BarbershopAppointment::STATUS_CANCELLED,
+        ]);
+    }
+
+    public function test_client_cannot_cancel_another_clients_appointment(): void
+    {
+        $barbershop = User::factory()->create();
+        $client = User::factory()->customer()->create();
+        $otherClient = User::factory()->customer()->create();
+
+        $appointment = BarbershopAppointment::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => $otherClient->id,
+            'scheduled_at' => now()->addDay()->setTime(14, 0),
+            'duration_minutes' => 30,
+            'service_label' => 'Corte Cabelo',
+            'status' => BarbershopAppointment::STATUS_PENDING,
+        ]);
+
+        $this->actingAs($client)
+            ->patch(route('client.appointments.cancel', $appointment))
+            ->assertForbidden();
     }
 }

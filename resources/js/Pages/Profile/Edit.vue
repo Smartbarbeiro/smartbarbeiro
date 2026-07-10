@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DashboardAlert from '@/Components/DashboardAlert.vue';
 import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
+import PaymentEmailMismatchCard from '@/Components/PaymentEmailMismatchCard.vue';
 import BarbershopPaymentStatusCard from './Partials/BarbershopPaymentStatusCard.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import SubscribersList from './Partials/SubscribersList.vue';
@@ -63,6 +64,10 @@ defineProps({
         type: Boolean,
         default: false,
     },
+    paymentEmailMismatch: {
+        type: Object,
+        default: null,
+    },
 });
 
 onMounted(() => {
@@ -88,6 +93,17 @@ onMounted(() => {
                 variant="success"
             >
                 {{ page.props.flash?.statusMessage }}
+            </DashboardAlert>
+
+            <DashboardAlert
+                :show="Boolean(paymentEmailMismatch)"
+                variant="warning"
+            >
+                <PaymentEmailMismatchCard
+                    v-if="paymentEmailMismatch"
+                    :mismatch="paymentEmailMismatch"
+                    compact
+                />
             </DashboardAlert>
 
             <DashboardContentCard

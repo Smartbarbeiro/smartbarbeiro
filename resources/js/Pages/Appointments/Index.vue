@@ -61,9 +61,13 @@ const confirmAppointment = (appointment) => {
     runAction(appointment.id, 'confirm', employeeId);
 };
 
-const assignEmployee = (appointment) => {
-    const select = document.getElementById(`assign-${appointment.id}`);
-    const employeeId = select?.value ? Number(select.value) : null;
+const onAssignEmployeeChange = (appointment, event) => {
+    const employeeId = event.target.value ? Number(event.target.value) : null;
+    const currentEmployeeId = appointment.employee?.id ?? null;
+
+    if (employeeId === currentEmployeeId) {
+        return;
+    }
 
     runAction(appointment.id, 'assign', employeeId);
 };
@@ -82,18 +86,6 @@ const openScheduleModal = (time) => {
 const closeScheduleModal = () => {
     scheduleModalOpen.value = false;
     selectedSlotTime.value = null;
-};
-
-const performerLabel = (appointment) => {
-    if (appointment.employee) {
-        return appointment.employee.name;
-    }
-
-    if (appointment.performer_name) {
-        return appointment.performer_name;
-    }
-
-    return 'Proprietário';
 };
 
 const hexToRgba = (hex, alpha) => {
@@ -248,8 +240,11 @@ const slotClasses = (slot) => ({
                                 {{ appointment.client.name }}
                             </p>
                             <p class="mb-1 small text-secondary">
-                                {{ appointment.scheduled_time }} ·
-                                {{ appointment.service_label }}
+                                {{
+                                    appointment.formatted_scheduled_at
+                                        || `${appointment.scheduled_time} · ${appointment.scheduled_date}`
+                                }}
+                                · {{ appointment.service_label }}
                             </p>
                             <p
                                 v-if="appointment.client_notes"
@@ -299,23 +294,6 @@ const slotClasses = (slot) => ({
                 title="Horários do dia"
                 description="Clique em um horário livre para agendar. Grade de 30 em 30 minutos, das 08:00 às 20:00."
             >
-                <div
-                    v-if="agenda.employees.some((employee) => employee.is_active)"
-                    class="barbershop-agenda-legend mb-3"
-                >
-                    <span
-                        v-for="employee in agenda.employees.filter((item) => item.is_active)"
-                        :key="`legend-${employee.id}`"
-                        class="barbershop-agenda-legend__item"
-                    >
-                        <span
-                            class="employee-color-swatch"
-                            :style="{ backgroundColor: employee.color }"
-                        />
-                        {{ employee.name }}
-                    </span>
-                </div>
-
                 <div class="barbershop-agenda-slots">
                     <article
                         v-for="slot in agenda.slots"
@@ -340,14 +318,6 @@ const slotClasses = (slot) => ({
                                             : 'Livre'
                                     }}
                                 </p>
-                                <button
-                                    v-if="slot.is_available"
-                                    type="button"
-                                    class="btn btn-sm btn-dark barbershop-agenda-slot__book-btn"
-                                    @click.stop="openScheduleModal(slot.time)"
-                                >
-                                    Agendar
-                                </button>
                             </template>
 
                             <div
@@ -382,37 +352,15 @@ const slotClasses = (slot) => ({
                                     </span>
                                 </div>
 
-                                <p
-                                    class="barbershop-agenda-appointment__performer mb-0"
-                                    :class="{
-                                        'barbershop-agenda-appointment__performer--employee':
-                                            !!appointment.employee?.color,
-                                    }"
-                                    :style="
-                                        appointment.employee?.color
-                                            ? {
-                                                  '--performer-accent':
-                                                      appointment.employee.color,
-                                              }
-                                            : {}
-                                    "
-                                >
-                                    <span
-                                        v-if="appointment.employee?.color"
-                                        class="barbershop-agenda-appointment__performer-dot"
-                                        aria-hidden="true"
-                                    />
-                                    {{ performerLabel(appointment) }}
-                                </p>
-
                                 <div
                                     v-if="appointment.status === 'confirmed'"
                                     class="barbershop-agenda-appointment__actions"
                                 >
                                     <select
-                                        :id="`assign-${appointment.id}`"
                                         class="form-select form-select-sm"
                                         :value="appointment.employee?.id ?? ''"
+                                        :disabled="actionForm.processing"
+                                        @change="onAssignEmployeeChange(appointment, $event)"
                                     >
                                         <option value="">Proprietário</option>
                                         <option
@@ -423,14 +371,6 @@ const slotClasses = (slot) => ({
                                             {{ employee.name }}
                                         </option>
                                     </select>
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-primary"
-                                        :disabled="actionForm.processing"
-                                        @click="assignEmployee(appointment)"
-                                    >
-                                        Atribuir
-                                    </button>
                                     <button
                                         type="button"
                                         class="btn btn-sm btn-success"

@@ -14,6 +14,7 @@ use App\Http\Controllers\BarbershopMembershipController;
 use App\Http\Controllers\BarbershopPreferredHaircutDayController;
 use App\Http\Controllers\BarbershopServiceController;
 use App\Http\Controllers\BarbershopServicePlanController;
+use App\Http\Controllers\ClientAppointmentController;
 use App\Http\Controllers\ClientHaircutPhotoController;
 use App\Http\Controllers\CepLookupController;
 use App\Http\Controllers\ServicePlanSubscribeController;
@@ -22,6 +23,7 @@ use App\Http\Controllers\ServicePlanSubscriptionPaymentController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfilePaymentEmailController;
 use App\Http\Controllers\ProfileSubscribeController;
 use App\Http\Controllers\ProfileSubscriptionController;
 use App\Http\Controllers\ProfileSubscriptionPlanController;
@@ -50,15 +52,6 @@ Route::get('/barbearias/{username}', [PublicProfileController::class, 'show'])
 
 Route::post('/barbearias/{username}/service-plans/subscribe-register', [ServicePlanSubscribeController::class, 'registerAndStore'])
     ->name('service-plan.subscribe.register');
-
-Route::middleware(['auth', 'not_frozen'])->group(function () {
-    Route::get('/assinatura/plataforma', [BarbershopPlatformSubscribeController::class, 'show'])
-        ->name('platform.subscribe');
-    Route::post('/assinatura/plataforma', [BarbershopPlatformSubscribeController::class, 'store'])
-        ->name('platform.subscribe.store');
-    Route::get('/assinatura/plataforma/retorno', [BarbershopPlatformSubscribeController::class, 'return'])
-        ->name('platform.subscribe.return');
-});
 
 Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(function () {
     Route::post('/barbearias/{username}/subscribe', [ProfileSubscribeController::class, 'store'])
@@ -154,6 +147,8 @@ Route::middleware(['auth', 'not_frozen'])->group(function () {
         ->name('platform.subscribe.store');
     Route::get('/assinatura/plataforma/retorno', [BarbershopPlatformSubscribeController::class, 'return'])
         ->name('platform.subscribe.return');
+    Route::post('/profile/payment-email', [ProfilePaymentEmailController::class, 'update'])
+        ->name('profile.payment-email.update');
 });
 
 Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(function () {
@@ -197,6 +192,10 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
     Route::get('/service-plan-payments/{payment}/nota-fiscal', [ServicePlanSubscriptionPaymentController::class, 'downloadNotaFiscal'])
         ->name('service-plan-payments.nota-fiscal');
 
+    Route::get('/agendamentos', [ClientAppointmentController::class, 'index'])
+        ->name('client.appointments.index');
+    Route::patch('/agendamentos/{appointment}/cancelar', [ClientAppointmentController::class, 'cancel'])
+        ->name('client.appointments.cancel');
     Route::get('/cortes', [ClientHaircutPhotoController::class, 'index'])
         ->name('haircuts.index');
     Route::post('/cortes', [ClientHaircutPhotoController::class, 'store'])

@@ -52,9 +52,25 @@ $zipPublic = Join-Path $DeployRoot "public_html.zip"
 if (Test-Path $zipLaravel) { Remove-Item $zipLaravel -Force }
 if (Test-Path $zipPublic) { Remove-Item $zipPublic -Force }
 
-Write-Host "==> Creating zip archives..."
-Compress-Archive -Path (Join-Path $LaravelOut "*") -DestinationPath $zipLaravel -CompressionLevel Optimal
-Compress-Archive -Path (Join-Path $PublicOut "*") -DestinationPath $zipPublic -CompressionLevel Optimal
+Write-Host "==> Creating zip archives (tar — Linux-safe forward slashes)..."
+function New-DeployZip([string]$SourceDir, [string]$ZipPath) {
+    if (Test-Path $ZipPath) {
+        Remove-Item $ZipPath -Force
+    }
+
+    Push-Location $SourceDir
+    try {
+        & tar -a -cf $ZipPath .
+        if ($LASTEXITCODE -ne 0) {
+            throw "tar failed creating $ZipPath (exit $LASTEXITCODE)"
+        }
+    } finally {
+        Pop-Location
+    }
+}
+
+New-DeployZip $LaravelOut $zipLaravel
+New-DeployZip $PublicOut $zipPublic
 
 Write-Host ""
 Write-Host "Done. Upload via FTP:"
@@ -73,6 +89,6 @@ Write-Host "  3. patch-mp-production-smartbarbeiro.php, clear-cache-smartbarbeir
 Write-Host ""
 Write-Host "After first deploy, create .env in laravel/ from deploy/hostinger/env.production.example"
 Write-Host "No SSH? Upload helper scripts from deploy/hostinger/public_html/"
-Write-Host "  extract-deploy-smartbarbeiro.php, fix-env-format-smartbarbeiro.php, fix-vite-smartbarbeiro.php"
+Write-Host "  extract-deploy-smartbarbeiro.php, sync-laravel-smartbarbeiro.php, sync-build-smartbarbeiro.php, fix-env-format-smartbarbeiro.php, fix-vite-smartbarbeiro.php"
 Write-Host "  setup-smartbarbeiro.php, patch-mp-production-smartbarbeiro.php"
 Write-Host "Delete all *-smartbarbeiro.php helpers from public_html after deploy."

@@ -106,6 +106,18 @@ Write-Host "==> Clearing Laravel cache..."
 Invoke-DeployUrl "clear-cache-smartbarbeiro.php" | Out-Null
 
 Write-Host ""
+Write-Host "==> Syncing Laravel app from zip (Linux-safe paths)..."
+if (-not (Invoke-DeployUrl "sync-laravel-smartbarbeiro.php")) {
+    throw "Laravel sync failed."
+}
+
+Write-Host ""
+Write-Host "==> Syncing Vite build assets..."
+if (-not (Invoke-DeployUrl "sync-build-smartbarbeiro.php")) {
+    throw "Vite build sync failed."
+}
+
+Write-Host ""
 Write-Host "==> Verifying Vite assets..."
 Invoke-DeployUrl "fix-vite-smartbarbeiro.php" | Out-Null
 

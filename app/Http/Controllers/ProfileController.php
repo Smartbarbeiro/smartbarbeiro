@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\AcrylicQrOrderService;
 use App\Services\DeleteUserAccountService;
+use App\Services\PaymentEmailService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,8 +24,11 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request, AcrylicQrOrderService $acrylicQrOrderService): Response
-    {
+    public function edit(
+        Request $request,
+        AcrylicQrOrderService $acrylicQrOrderService,
+        PaymentEmailService $paymentEmailService,
+    ): Response {
         $user = $request->user()->load([
             'subscriptionPlan',
             'barbershopSignups.barbershop:id,name,username',
@@ -33,6 +37,8 @@ class ProfileController extends Controller
         $props = [
             'mustVerifyEmail' => $user instanceof MustVerifyEmail,
             'status' => session('status'),
+            'paymentEmailMismatch' => session('payment_email_mismatch')
+                ?? $paymentEmailService->mismatchForUser($user),
             'promptProfilePhoto' => $user->isBarbershop()
                 && ! $user->hasCustomProfilePhoto()
                 && (bool) $request->session()->pull('prompt_profile_photo', false),

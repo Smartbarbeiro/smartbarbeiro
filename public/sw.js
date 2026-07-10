@@ -1,5 +1,5 @@
 /* Smart Barbeiro service worker — enables installability and a light offline fallback. */
-const CACHE_NAME = 'smartbarbeiro-v1';
+const CACHE_NAME = 'smartbarbeiro-v2';
 const PRECACHE_URLS = [
     '/site.webmanifest',
     '/offline.html',
@@ -62,9 +62,17 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static assets: cache-first, then network.
+    // Vite bundles change hash on every deploy — always fetch fresh from network.
+    if (url.pathname.startsWith('/build/')) {
+        event.respondWith(
+            fetch(request).catch(() => caches.match(request)),
+        );
+
+        return;
+    }
+
+    // Other static assets: cache-first, then network.
     if (
-        url.pathname.startsWith('/build/') ||
         url.pathname.startsWith('/images/') ||
         url.pathname.endsWith('.png') ||
         url.pathname.endsWith('.svg') ||

@@ -44,7 +44,9 @@ class BarbershopPlatformCheckoutService
             ];
         }
 
-        $this->mercadoPago->assertSandboxCheckoutUsers($barbershop->email);
+        $this->mercadoPago->assertSandboxCheckoutUsers(
+            app(PaymentEmailService::class)->preferredPayerEmail($barbershop),
+        );
 
         $backUrl = rtrim((string) config('mercadopago.back_url', config('app.url')), '/')
             .'/assinatura/plataforma/retorno';
@@ -55,9 +57,11 @@ class BarbershopPlatformCheckoutService
 
         // Redirect checkout must use auto_recurring (no preapproval_plan_id). MP requires
         // card_token_id when associating a subscription with a plan via API.
+        $payerEmail = app(PaymentEmailService::class)->preferredPayerEmail($barbershop);
+
         $preapproval = $this->mercadoPago->createSubscriptionCheckout(
             reason: $plan->title,
-            payerEmail: $barbershop->email,
+            payerEmail: $payerEmail,
             externalReference: $subscription->external_reference,
             backUrl: $backUrl,
             amount: (float) $plan->monthly_amount,
@@ -80,7 +84,7 @@ class BarbershopPlatformCheckoutService
         return BarbershopPlatformSubscription::updateOrCreate(
             ['barbershop_user_id' => $barbershop->id],
             [
-                'payer_email' => $barbershop->email,
+                'payer_email' => app(PaymentEmailService::class)->preferredPayerEmail($barbershop),
                 'external_reference' => $this->externalReference($barbershop),
                 'status' => BarbershopPlatformSubscription::STATUS_PENDING,
             ],

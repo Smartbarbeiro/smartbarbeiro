@@ -1,6 +1,5 @@
 <script setup>
 import Modal from '@/Components/Modal.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import ProfileAvatar from '@/Components/ProfileAvatar.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import Cropper from 'cropperjs';
@@ -39,6 +38,7 @@ const showCropModal = ref(false);
 const cropImageSrc = ref(null);
 const cropError = ref(null);
 const isPreparingCrop = ref(false);
+const zoomRatio = ref(1);
 
 let cropper = null;
 let pendingObjectUrl = null;
@@ -55,12 +55,17 @@ const destroyCropper = () => {
     cropper = null;
 };
 
-const closeCropModal = () => {
+const resetCropModal = () => {
     showCropModal.value = false;
     cropError.value = null;
     destroyCropper();
     revokePendingUrl();
     cropImageSrc.value = null;
+    zoomRatio.value = 1;
+};
+
+const cancelCropModal = () => {
+    resetCropModal();
 };
 
 const openFilePicker = () => {
@@ -91,6 +96,15 @@ const onFileSelected = async (event) => {
     showCropModal.value = true;
 };
 
+const syncZoomRatio = () => {
+    if (!cropper) {
+        return;
+    }
+
+    const imageData = cropper.getImageData();
+    zoomRatio.value = Number((imageData?.ratio ?? 1).toFixed(2));
+};
+
 const initCropper = async () => {
     await nextTick();
 
@@ -118,6 +132,12 @@ const initCropper = async () => {
         cropBoxMovable: false,
         cropBoxResizable: false,
         toggleDragModeOnDblclick: false,
+        ready() {
+            syncZoomRatio();
+        },
+        zoom() {
+            syncZoomRatio();
+        },
     });
 };
 
@@ -127,9 +147,27 @@ watch(showCropModal, (visible) => {
     }
 });
 
+const zoomIn = () => {
+    cropper?.zoom(0.12);
+};
+
+const zoomOut = () => {
+    cropper?.zoom(-0.12);
+};
+
+const onZoomSlider = (event) => {
+    const value = Number(event.target.value);
+
+    if (!cropper || Number.isNaN(value)) {
+        return;
+    }
+
+    cropper.zoomTo(value);
+};
+
 const confirmCrop = async () => {
     if (!cropper || isPreparingCrop.value) {
-        return;
+        return false;
     }
 
     isPreparingCrop.value = true;
@@ -139,15 +177,33 @@ const confirmCrop = async () => {
         const blob = await exportCircularCrop(cropper);
         const file = blobToJpegFile(blob);
         emit('selected', file);
-        closeCropModal();
+        resetCropModal();
+
+        return true;
     } catch (error) {
         cropError.value =
             error instanceof Error
                 ? error.message
                 : 'Não foi possível recortar a imagem.';
+
+        return false;
     } finally {
         isPreparingCrop.value = false;
     }
+};
+
+const onModalClose = async () => {
+    if (isPreparingCrop.value) {
+        return;
+    }
+
+    if (!cropper) {
+        cancelCropModal();
+
+        return;
+    }
+
+    await confirmCrop();
 };
 
 onBeforeUnmount(() => {
@@ -186,15 +242,16 @@ onBeforeUnmount(() => {
             @change="onFileSelected"
         />
 
-        <Modal :show="showCropModal" max-width="lg" @close="closeCropModal">
+        <Modal :show="showCropModal" max-width="lg" @close="onModalClose">
             <div class="modal-header border-secondary">
                 <h2 class="modal-title h5 mb-0">Ajustar logo ou foto</h2>
             </div>
 
             <div class="modal-body">
                 <p class="text-secondary small mb-3">
-                    Arraste para posicionar e use o zoom para enquadrar. A foto
-                    será salva em formato circular.
+                    Arraste para posicionar e use os controles de zoom. Clique
+                    fora do modal ou pressione Esc para salvar em formato
+                    circular.
                 </p>
 
                 <div class="profile-photo-cropper">
@@ -206,22 +263,56 @@ onBeforeUnmount(() => {
                     />
                 </div>
 
+                <div class="profile-photo-cropper__zoom mt-3">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary profile-photo-cropper__zoom-btn"
+                        aria-label="Diminuir zoom"
+                        :disabled="isPreparingCrop"
+                        @click="zoomOut"
+                    >
+                        <i class="bi bi-dash-lg" aria-hidden="true"></i>
+                    </button>
+
+                    <input
+                        type="range"
+                        class="form-range profile-photo-cropper__zoom-slider"
+                        min="0.2"
+                        max="3"
+                        step="0.01"
+                        :value="zoomRatio"
+                        :disabled="isPreparingCrop"
+                        aria-label="Zoom da imagem"
+                        @input="onZoomSlider"
+                    />
+
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary profile-photo-cropper__zoom-btn"
+                        aria-label="Aumentar zoom"
+                        :disabled="isPreparingCrop"
+                        @click="zoomIn"
+                    >
+                        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <p
+                    v-if="isPreparingCrop"
+                    class="text-secondary small mb-0 mt-3"
+                >
+                    Salvando foto...
+                </p>
+
                 <p v-if="cropError" class="text-danger small mb-0 mt-3">
                     {{ cropError }}
                 </p>
             </div>
 
             <div class="modal-footer border-secondary">
-                <SecondaryButton type="button" @click="closeCropModal">
+                <SecondaryButton type="button" @click="cancelCropModal">
                     Cancelar
                 </SecondaryButton>
-                <PrimaryButton
-                    type="button"
-                    :disabled="isPreparingCrop"
-                    @click="confirmCrop"
-                >
-                    Usar esta foto
-                </PrimaryButton>
             </div>
         </Modal>
     </div>

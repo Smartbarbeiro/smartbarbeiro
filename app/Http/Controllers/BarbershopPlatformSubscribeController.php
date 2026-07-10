@@ -7,6 +7,7 @@ use App\Models\BarbershopPlatformSubscription;
 use App\Services\BarbershopPlatformCheckoutService;
 use App\Services\BarbershopPlatformSubscriptionSyncService;
 use App\Services\MercadoPagoService;
+use App\Services\PaymentEmailService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,7 +80,8 @@ class BarbershopPlatformSubscribeController extends Controller
     public function return(
         Request $request,
         BarbershopPlatformSubscriptionSyncService $syncService,
-    ): Response {
+        PaymentEmailService $paymentEmailService,
+    ): Response|RedirectResponse {
         $user = $request->user();
 
         abort_unless($user->isBarbershopAccount(), 403);
@@ -98,11 +100,17 @@ class BarbershopPlatformSubscribeController extends Controller
             }
         }
 
+        $paymentEmailMismatch = $paymentEmailService->mismatchForPayerEmail(
+            $user,
+            $subscription?->payer_email,
+        );
+
         if ($subscription?->isActive()) {
             return redirect()
                 ->route('profile.edit')
                 ->with('status', 'platform-subscription-active')
-                ->with('prompt_profile_photo', true);
+                ->with('prompt_profile_photo', true)
+                ->with('payment_email_mismatch', $paymentEmailMismatch);
         }
 
         return Inertia::render('Platform/SubscribeReturn', [
@@ -111,6 +119,7 @@ class BarbershopPlatformSubscribeController extends Controller
                 'status_label' => $subscription->statusLabel(),
                 'is_active' => $subscription->isActive(),
             ] : null,
+            'paymentEmailMismatch' => $paymentEmailMismatch,
         ]);
     }
 }

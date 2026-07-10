@@ -158,6 +158,10 @@ const validateStep = (step) => {
 
 const serverError = (step) => props.form.errors?.[step.key] ?? null;
 
+const clearReadonly = (event) => {
+    event.target.removeAttribute('readonly');
+};
+
 const passwordStepIndex = () =>
     props.steps.findIndex((step) => step.key === 'password');
 
@@ -259,7 +263,7 @@ defineExpose({
             <p class="step-signup-form__subtitle">{{ subtitle }}</p>
         </header>
 
-        <form class="step-signup-form__body" @submit.prevent>
+        <form class="step-signup-form__body" autocomplete="off" @submit.prevent>
             <div
                 class="step-signup-form__stack"
                 :style="{ height: stackHeight }"
@@ -280,10 +284,13 @@ defineExpose({
                             :id="`step-${step.key}`"
                             :type="inputType(step)"
                             :placeholder="step.placeholder"
-                            :autocomplete="step.autocomplete"
+                            autocomplete="off"
+                            :name="`sb-${step.key}`"
+                            readonly
                             :required="step.required"
                             class="step-signup-section__input step-signup-section__input--password"
                             :value="form[step.key]"
+                            @focus="clearReadonly"
                             @input="onFieldInput(step, $event)"
                             @keydown.enter="onEnter(step, index, $event)"
                         />
@@ -309,12 +316,15 @@ defineExpose({
                         :id="`step-${step.key}`"
                         :type="step.type"
                         :placeholder="step.placeholder"
-                        :autocomplete="step.autocomplete"
+                        autocomplete="off"
+                        :name="`sb-${step.key}`"
+                        readonly
                         :inputmode="step.inputmode"
                         :required="step.required"
                         :maxlength="taxDocumentFieldMaxLength(step.key) ?? undefined"
                         class="step-signup-section__input"
                         :value="form[step.key]"
+                        @focus="clearReadonly"
                         @input="onFieldInput(step, $event)"
                         @keydown.enter="onEnter(step, index, $event)"
                     />

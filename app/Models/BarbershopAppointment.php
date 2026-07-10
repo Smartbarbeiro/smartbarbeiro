@@ -75,6 +75,16 @@ class BarbershopAppointment extends Model
         return in_array($this->status, [self::STATUS_PENDING, self::STATUS_CONFIRMED], true);
     }
 
+    public function isCancellableByClient(): bool
+    {
+        return $this->isActive();
+    }
+
+    public function isVisibleOnAgenda(): bool
+    {
+        return ! in_array($this->status, [self::STATUS_CANCELLED, self::STATUS_REJECTED], true);
+    }
+
     public function statusLabel(): string
     {
         return match ($this->status) {
@@ -128,6 +138,7 @@ class BarbershopAppointment extends Model
             'package_type' => $this->package_type,
             'status' => $this->status,
             'status_label' => $this->statusLabel(),
+            'is_cancellable' => $this->isCancellableByClient(),
             'client_notes' => $this->client_notes,
             'client' => [
                 'id' => $this->client_user_id,
