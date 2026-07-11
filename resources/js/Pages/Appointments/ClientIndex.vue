@@ -91,7 +91,7 @@ const cancelAppointment = (appointment) => {
             <DashboardPageHeader icon="journal-bookmark" title="Agendamentos" />
         </template>
 
-        <div class="d-flex flex-column gap-4">
+        <div class="d-flex flex-column gap-4 client-appointments-page">
             <DashboardAlert
                 v-if="statusMessage"
                 variant="success"
