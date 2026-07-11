@@ -42,7 +42,7 @@ defineProps({
             <div v-if="message.is_sender" class="border-top border-secondary-subtle pt-4">
                 <h3 class="h6 fw-semibold mb-3">Destinatários</h3>
                 <div class="table-responsive">
-                    <table class="table table-dark table-dark-custom mb-0">
+                    <table class="table glass-table table-dark table-dark-custom mb-0">
                         <thead>
                             <tr>
                                 <th scope="col">Cliente</th>

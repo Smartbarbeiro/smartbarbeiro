@@ -119,7 +119,7 @@ const onMonthPick = (event) => {
                 description="Totais do mês agrupados por barbeiro."
             >
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
+                    <table class="table glass-table align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Funcionário</th>
@@ -151,7 +151,7 @@ const onMonthPick = (event) => {
                 description="Cada serviço concluído com o valor e a comissão registrados."
             >
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
+                    <table class="table glass-table align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Data</th>

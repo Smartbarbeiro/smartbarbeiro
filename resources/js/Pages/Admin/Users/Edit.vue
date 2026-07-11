@@ -344,7 +344,7 @@ const qrProfileUrl = computed(() => {
                 description="Clientes cadastrados nesta barbearia."
             >
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover table-dark-custom mb-0">
+                    <table class="table glass-table table-dark table-hover table-dark-custom mb-0">
                         <thead>
                             <tr>
                                 <th scope="col">Membro</th>

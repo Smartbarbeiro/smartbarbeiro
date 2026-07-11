@@ -39,7 +39,7 @@ const monthRows = (yearGroup) => {
             <p class="small text-secondary fw-semibold mb-2">{{ yearGroup.year }}</p>
 
             <div class="table-responsive">
-                <table class="table table-sm align-middle mb-0">
+                <table class="table glass-table table-sm align-middle mb-0">
                     <thead>
                         <tr>
                             <th scope="col">Competência</th>

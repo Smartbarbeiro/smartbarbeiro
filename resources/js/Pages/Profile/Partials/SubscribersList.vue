@@ -24,7 +24,7 @@ const statusClass = (status) => {
         </div>
 
         <div v-else class="table-responsive">
-            <table class="table table-dark table-hover table-dark-custom mb-0">
+            <table class="table glass-table table-dark table-hover table-dark-custom mb-0">
                 <thead>
                     <tr>
                         <th scope="col">Assinante</th>

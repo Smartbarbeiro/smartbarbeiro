@@ -215,7 +215,7 @@ const deleteEmployee = (employee) => {
                 :description="`${employees.length} ${employees.length === 1 ? 'funcionário' : 'funcionários'} na equipe.`"
             >
                 <div class="table-responsive">
-                    <table class="table align-middle mb-0">
+                    <table class="table glass-table align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Cor</th>
