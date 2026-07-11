@@ -100,8 +100,40 @@ const pageDescription = computed(() => {
 const statusClass = (status) => {
     if (status === 'authorized') return 'badge bg-success';
     if (status === 'cancelled') return 'badge bg-secondary';
-    if (status === 'pending') return 'badge bg-secondary';
+    if (status === 'pending') return 'badge bg-warning text-dark';
+    if (status === 'paused') return 'badge bg-warning text-dark';
     return 'badge bg-secondary';
+};
+
+const subscriptionNeedsPayment = (subscription) => {
+    if (subscription.status === 'pending' || subscription.status === 'paused') {
+        return true;
+    }
+
+    if (subscription.kind !== 'service_plan') {
+        return false;
+    }
+
+    return (subscription.payment_history ?? []).some((yearGroup) =>
+        Object.values(yearGroup.months ?? {}).some(
+            (payment) =>
+                payment && ['overdue', 'failed'].includes(payment.status),
+        ),
+    );
+};
+
+const paymentHref = (subscription) => {
+    const username = subscription.creator?.username;
+
+    if (!username) {
+        return '#';
+    }
+
+    if (subscription.kind === 'service_plan') {
+        return `${route('profile.public', { username })}#pagamento`;
+    }
+
+    return route('profile.public', { username });
 };
 </script>
 
@@ -356,6 +388,14 @@ const statusClass = (status) => {
                                 v-if="!isBarbershopClientsView"
                                 class="d-flex flex-column gap-2 align-items-sm-end"
                             >
+                                <Link
+                                    v-if="subscriptionNeedsPayment(subscription)"
+                                    :href="paymentHref(subscription)"
+                                    class="link-primary small fw-semibold"
+                                >
+                                    Realizar pagamento
+                                </Link>
+
                                 <Link
                                     v-if="subscription.is_active"
                                     :href="

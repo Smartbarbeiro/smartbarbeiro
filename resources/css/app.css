@@ -821,6 +821,18 @@ a:hover {
     color: #ffe566;
 }
 
+.app-content .link-danger,
+.app-content .text-danger,
+.app-content .cancel-subscription-link {
+    color: #f87171 !important;
+}
+
+.app-content .link-danger:hover,
+.app-content .text-danger:hover,
+.app-content .cancel-subscription-link:hover {
+    color: #fca5a5 !important;
+}
+
 .app-content .alert-success {
     background: rgba(34, 197, 94, 0.12);
     border-color: rgba(34, 197, 94, 0.35);
