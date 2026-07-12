@@ -116,23 +116,31 @@ const cancelAppointment = (appointment) => {
                         :key="appointment.id"
                         class="client-appointment-card"
                     >
-                        <div class="d-flex justify-content-between align-items-start gap-3">
-                            <div>
-                                <p class="mb-1 fw-semibold">
+                        <div class="client-appointment-card__top">
+                            <div class="client-appointment-card__main">
+                                <p class="client-appointment-card__service mb-0">
                                     {{ appointment.service_label }}
                                 </p>
-                                <p class="mb-1 small text-secondary">
-                                    {{ appointment.formatted_scheduled_at }}
-                                </p>
+                                <div class="client-appointment-meta" aria-label="Data e horário">
+                                    <span class="client-appointment-meta__chip">
+                                        <i class="bi bi-calendar3" aria-hidden="true"></i>
+                                        <span>{{ appointment.formatted_date }}</span>
+                                    </span>
+                                    <span class="client-appointment-meta__chip client-appointment-meta__chip--time">
+                                        <i class="bi bi-clock" aria-hidden="true"></i>
+                                        <span>{{ appointment.formatted_time }}</span>
+                                    </span>
+                                </div>
                                 <p
                                     v-if="appointment.performer_name"
-                                    class="mb-0 small"
+                                    class="client-appointment-card__performer mb-0"
                                 >
-                                    Com {{ appointment.performer_name }}
+                                    <i class="bi bi-person" aria-hidden="true"></i>
+                                    <span>Com {{ appointment.performer_name }}</span>
                                 </p>
                                 <p
                                     v-if="appointment.client_notes"
-                                    class="mb-0 small mt-2"
+                                    class="client-appointment-card__notes mb-0"
                                 >
                                     {{ appointment.client_notes }}
                                 </p>

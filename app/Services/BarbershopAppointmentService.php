@@ -344,12 +344,15 @@ class BarbershopAppointmentService
             ->limit(30)
             ->get()
             ->map(function (BarbershopAppointment $appointment) use ($barbershop) {
+                $scheduledAt = $appointment->scheduled_at
+                    ->timezone(config('app.timezone'))
+                    ->locale('pt_BR');
+
                 return [
                     ...$appointment->toPayload(),
-                    'formatted_scheduled_at' => $appointment->scheduled_at
-                        ->timezone(config('app.timezone'))
-                        ->locale('pt_BR')
-                        ->translatedFormat('d/m/Y \à\s H:i'),
+                    'formatted_scheduled_at' => $scheduledAt->translatedFormat('d/m/Y \à\s H:i'),
+                    'formatted_date' => $scheduledAt->translatedFormat('D, d/m/Y'),
+                    'formatted_time' => $scheduledAt->format('H:i'),
                     'barbershop' => [
                         'name' => $barbershop->name,
                         'username' => $barbershop->username,
