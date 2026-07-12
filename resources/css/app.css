@@ -4076,6 +4076,12 @@ li {
     margin: 0.35rem auto 0;
 }
 
+.plan-builder .plan-wallet-icon--img {
+    height: 2.75rem;
+    object-fit: contain;
+    width: 2.75rem;
+}
+
 .plan-builder .card-pagamento:hover {
     border-color: rgba(255, 223, 17, 0.5);
 }

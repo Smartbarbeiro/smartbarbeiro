@@ -74,7 +74,7 @@ const checkoutStep = ref(null);
 const paymentMethod = ref(null);
 const showCancelCurrentPlanWarning = ref(false);
 
-const pixImageUrl = '/images/pix.svg';
+const pixImageUrl = '/images/pix-icon.png';
 
 const checkoutForm = useForm({
     package_type: selectedPackageType.value,
@@ -741,7 +741,7 @@ onUnmounted(() => {
                                 <img
                                     :src="pixImageUrl"
                                     alt="Pix"
-                                    class="service-pix img-fluid"
+                                    class="plan-wallet-icon plan-wallet-icon--img"
                                 />
                             </div>
                         </div>
