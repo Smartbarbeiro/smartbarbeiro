@@ -75,7 +75,6 @@ const paymentMethod = ref(null);
 const showCancelCurrentPlanWarning = ref(false);
 
 const pixImageUrl = '/images/pix.svg';
-const cardImageUrl = '/images/cartao.svg';
 
 const checkoutForm = useForm({
     package_type: selectedPackageType.value,
@@ -749,11 +748,10 @@ onUnmounted(() => {
                         <div class="col-6 col-md-3">
                             <div class="card-pagamento card-pagamento--static w-100">
                                 <h3 class="h6 fw-bold mb-3">Cartão</h3>
-                                <img
-                                    :src="cardImageUrl"
-                                    alt="Cartão"
-                                    class="service-pix img-fluid"
-                                />
+                                <i
+                                    class="bi bi-credit-card plan-wallet-icon"
+                                    aria-hidden="true"
+                                ></i>
                             </div>
                         </div>
                         <div class="col-6 col-md-3">
