@@ -237,7 +237,7 @@ const openPendingCheckout = () => {
     selectedAddonIds.value = [
         ...(props.pendingServicePlanSubscription.selected_addon_ids ?? []),
     ];
-    paymentMethod.value = null;
+    paymentMethod.value = 'stripe';
     checkoutStep.value = 'payment';
 };
 
@@ -255,6 +255,7 @@ const restorePendingCheckout = () => {
 };
 
 const goToPayment = () => {
+    paymentMethod.value = 'stripe';
     checkoutStep.value = 'payment';
 };
 
@@ -725,63 +726,55 @@ onUnmounted(() => {
                         </p>
                     </div>
 
-                    <p class="h6 fw-bold mb-3">
-                        Método de Pagamento:
+                    <p class="h6 fw-bold mb-2">
+                        Métodos no checkout Stripe:
+                    </p>
+                    <p class="small text-secondary mb-3">
+                        No próximo passo você poderá pagar com Pix, cartão,
+                        Google Pay ou Apple Pay quando disponíveis no seu
+                        dispositivo.
                     </p>
 
-                    <fieldset>
-                        <legend class="visually-hidden">
-                            Método de pagamento
-                        </legend>
-
-                        <div class="row g-3 justify-content-center">
-                            <div class="col-12 col-md-6">
-                                <button
-                                    type="button"
-                                    class="card-pagamento w-100"
-                                    :class="{
-                                        'card-pagamento--selected':
-                                            paymentMethod === 'pix',
-                                    }"
-                                    @click="paymentMethod = 'pix'"
-                                >
-                                    <h3 class="h6 fw-bold mb-3">
-                                        Pix Recorrente
-                                    </h3>
-                                    <img
-                                        :src="pixImageUrl"
-                                        alt="Pix"
-                                        class="service-pix img-fluid"
-                                    />
-                                </button>
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-6 col-md-3">
+                            <div class="card-pagamento card-pagamento--static w-100">
+                                <h3 class="h6 fw-bold mb-3">Pix</h3>
+                                <img
+                                    :src="pixImageUrl"
+                                    alt="Pix"
+                                    class="service-pix img-fluid"
+                                />
                             </div>
                         </div>
-
-                        <div
-                            class="row g-3 justify-content-center plan-payment-row-spaced"
-                        >
-                            <div class="col-12 col-md-6">
-                                <button
-                                    type="button"
-                                    class="card-pagamento w-100"
-                                    :class="{
-                                        'card-pagamento--selected':
-                                            paymentMethod === 'card',
-                                    }"
-                                    @click="paymentMethod = 'card'"
-                                >
-                                    <h3 class="h6 fw-bold mb-3">
-                                        Cartão de Crédito e Débito
-                                    </h3>
-                                    <img
-                                        :src="cardImageUrl"
-                                        alt="Cartão"
-                                        class="service-pix img-fluid"
-                                    />
-                                </button>
+                        <div class="col-6 col-md-3">
+                            <div class="card-pagamento card-pagamento--static w-100">
+                                <h3 class="h6 fw-bold mb-3">Cartão</h3>
+                                <img
+                                    :src="cardImageUrl"
+                                    alt="Cartão"
+                                    class="service-pix img-fluid"
+                                />
                             </div>
                         </div>
-                    </fieldset>
+                        <div class="col-6 col-md-3">
+                            <div class="card-pagamento card-pagamento--static w-100">
+                                <h3 class="h6 fw-bold mb-3">Google Pay</h3>
+                                <i
+                                    class="bi bi-google plan-wallet-icon"
+                                    aria-hidden="true"
+                                ></i>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="card-pagamento card-pagamento--static w-100">
+                                <h3 class="h6 fw-bold mb-3">Apple Pay</h3>
+                                <i
+                                    class="bi bi-apple plan-wallet-icon"
+                                    aria-hidden="true"
+                                ></i>
+                            </div>
+                        </div>
+                    </div>
 
                     <InputError class="mt-3 mb-0" :message="checkoutError" />
 
@@ -823,8 +816,7 @@ onUnmounted(() => {
                             v-if="
                                 isAuthenticated &&
                                 stripeConfigured &&
-                                !isOwner &&
-                                paymentMethod
+                                !isOwner
                             "
                             class="col-12 col-md-6"
                         >
@@ -841,14 +833,14 @@ onUnmounted(() => {
                                     {{
                                         checkoutForm.processing
                                             ? 'REDIRECIONANDO...'
-                                            : 'CONFIRMAR PAGAMENTO'
+                                            : 'IR PARA PAGAMENTO'
                                     }}
                                 </span>
                             </button>
                         </div>
 
                         <div
-                            v-else-if="isOwner && paymentMethod"
+                            v-else-if="isOwner"
                             class="col-12 col-md-6"
                         >
                             <button
@@ -856,7 +848,7 @@ onUnmounted(() => {
                                 class="btn btn-plan-submit og-btn og-btn--primary w-100"
                                 disabled
                             >
-                                <span class="og-btn__label">CONFIRMAR PAGAMENTO</span>
+                                <span class="og-btn__label">IR PARA PAGAMENTO</span>
                             </button>
                         </div>
                     </div>

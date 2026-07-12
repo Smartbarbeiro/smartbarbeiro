@@ -156,9 +156,40 @@ class StripeServicePlanService
         $barbershop ??= $subscription->creator;
         $customerId = $this->findOrCreateCustomer($subscriber);
 
-        $session = $this->client()->checkout->sessions->create([
+        $session = $this->client()->checkout->sessions->create(
+            $this->webCheckoutSessionParams(
+                $subscription,
+                $customerId,
+                $selection,
+                $successUrl,
+                $cancelUrl,
+                $barbershop,
+            ),
+        );
+
+        if (! is_string($session->url) || $session->url === '') {
+            throw new \RuntimeException(__('messages.stripe_no_checkout_url'));
+        }
+
+        return $session->url;
+    }
+
+    /**
+     * @param  array{reason: string, monthly_total: float}  $selection
+     * @return array<string, mixed>
+     */
+    public function webCheckoutSessionParams(
+        ServicePlanSubscription $subscription,
+        string $customerId,
+        array $selection,
+        string $successUrl,
+        string $cancelUrl,
+        ?User $barbershop = null,
+    ): array {
+        $params = [
             'mode' => 'subscription',
             'customer' => $customerId,
+            'locale' => 'pt-BR',
             'line_items' => [[
                 'price_data' => $this->lineItemPriceData($selection),
                 'quantity' => 1,
@@ -170,13 +201,16 @@ class StripeServicePlanService
                 'service_plan_subscription_id' => (string) $subscription->id,
             ],
             'subscription_data' => $this->subscriptionData($subscription, $barbershop),
-        ]);
+            'payment_method_types' => $this->checkoutPaymentMethodTypes(),
+        ];
 
-        if (! is_string($session->url) || $session->url === '') {
-            throw new \RuntimeException(__('messages.stripe_no_checkout_url'));
+        $paymentMethodOptions = $this->checkoutPaymentMethodOptions($selection);
+
+        if ($paymentMethodOptions !== []) {
+            $params['payment_method_options'] = $paymentMethodOptions;
         }
 
-        return $session->url;
+        return $params;
     }
 
     public function retrieveSubscription(string $stripeSubscriptionId): Subscription
@@ -227,9 +261,7 @@ class StripeServicePlanService
                 'price_data' => $this->lineItemPriceData($selection),
             ]],
             'payment_behavior' => 'default_incomplete',
-            'payment_settings' => [
-                'save_default_payment_method' => 'on_subscription',
-            ],
+            'payment_settings' => $this->subscriptionPaymentSettings($selection),
             'expand' => ['latest_invoice.payment_intent'],
             'metadata' => $this->subscriptionMetadata($subscription),
         ];
@@ -312,6 +344,83 @@ class StripeServicePlanService
             'creator_user_id' => (string) $subscription->creator_user_id,
             'subscriber_user_id' => (string) $subscription->subscriber_user_id,
         ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function checkoutPaymentMethodTypes(): array
+    {
+        $types = ['card'];
+
+        if ($this->pixEnabled()) {
+            $types[] = 'pix';
+        }
+
+        return $types;
+    }
+
+    /**
+     * @param  array{reason: string, monthly_total: float}  $selection
+     * @return array<string, mixed>
+     */
+    private function checkoutPaymentMethodOptions(array $selection): array
+    {
+        if (! $this->pixEnabled()) {
+            return [];
+        }
+
+        return [
+            'pix' => [
+                'mandate_options' => $this->pixMandateOptions($selection),
+            ],
+        ];
+    }
+
+    /**
+     * @param  array{reason: string, monthly_total: float}  $selection
+     * @return array<string, mixed>
+     */
+    private function subscriptionPaymentSettings(array $selection): array
+    {
+        $settings = [
+            'save_default_payment_method' => 'on_subscription',
+            'payment_method_types' => $this->checkoutPaymentMethodTypes(),
+        ];
+
+        if ($this->pixEnabled()) {
+            $settings['payment_method_options'] = [
+                'pix' => [
+                    'mandate_options' => $this->pixMandateOptions($selection),
+                ],
+            ];
+        }
+
+        return $settings;
+    }
+
+    /**
+     * @param  array{reason: string, monthly_total: float}  $selection
+     * @return array<string, mixed>
+     */
+    private function pixMandateOptions(array $selection): array
+    {
+        $amount = $this->amountInCents((float) $selection['monthly_total']);
+
+        return [
+            // Headroom for small plan changes / IOF presentation without re-mandate.
+            'amount' => max($amount, (int) round($amount * 1.2)),
+            'amount_type' => 'maximum',
+            'currency' => strtolower((string) config('stripe.currency', 'brl')),
+            'payment_schedule' => 'monthly',
+            'reference' => mb_substr((string) $selection['reason'], 0, 35),
+        ];
+    }
+
+    private function pixEnabled(): bool
+    {
+        return (bool) config('stripe.pix_enabled', true)
+            && strtolower((string) config('stripe.currency', 'brl')) === 'brl';
     }
 
     private function amountInCents(float $amount): int

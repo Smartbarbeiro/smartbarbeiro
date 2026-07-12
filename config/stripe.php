@@ -29,6 +29,12 @@ return [
 
     'api_version' => env('STRIPE_API_VERSION'),
 
+    /*
+    | Enable Pix Automático on subscription Checkout (BRL). Requires Pix to be
+    | turned on in the Stripe Dashboard (Test and Live).
+    */
+    'pix_enabled' => env('STRIPE_PIX_ENABLED', true),
+
     'connect_enabled' => env('STRIPE_CONNECT_ENABLED', true),
 
     'connect_country' => env('STRIPE_CONNECT_COUNTRY', 'BR'),

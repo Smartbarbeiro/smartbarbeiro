@@ -4058,6 +4058,24 @@ li {
     width: 100%;
 }
 
+.plan-builder .card-pagamento--static {
+    cursor: default;
+    min-height: 100%;
+    text-align: center;
+}
+
+.plan-builder .card-pagamento--static:hover {
+    border-color: transparent;
+}
+
+.plan-builder .plan-wallet-icon {
+    color: #111;
+    display: block;
+    font-size: 2.75rem;
+    line-height: 1;
+    margin: 0.35rem auto 0;
+}
+
 .plan-builder .card-pagamento:hover {
     border-color: rgba(255, 223, 17, 0.5);
 }
