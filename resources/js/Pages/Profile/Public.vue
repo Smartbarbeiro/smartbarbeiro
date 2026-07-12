@@ -626,6 +626,7 @@ onUnmounted(() => {
                         :mercadopago-configured="mercadopagoConfigured"
                         :stripe-configured="stripeConfigured"
                         :has-active-service-plan-subscription="hasActiveServicePlanSubscription"
+                        :active-service-plan-subscription="activeServicePlanSubscription"
                         :pending-service-plan-subscription="pendingServicePlanSubscription"
                         :has-signed-up="hasSignedUp"
                         @checkout-step-change="planCheckoutStep = $event"

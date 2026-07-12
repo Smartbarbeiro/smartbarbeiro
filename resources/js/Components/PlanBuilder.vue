@@ -6,7 +6,7 @@ import ServicePlanIcon from '@/Components/ServicePlanIcon.vue';
 import StepSignupForm from '@/Components/StepSignupForm.vue';
 import { barbershopDisplayName } from '@/utils/barbershopDisplayName';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const page = usePage();
 
@@ -43,6 +43,10 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    activeServicePlanSubscription: {
+        type: Object,
+        default: null,
+    },
     pendingServicePlanSubscription: {
         type: Object,
         default: null,
@@ -55,11 +59,20 @@ const props = defineProps({
 
 const emit = defineEmits(['checkout-step-change']);
 
-const selectedPackageType = ref(props.servicePlans.packages[0]?.type ?? null);
-const selectedAddonIds = ref([]);
-const showAddons = ref(false);
+const initialPackageType =
+    props.activeServicePlanSubscription?.package_type ??
+    props.servicePlans.packages[0]?.type ??
+    null;
+const initialAddonIds = [
+    ...(props.activeServicePlanSubscription?.selected_addon_ids ?? []),
+];
+
+const selectedPackageType = ref(initialPackageType);
+const selectedAddonIds = ref(initialAddonIds);
+const showAddons = ref(initialAddonIds.length > 0);
 const checkoutStep = ref(null);
 const paymentMethod = ref(null);
+const showCancelCurrentPlanWarning = ref(false);
 
 const pixImageUrl = '/images/pix.svg';
 const cardImageUrl = '/images/cartao.svg';
@@ -179,6 +192,32 @@ const toggleAddon = (addonId) => {
     }
 };
 
+const sameAddonIds = (left, right) => {
+    const a = [...(left ?? [])].map(Number).sort((x, y) => x - y);
+    const b = [...(right ?? [])].map(Number).sort((x, y) => x - y);
+
+    return a.length === b.length && a.every((id, index) => id === b[index]);
+};
+
+const isSelectionSameAsActivePlan = computed(() => {
+    const active = props.activeServicePlanSubscription;
+
+    if (!active || !props.hasActiveServicePlanSubscription) {
+        return false;
+    }
+
+    return (
+        active.package_type === selectedPackageType.value &&
+        sameAddonIds(active.selected_addon_ids, selectedAddonIds.value)
+    );
+});
+
+const revealCancelCurrentPlanWarning = async () => {
+    showCancelCurrentPlanWarning.value = false;
+    await nextTick();
+    showCancelCurrentPlanWarning.value = true;
+};
+
 const buildPlan = () => {
     if (!selectedPackage.value) {
         return;
@@ -292,6 +331,14 @@ const handlePlanSubmit = () => {
         return;
     }
 
+    if (props.hasActiveServicePlanSubscription && !props.isOwner) {
+        if (!isSelectionSameAsActivePlan.value) {
+            revealCancelCurrentPlanWarning();
+        }
+
+        return;
+    }
+
     buildPlan();
 };
 
@@ -372,6 +419,15 @@ watch(checkoutStep, (step) => {
     syncCheckoutHash(step);
 });
 
+watch([selectedPackageType, selectedAddonIds], () => {
+    if (
+        showCancelCurrentPlanWarning.value &&
+        isSelectionSameAsActivePlan.value
+    ) {
+        showCancelCurrentPlanWarning.value = false;
+    }
+});
+
 onMounted(() => {
     window.addEventListener('hashchange', handleCheckoutHashChange);
     restorePendingCheckout();
@@ -404,6 +460,25 @@ onUnmounted(() => {
             role="alert"
         >
             Você já tem um plano de serviço ativo nesta barbearia.
+        </div>
+
+        <DashboardAlert
+            v-if="isAuthenticated"
+            :show="showCancelCurrentPlanWarning"
+            variant="warning"
+            :auto-dismiss="false"
+        >
+            Você precisa cancelar seu plano atual antes.
+            <Link :href="route('subscriptions.index')" class="d-inline-block mt-2">
+                Ir para Plano
+            </Link>
+        </DashboardAlert>
+        <div
+            v-else-if="showCancelCurrentPlanWarning"
+            class="alert alert-warning mb-3"
+            role="alert"
+        >
+            Você precisa cancelar seu plano atual antes.
         </div>
 
         <DashboardAlert
@@ -519,7 +594,6 @@ onUnmounted(() => {
                 <button
                     type="submit"
                     class="btn btn-plan-submit og-btn og-btn--primary"
-                    :disabled="hasActiveServicePlanSubscription"
                 >
                     <span class="og-btn__label">{{ planBuilderSubmitLabel }}</span>
                 </button>
