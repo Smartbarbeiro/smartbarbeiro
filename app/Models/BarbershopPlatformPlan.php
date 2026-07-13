@@ -51,7 +51,6 @@ class BarbershopPlatformPlan extends Model
             'formatted_price' => $this->formattedPrice(),
             'currency_id' => $this->currency_id,
             'is_active' => $this->is_active,
-            'trial_days' => max(0, (int) config('platform.trial_days', 30)),
         ];
     }
 }

@@ -145,9 +145,7 @@ class OAuthRegistrationController extends Controller
         if (! $isCustomerSignup) {
             $request->session()->put(
                 'registration.redirect_to',
-                $user->hasActivePlatformSubscription()
-                    ? route('dashboard', absolute: false)
-                    : route('platform.subscribe', absolute: false),
+                route('platform.subscribe', absolute: false),
             );
 
             return redirect()->route('register.celebration');

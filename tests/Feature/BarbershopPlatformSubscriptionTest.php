@@ -25,11 +25,10 @@ class BarbershopPlatformSubscriptionTest extends TestCase
                 ->component('Auth/Register')
                 ->has('platformPlan')
                 ->where('platformPlan.title', 'Plano Único')
-                ->where('platformPlan.formatted_price', 'R$ 49,90')
-                ->where('platformPlan.trial_days', 30));
+                ->where('platformPlan.formatted_price', 'R$ 49,90'));
     }
 
-    public function test_barbershop_registration_starts_trial_and_opens_dashboard(): void
+    public function test_barbershop_registration_redirects_to_celebration_then_platform_subscribe(): void
     {
         $response = $this->post('/registrar', [
             'name' => 'Nova Barbearia',
@@ -46,33 +45,17 @@ class BarbershopPlatformSubscriptionTest extends TestCase
         $user = User::query()->where('email', 'nova@example.com')->first();
         $this->assertNotNull($user);
 
-        $subscription = $user->platformSubscription;
-        $this->assertNotNull($subscription);
-        $this->assertSame(BarbershopPlatformSubscription::STATUS_PENDING, $subscription->status);
-        $this->assertTrue($subscription->isOnTrial());
-        $this->assertTrue($user->hasActivePlatformSubscription());
-        $this->assertNotNull($subscription->trial_ends_at);
-        $this->assertTrue($subscription->trial_ends_at->isAfter(now()->addDays(29)));
+        $this->assertDatabaseHas('barbershop_platform_subscriptions', [
+            'barbershop_user_id' => $user->id,
+            'status' => BarbershopPlatformSubscription::STATUS_PENDING,
+        ]);
 
         $this->get(route('register.celebration'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('redirectTo', route('dashboard', absolute: false)));
+                ->where('redirectTo', route('platform.subscribe', absolute: false)));
 
-        $this->get(route('dashboard'))->assertOk();
-        $this->get(route('profile.public', $user->username))->assertOk();
-    }
-
-    public function test_expired_trial_without_payment_redirects_to_subscribe(): void
-    {
-        $barbershop = User::factory()->create();
-        $barbershop->platformSubscription()->update([
-            'status' => BarbershopPlatformSubscription::STATUS_PENDING,
-            'trial_ends_at' => now()->subDay(),
-        ]);
-
-        $this->actingAs($barbershop)
-            ->get(route('dashboard'))
+        $this->get(route('dashboard'))
             ->assertRedirect(route('platform.subscribe', absolute: false));
     }
 

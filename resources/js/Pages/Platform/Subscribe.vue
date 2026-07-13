@@ -5,12 +5,12 @@ import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const page = usePage();
 
-const props = defineProps({
+defineProps({
     plan: {
         type: Object,
         required: true,
@@ -29,12 +29,6 @@ const form = useForm({});
 
 const subscribeError = computed(
     () => page.props.errors?.subscribe ?? form.errors.subscribe ?? null,
-);
-
-const onTrial = computed(() => Boolean(props.subscription?.is_on_trial));
-
-const trialDaysRemaining = computed(
-    () => props.subscription?.trial_days_remaining ?? null,
 );
 
 const startCheckout = () => {
@@ -95,31 +89,11 @@ const startCheckout = () => {
             <h2 class="h3 fw-semibold mb-2">{{ plan.title }}</h2>
             <p class="display-6 fw-bold mb-3">{{ plan.formatted_price }}</p>
 
-            <p v-if="plan.trial_days" class="text-success mb-3">
-                {{ plan.trial_days }} dias grátis no cadastro
-            </p>
-
             <p v-if="plan.description" class="text-secondary mb-4">
                 {{ plan.description }}
             </p>
 
-            <DashboardAlert
-                :show="onTrial"
-                variant="success"
-                class="mb-3"
-            >
-                Você está no período gratuito
-                <template v-if="trialDaysRemaining !== null">
-                    — restam {{ trialDaysRemaining }}
-                    {{ trialDaysRemaining === 1 ? 'dia' : 'dias' }}
-                </template>
-                . Pode assinar agora ou continuar usando a plataforma de graça.
-            </DashboardAlert>
-
-            <p
-                v-else-if="subscription && !subscription.is_active"
-                class="text-warning mb-3"
-            >
+            <p v-if="subscription && !subscription.is_active" class="text-warning mb-3">
                 Status: {{ subscription.status_label }}
             </p>
 
@@ -139,7 +113,7 @@ const startCheckout = () => {
 
             <InputError class="mb-3" :message="subscribeError" />
 
-            <form @submit.prevent="startCheckout" class="d-grid gap-2">
+            <form @submit.prevent="startCheckout">
                 <PrimaryButton
                     type="submit"
                     class="w-100"
@@ -148,15 +122,6 @@ const startCheckout = () => {
                     Assinar com Mercado Pago
                 </PrimaryButton>
             </form>
-
-            <p v-if="onTrial" class="mt-3 mb-0">
-                <Link
-                    :href="route('dashboard')"
-                    class="btn btn-outline-secondary w-100"
-                >
-                    Continuar com período gratuito
-                </Link>
-            </p>
         </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

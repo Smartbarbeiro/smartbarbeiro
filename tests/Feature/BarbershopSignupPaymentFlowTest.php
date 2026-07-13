@@ -63,23 +63,19 @@ class BarbershopSignupPaymentFlowTest extends TestCase
         $subscription = $user->platformSubscription;
         $this->assertNotNull($subscription);
         $this->assertSame(BarbershopPlatformSubscription::STATUS_PENDING, $subscription->status);
-        $this->assertTrue($subscription->isOnTrial());
 
         $preapproval->external_reference = $subscription->external_reference;
 
         $this->get(route('register.celebration'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('redirectTo', route('dashboard', absolute: false)));
-
-        $this->get(route('dashboard'))->assertOk();
+                ->where('redirectTo', route('platform.subscribe', absolute: false)));
 
         $this->get(route('platform.subscribe'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Platform/Subscribe')
                 ->has('plan')
-                ->where('subscription.is_on_trial', true)
                 ->where('paymentsConfigured', true));
 
         $this->post(route('platform.subscribe.store'))
@@ -132,29 +128,19 @@ class BarbershopSignupPaymentFlowTest extends TestCase
         ])->assertRedirect(route('register.celebration', absolute: false));
 
         $user = User::query()->where('email', 'semmp@example.com')->firstOrFail();
-        $this->assertTrue($user->platformSubscription->isOnTrial());
-
-        $this->actingAs($user)
-            ->get(route('dashboard'))
-            ->assertOk();
 
         $this->actingAs($user)
             ->get(route('platform.subscribe'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('paymentsConfigured', false)
-                ->where('subscription.is_on_trial', true));
+                ->where('paymentsConfigured', false));
 
         $this->actingAs($user)
             ->post(route('platform.subscribe.store'))
             ->assertRedirect()
             ->assertSessionHas('status', 'platform-subscription-pending');
 
-        $user->platformSubscription()->update([
-            'trial_ends_at' => now()->subDay(),
-        ]);
-
-        $this->actingAs($user->fresh())
+        $this->actingAs($user)
             ->get(route('dashboard'))
             ->assertRedirect(route('platform.subscribe', absolute: false));
     }

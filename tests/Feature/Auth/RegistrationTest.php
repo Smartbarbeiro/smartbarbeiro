@@ -44,7 +44,7 @@ class RegistrationTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Auth/Register')
                 ->where('celebrateRegistration', true)
-                ->where('redirectTo', route('dashboard', absolute: false))
+                ->where('redirectTo', route('platform.subscribe', absolute: false))
             );
     }
 

@@ -77,7 +77,6 @@ return [
         'pending' => 'Pagamento pendente',
         'paused' => 'Pausada',
         'cancelled' => 'Cancelada',
-        'trial' => 'Período gratuito',
     ],
 
     'service_plan_payment_status' => [
