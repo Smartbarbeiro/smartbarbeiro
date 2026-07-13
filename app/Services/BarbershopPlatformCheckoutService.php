@@ -12,7 +12,6 @@ class BarbershopPlatformCheckoutService
 {
     public function __construct(
         private MercadoPagoService $mercadoPago,
-        private BarbershopPlatformPlanService $planService,
     ) {}
 
     /**
@@ -56,24 +55,28 @@ class BarbershopPlatformCheckoutService
             throw new \InvalidArgumentException(__('messages.mercadopago_https_back_url_required'));
         }
 
-        // Plan-hosted checkout can offer Pix / account money / cards in Brazil.
-        // Creating a bare auto_recurring preapproval tends to show card-only.
-        $this->planService->ensureSynced($plan);
-        $plan->refresh();
+        // Hosted plan init_point breaks the card-entry checkout UX for this
+        // account. Pending auto_recurring preapproval restores add-card flow.
+        // Pix is not offered on this redirect model in BR subscriptions.
+        $payerEmail = app(PaymentEmailService::class)->preferredPayerEmail($barbershop);
 
-        if (! filled($plan->mercadopago_preapproval_plan_id)) {
-            throw new \InvalidArgumentException(__('messages.mercadopago_no_checkout_url'));
-        }
-
-        $mpPlan = $this->mercadoPago->getPreApprovalPlan(
-            (string) $plan->mercadopago_preapproval_plan_id,
+        $preapproval = $this->mercadoPago->createSubscriptionCheckout(
+            reason: $plan->title,
+            payerEmail: $payerEmail,
+            externalReference: $subscription->external_reference,
+            backUrl: $backUrl,
+            amount: (float) $plan->monthly_amount,
+            currencyId: $plan->currency_id,
         );
 
-        $checkoutUrl = $this->mercadoPago->planCheckoutUrl($mpPlan);
+        $subscription->update([
+            'mercadopago_preapproval_id' => $preapproval->id,
+            'status' => $this->mercadoPago->mapPreApprovalStatus($preapproval->status),
+        ]);
 
         return [
             'subscription' => $subscription->fresh(),
-            'checkout_url' => $checkoutUrl,
+            'checkout_url' => $this->mercadoPago->checkoutUrl($preapproval),
         ];
     }
 
