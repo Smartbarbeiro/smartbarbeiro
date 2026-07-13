@@ -23,7 +23,7 @@ class BarbershopPlatformSubscribeController extends Controller
 
         abort_unless($user->isBarbershopAccount(), 403);
 
-        if ($user->hasActivePlatformSubscription()) {
+        if ($user->isExemptFromPlatformSubscription() || $user->platformSubscription?->isPaidActive()) {
             return redirect()->route('dashboard');
         }
 
@@ -36,6 +36,9 @@ class BarbershopPlatformSubscribeController extends Controller
                 'status' => $subscription->status,
                 'status_label' => $subscription->statusLabel(),
                 'is_active' => $subscription->isActive(),
+                'is_on_trial' => $subscription->isOnTrial(),
+                'trial_days_remaining' => $subscription->trialDaysRemaining(),
+                'trial_ends_at' => $subscription->trial_ends_at?->toIso8601String(),
             ] : null,
             'paymentsConfigured' => app(MercadoPagoService::class)->isConfigured(),
         ]);
@@ -50,7 +53,7 @@ class BarbershopPlatformSubscribeController extends Controller
 
         abort_unless($user->isBarbershopAccount(), 403);
 
-        if ($user->hasActivePlatformSubscription()) {
+        if ($user->isExemptFromPlatformSubscription() || $user->platformSubscription?->isPaidActive()) {
             return redirect()->route('dashboard');
         }
 
@@ -109,7 +112,7 @@ class BarbershopPlatformSubscribeController extends Controller
             $subscription?->payer_email,
         );
 
-        if ($subscription?->isActive()) {
+        if ($subscription?->isPaidActive()) {
             return redirect()
                 ->route('profile.edit')
                 ->with('status', 'platform-subscription-active')
@@ -122,6 +125,7 @@ class BarbershopPlatformSubscribeController extends Controller
                 'status' => $subscription->status,
                 'status_label' => $subscription->statusLabel(),
                 'is_active' => $subscription->isActive(),
+                'is_on_trial' => $subscription->isOnTrial(),
             ] : null,
             'paymentEmailMismatch' => $paymentEmailMismatch,
         ]);

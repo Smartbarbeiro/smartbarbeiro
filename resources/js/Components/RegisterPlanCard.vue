@@ -136,6 +136,13 @@ onUnmounted(() => {
                     <span class="card__price-period">/ mês</span>
                 </p>
 
+                <p
+                    v-if="platformPlan?.trial_days"
+                    class="card__trial text-success mb-3"
+                >
+                    {{ platformPlan.trial_days }} dias grátis
+                </p>
+
                 <ul role="list" class="card__bullets flow">
                     <li v-for="bullet in bullets" :key="bullet">
                         {{ bullet }}

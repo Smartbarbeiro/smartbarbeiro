@@ -23,6 +23,7 @@ class BarbershopPlatformSubscription extends Model
         'status',
         'next_payment_date',
         'cancelled_at',
+        'trial_ends_at',
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class BarbershopPlatformSubscription extends Model
         return [
             'next_payment_date' => 'datetime',
             'cancelled_at' => 'datetime',
+            'trial_ends_at' => 'datetime',
         ];
     }
 
@@ -38,9 +40,34 @@ class BarbershopPlatformSubscription extends Model
         return $this->belongsTo(User::class, 'barbershop_user_id');
     }
 
-    public function isActive(): bool
+    public function isPaidActive(): bool
     {
         return $this->status === self::STATUS_AUTHORIZED;
+    }
+
+    public function isOnTrial(): bool
+    {
+        if ($this->isPaidActive() || $this->status === self::STATUS_CANCELLED) {
+            return false;
+        }
+
+        return $this->trial_ends_at !== null && $this->trial_ends_at->isFuture();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isPaidActive() || $this->isOnTrial();
+    }
+
+    public function trialDaysRemaining(): ?int
+    {
+        if (! $this->isOnTrial() || $this->trial_ends_at === null) {
+            return null;
+        }
+
+        $days = (int) ceil(now()->floatDiffInDays($this->trial_ends_at, absolute: false));
+
+        return max(0, $days);
     }
 
     public static function activeStatuses(): array
@@ -50,6 +77,10 @@ class BarbershopPlatformSubscription extends Model
 
     public function statusLabel(): string
     {
+        if ($this->isOnTrial()) {
+            return __('messages.subscription_status.trial');
+        }
+
         return match ($this->status) {
             self::STATUS_AUTHORIZED => __('messages.subscription_status.authorized'),
             self::STATUS_PENDING => __('messages.subscription_status.pending'),
