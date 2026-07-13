@@ -75,6 +75,7 @@ class MercadoPagoService
                 'transaction_amount' => $amount,
                 'currency_id' => $currencyId,
             ],
+            'payment_methods_allowed' => $this->subscriptionPaymentMethodsAllowed(),
         ]);
     }
 
@@ -98,7 +99,43 @@ class MercadoPagoService
                 'transaction_amount' => $amount,
                 'currency_id' => $currencyId,
             ],
+            'payment_methods_allowed' => $this->subscriptionPaymentMethodsAllowed(),
         ]);
+    }
+
+    public function getPreApprovalPlan(string $planId): PreApprovalPlan
+    {
+        $this->ensureConfigured();
+
+        return (new PreApprovalPlanClient)->get($planId);
+    }
+
+    /**
+     * Hosted subscription-plan checkout URL (can show Pix / account money in BR).
+     */
+    public function planCheckoutUrl(PreApprovalPlan $plan): ?string
+    {
+        $url = $plan->init_point ?? null;
+
+        return filled($url) ? (string) $url : null;
+    }
+
+    /**
+     * Payment types Mercado Pago Subscriptions supports in Brazil.
+     * bank_transfer = Pix; account_money = carteira MP.
+     *
+     * @return array{payment_types: list<array{id: string}>}
+     */
+    public function subscriptionPaymentMethodsAllowed(): array
+    {
+        return [
+            'payment_types' => [
+                ['id' => 'credit_card'],
+                ['id' => 'debit_card'],
+                ['id' => 'bank_transfer'],
+                ['id' => 'account_money'],
+            ],
+        ];
     }
 
     public function createAuthorizedSubscription(

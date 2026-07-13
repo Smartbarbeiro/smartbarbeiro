@@ -111,6 +111,12 @@ const startCheckout = () => {
                 disponível.
             </p>
 
+            <p v-else class="small text-secondary mb-4">
+                No checkout Mercado Pago você pode pagar com Pix, cartão ou
+                saldo da carteira. Entre na sua conta Mercado Pago para ver
+                todas as opções.
+            </p>
+
             <InputError class="mb-3" :message="subscribeError" />
 
             <form @submit.prevent="startCheckout">

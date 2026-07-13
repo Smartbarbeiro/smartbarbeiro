@@ -12,6 +12,7 @@ class BarbershopPlatformCheckoutService
 {
     public function __construct(
         private MercadoPagoService $mercadoPago,
+        private BarbershopPlatformPlanService $planService,
     ) {}
 
     /**
@@ -55,27 +56,24 @@ class BarbershopPlatformCheckoutService
             throw new \InvalidArgumentException(__('messages.mercadopago_https_back_url_required'));
         }
 
-        // Redirect checkout must use auto_recurring (no preapproval_plan_id). MP requires
-        // card_token_id when associating a subscription with a plan via API.
-        $payerEmail = app(PaymentEmailService::class)->preferredPayerEmail($barbershop);
+        // Plan-hosted checkout can offer Pix / account money / cards in Brazil.
+        // Creating a bare auto_recurring preapproval tends to show card-only.
+        $this->planService->ensureSynced($plan);
+        $plan->refresh();
 
-        $preapproval = $this->mercadoPago->createSubscriptionCheckout(
-            reason: $plan->title,
-            payerEmail: $payerEmail,
-            externalReference: $subscription->external_reference,
-            backUrl: $backUrl,
-            amount: (float) $plan->monthly_amount,
-            currencyId: $plan->currency_id,
+        if (! filled($plan->mercadopago_preapproval_plan_id)) {
+            throw new \InvalidArgumentException(__('messages.mercadopago_no_checkout_url'));
+        }
+
+        $mpPlan = $this->mercadoPago->getPreApprovalPlan(
+            (string) $plan->mercadopago_preapproval_plan_id,
         );
 
-        $subscription->update([
-            'mercadopago_preapproval_id' => $preapproval->id,
-            'status' => $this->mercadoPago->mapPreApprovalStatus($preapproval->status),
-        ]);
+        $checkoutUrl = $this->mercadoPago->planCheckoutUrl($mpPlan);
 
         return [
             'subscription' => $subscription->fresh(),
-            'checkout_url' => $this->mercadoPago->checkoutUrl($preapproval),
+            'checkout_url' => $checkoutUrl,
         ];
     }
 
@@ -98,9 +96,9 @@ class BarbershopPlatformCheckoutService
             ->value('external_reference');
 
         if (filled($existing)) {
-            return $existing;
+            return (string) $existing;
         }
 
-        return 'platform-'.$barbershop->id.'-'.Str::lower(Str::random(8));
+        return 'platform-'.$barbershop->id.'-'.Str::lower(Str::random(10));
     }
 }

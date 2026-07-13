@@ -31,6 +31,25 @@ class BarbershopPlatformPlanService
         return $plan;
     }
 
+    /**
+     * Ensure the Mercado Pago plan exists and allows Pix / cards / account money.
+     */
+    public function ensureSynced(BarbershopPlatformPlan $plan): BarbershopPlatformPlan
+    {
+        if (! $plan->is_active) {
+            throw new \InvalidArgumentException(__('messages.platform_plan_not_active'));
+        }
+
+        if (! $this->mercadoPago->isConfigured()) {
+            return $plan;
+        }
+
+        $this->syncMercadoPagoPlan($plan);
+        $plan->save();
+
+        return $plan->fresh();
+    }
+
     private function syncMercadoPagoPlan(BarbershopPlatformPlan $plan): void
     {
         $backUrl = $this->subscriptionBackUrl('/assinatura/plataforma/retorno');

@@ -18,30 +18,29 @@ class BarbershopSignupPaymentFlowTest extends TestCase
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);
 
-        $preapproval = new PreApproval;
-        $preapproval->id = 'mp-flow-preapproval';
-        $preapproval->status = 'pending';
-        $preapproval->init_point = 'https://mercadopago.test/checkout-flow';
-        $preapproval->external_reference = 'will-be-set';
+        $plan = \App\Models\BarbershopPlatformPlan::current();
+        $plan->update(['mercadopago_preapproval_plan_id' => 'mp-plan-flow']);
 
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
+        $mpPlan = new \MercadoPago\Resources\PreApprovalPlan;
+        $mpPlan->id = 'mp-plan-flow';
+        $mpPlan->init_point = 'https://mercadopago.test/checkout-flow';
+
+        $this->mock(MercadoPagoService::class, function ($mock) use ($mpPlan) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
             $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
-            $mock->shouldReceive('createSubscriptionCheckout')
-                ->once()
-                ->andReturn($preapproval);
+            $mock->shouldReceive('updatePreApprovalPlan')->once()->andReturn($mpPlan);
+            $mock->shouldReceive('getPreApprovalPlan')->once()->andReturn($mpPlan);
+            $mock->shouldReceive('planCheckoutUrl')->once()->andReturn('https://mercadopago.test/checkout-flow');
             $mock->shouldReceive('mapPreApprovalStatus')
                 ->andReturnUsing(fn (?string $status) => match ($status) {
                     'authorized', 'active' => BarbershopPlatformSubscription::STATUS_AUTHORIZED,
                     default => BarbershopPlatformSubscription::STATUS_PENDING,
                 });
-            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/checkout-flow');
             $mock->shouldReceive('getPreApproval')
-                ->andReturnUsing(function () use ($preapproval) {
+                ->andReturnUsing(function () {
                     $authorized = new PreApproval;
-                    $authorized->id = $preapproval->id;
+                    $authorized->id = 'mp-flow-preapproval';
                     $authorized->status = 'authorized';
-                    $authorized->external_reference = $preapproval->external_reference;
                     $authorized->payer_email = 'flow@example.com';
 
                     return $authorized;
@@ -64,8 +63,6 @@ class BarbershopSignupPaymentFlowTest extends TestCase
         $this->assertNotNull($subscription);
         $this->assertSame(BarbershopPlatformSubscription::STATUS_PENDING, $subscription->status);
 
-        $preapproval->external_reference = $subscription->external_reference;
-
         $this->get(route('register.celebration'))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
@@ -83,11 +80,10 @@ class BarbershopSignupPaymentFlowTest extends TestCase
 
         $this->assertDatabaseHas('barbershop_platform_subscriptions', [
             'barbershop_user_id' => $user->id,
-            'mercadopago_preapproval_id' => 'mp-flow-preapproval',
             'status' => BarbershopPlatformSubscription::STATUS_PENDING,
         ]);
 
-        $this->get(route('platform.subscribe.return'))
+        $this->get(route('platform.subscribe.return', ['preapproval_id' => 'mp-flow-preapproval']))
             ->assertRedirect(route('profile.edit', absolute: false))
             ->assertSessionHas('status', 'platform-subscription-active')
             ->assertSessionHas('prompt_profile_photo', true);
@@ -102,6 +98,7 @@ class BarbershopSignupPaymentFlowTest extends TestCase
         $user->refresh();
         $this->assertDatabaseHas('barbershop_platform_subscriptions', [
             'barbershop_user_id' => $user->id,
+            'mercadopago_preapproval_id' => 'mp-flow-preapproval',
             'status' => BarbershopPlatformSubscription::STATUS_AUTHORIZED,
         ]);
 

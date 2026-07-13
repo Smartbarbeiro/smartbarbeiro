@@ -86,19 +86,23 @@ class BarbershopPlatformSubscribeController extends Controller
 
         abort_unless($user->isBarbershopAccount(), 403);
 
+        $preapprovalId = $request->query('preapproval_id')
+            ?? $request->query('preapprovalId')
+            ?? $request->query('id');
+
+        try {
+            $syncService->syncPendingForBarbershop(
+                $user,
+                is_string($preapprovalId) && $preapprovalId !== '' ? $preapprovalId : null,
+            );
+        } catch (\Throwable) {
+            // Webhook will reconcile; show return page with current status.
+        }
+
         $subscription = BarbershopPlatformSubscription::query()
             ->where('barbershop_user_id', $user->id)
             ->latest()
             ->first();
-
-        if ($subscription?->mercadopago_preapproval_id) {
-            try {
-                $syncService->syncByMercadoPagoId($subscription->mercadopago_preapproval_id);
-                $subscription->refresh();
-            } catch (\Throwable) {
-                // Webhook will reconcile; show return page with current status.
-            }
-        }
 
         $paymentEmailMismatch = $paymentEmailService->mismatchForPayerEmail(
             $user,
