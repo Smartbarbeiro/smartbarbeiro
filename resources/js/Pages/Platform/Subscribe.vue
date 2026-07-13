@@ -117,7 +117,7 @@ const startCheckout = () => {
             </DashboardAlert>
 
             <p
-                v-if="!onTrial && subscription && !subscription.is_active"
+                v-else-if="subscription && !subscription.is_active"
                 class="text-warning mb-3"
             >
                 Status: {{ subscription.status_label }}
