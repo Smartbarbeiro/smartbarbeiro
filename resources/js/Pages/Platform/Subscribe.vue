@@ -4,6 +4,7 @@ import DashboardContentCard from '@/Components/DashboardContentCard.vue';
 import DashboardPageHeader from '@/Components/DashboardPageHeader.vue';
 import InputError from '@/Components/InputError.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -31,7 +32,7 @@ const subscribeError = computed(
     () => page.props.errors?.subscribe ?? form.errors.subscribe ?? null,
 );
 
-const startCheckout = () => {
+const startCheckout = (checkoutMode) => {
     if (form.processing) {
         return;
     }
@@ -62,6 +63,12 @@ const startCheckout = () => {
     csrfInput.name = '_token';
     csrfInput.value = token;
     nativeForm.appendChild(csrfInput);
+
+    const modeInput = document.createElement('input');
+    modeInput.type = 'hidden';
+    modeInput.name = 'checkout_mode';
+    modeInput.value = checkoutMode;
+    nativeForm.appendChild(modeInput);
 
     document.body.appendChild(nativeForm);
     nativeForm.submit();
@@ -111,22 +118,33 @@ const startCheckout = () => {
                 disponível.
             </p>
 
-            <p v-if="paymentsConfigured" class="small text-secondary mb-4">
-                No Mercado Pago, use cartão, Pix ou boleto conforme habilitado no
-                plano. Entre na sua conta Mercado Pago para ver todas as opções.
+            <p v-else class="small text-secondary mb-4">
+                Pix Automático e boleto usam o checkout do plano no Mercado Pago.
+                Cartão usa o fluxo dedicado de cartão. Entre na conta Mercado
+                Pago no checkout.
             </p>
 
             <InputError class="mb-3" :message="subscribeError" />
 
-            <form @submit.prevent="startCheckout">
+            <div class="d-grid gap-2">
                 <PrimaryButton
-                    type="submit"
+                    type="button"
                     class="w-100"
                     :disabled="form.processing || !paymentsConfigured"
+                    @click="startCheckout('plan')"
                 >
-                    Assinar com Mercado Pago
+                    Assinar com Pix / boleto
                 </PrimaryButton>
-            </form>
+
+                <SecondaryButton
+                    type="button"
+                    class="w-100"
+                    :disabled="form.processing || !paymentsConfigured"
+                    @click="startCheckout('card')"
+                >
+                    Assinar com cartão
+                </SecondaryButton>
+            </div>
         </DashboardContentCard>
     </AuthenticatedLayout>
 </template>

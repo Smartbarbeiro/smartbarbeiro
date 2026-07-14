@@ -136,6 +136,9 @@ class MercadoPagoService
                 ['id' => 'ticket'],
                 ['id' => 'account_money'],
             ],
+            'payment_methods' => [
+                ['id' => 'pix'],
+            ],
         ];
     }
 

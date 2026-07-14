@@ -55,7 +55,8 @@ class BarbershopPlatformSubscribeController extends Controller
         }
 
         try {
-            $result = $checkoutService->startCheckout($user);
+            $mode = (string) $request->input('checkout_mode', BarbershopPlatformCheckoutService::MODE_CARD);
+            $result = $checkoutService->startCheckout($user, $mode);
         } catch (\InvalidArgumentException $exception) {
             return back()->withErrors(['subscribe' => $exception->getMessage()]);
         } catch (MPApiException $exception) {

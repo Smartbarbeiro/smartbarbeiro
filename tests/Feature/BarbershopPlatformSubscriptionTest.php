@@ -148,7 +148,7 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             ]);
     }
 
-    public function test_platform_checkout_links_subscription_to_plan_for_pix_boleto(): void
+    public function test_platform_plan_checkout_uses_plan_init_point_for_pix(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);
 
@@ -164,44 +164,24 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             'currency_id' => 'BRL',
         ]);
 
-        $preapproval = new PreApproval;
-        $preapproval->id = 'mp-platform-with-plan';
-        $preapproval->status = 'pending';
-        $preapproval->init_point = 'https://mercadopago.test/platform-checkout';
-
         $mpPlan = new PreApprovalPlan;
         $mpPlan->id = 'mp-plan-pix';
+        $mpPlan->init_point = 'https://mercadopago.test/subscriptions/checkout?preapproval_plan_id=mp-plan-pix';
 
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval, $mpPlan) {
+        $this->mock(MercadoPagoService::class, function ($mock) use ($mpPlan) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
             $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
             $mock->shouldReceive('updatePreApprovalPlan')->once()->andReturn($mpPlan);
-            $mock->shouldReceive('createSubscriptionCheckout')
-                ->once()
-                ->withArgs(function (
-                    string $reason,
-                    string $payerEmail,
-                    string $externalReference,
-                    string $backUrl,
-                    ?string $preapprovalPlanId = null,
-                    ?float $amount = null,
-                    ?string $currencyId = null,
-                ) {
-                    return $preapprovalPlanId === 'mp-plan-pix'
-                        && $amount === null
-                        && $currencyId === null;
-                })
-                ->andReturn($preapproval);
-            $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
-            $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/platform-checkout');
+            $mock->shouldReceive('getPreApprovalPlan')->once()->with('mp-plan-pix')->andReturn($mpPlan);
+            $mock->shouldReceive('planCheckoutUrl')->once()->with($mpPlan)->andReturn($mpPlan->init_point);
         });
 
         $this->actingAs($barbershop)
-            ->post(route('platform.subscribe.store'))
-            ->assertRedirect('https://mercadopago.test/platform-checkout');
+            ->post(route('platform.subscribe.store'), ['checkout_mode' => 'plan'])
+            ->assertRedirect($mpPlan->init_point);
     }
 
-    public function test_barbershop_can_start_platform_checkout(): void
+    public function test_barbershop_can_start_platform_card_checkout(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);
 
@@ -233,7 +213,7 @@ class BarbershopPlatformSubscriptionTest extends TestCase
         });
 
         $this->actingAs($barbershop)
-            ->post(route('platform.subscribe.store'))
+            ->post(route('platform.subscribe.store'), ['checkout_mode' => 'card'])
             ->assertRedirect('https://mercadopago.test/platform-checkout');
 
         $this->assertDatabaseHas('barbershop_platform_subscriptions', [
@@ -275,7 +255,7 @@ class BarbershopPlatformSubscriptionTest extends TestCase
 
         $this->actingAs($barbershop)
             ->withHeader('X-Inertia', 'true')
-            ->post(route('platform.subscribe.store'))
+            ->post(route('platform.subscribe.store'), ['checkout_mode' => 'card'])
             ->assertStatus(409)
             ->assertHeader('X-Inertia-Location', 'https://mercadopago.test/platform-checkout');
     }

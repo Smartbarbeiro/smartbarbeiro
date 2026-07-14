@@ -90,7 +90,7 @@ class BarbershopSignupPaymentFlowTest extends TestCase
                 ->has('plan')
                 ->where('paymentsConfigured', true));
 
-        $this->post(route('platform.subscribe.store'))
+        $this->post(route('platform.subscribe.store'), ['checkout_mode' => 'card'])
             ->assertRedirect('https://mercadopago.test/checkout-flow');
 
         $this->assertDatabaseHas('barbershop_platform_subscriptions', [
