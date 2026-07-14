@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\BarbershopPlatformSubscription;
 use App\Models\User;
+use App\Services\BarbershopPlatformPlanService;
 use App\Services\MercadoPagoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use MercadoPago\Resources\PreApproval;
@@ -23,6 +24,17 @@ class BarbershopSignupPaymentFlowTest extends TestCase
         $preapproval->status = 'pending';
         $preapproval->init_point = 'https://mercadopago.test/checkout-flow';
         $preapproval->external_reference = 'will-be-set';
+
+        $this->mock(BarbershopPlatformPlanService::class, function ($mock) {
+            $mock->shouldReceive('ensureSynced')->andReturnUsing(function ($plan) {
+                if (! filled($plan->mercadopago_preapproval_plan_id)) {
+                    $plan->mercadopago_preapproval_plan_id = 'mp-plan-flow';
+                    $plan->save();
+                }
+
+                return $plan->fresh();
+            });
+        });
 
         $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
             $mock->shouldReceive('isConfigured')->andReturn(true);

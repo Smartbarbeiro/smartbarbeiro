@@ -121,8 +121,8 @@ class MercadoPagoService
     }
 
     /**
-     * Payment types Mercado Pago Subscriptions supports in Brazil.
-     * bank_transfer = Pix; account_money = carteira MP.
+     * Payment types for Brazil subscription checkout.
+     * bank_transfer = Pix; ticket = boleto; account_money = carteira MP.
      *
      * @return array{payment_types: list<array{id: string}>}
      */
@@ -133,6 +133,7 @@ class MercadoPagoService
                 ['id' => 'credit_card'],
                 ['id' => 'debit_card'],
                 ['id' => 'bank_transfer'],
+                ['id' => 'ticket'],
                 ['id' => 'account_money'],
             ],
         ];

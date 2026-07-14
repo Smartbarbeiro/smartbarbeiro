@@ -148,7 +148,7 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             ]);
     }
 
-    public function test_platform_checkout_uses_auto_recurring_not_plan_id_for_redirect(): void
+    public function test_platform_checkout_links_subscription_to_plan_for_pix_boleto(): void
     {
         config(['mercadopago.access_token' => 'TEST-fake-token']);
 
@@ -159,19 +159,23 @@ class BarbershopPlatformSubscriptionTest extends TestCase
 
         $plan = \App\Models\BarbershopPlatformPlan::current();
         $plan->update([
-            'mercadopago_preapproval_plan_id' => 'mp-plan-should-not-be-used',
+            'mercadopago_preapproval_plan_id' => 'mp-plan-pix',
             'monthly_amount' => 1.00,
             'currency_id' => 'BRL',
         ]);
 
         $preapproval = new PreApproval;
-        $preapproval->id = 'mp-platform-no-plan';
+        $preapproval->id = 'mp-platform-with-plan';
         $preapproval->status = 'pending';
         $preapproval->init_point = 'https://mercadopago.test/platform-checkout';
 
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval, $plan) {
+        $mpPlan = new PreApprovalPlan;
+        $mpPlan->id = 'mp-plan-pix';
+
+        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval, $mpPlan) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
             $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
+            $mock->shouldReceive('updatePreApprovalPlan')->once()->andReturn($mpPlan);
             $mock->shouldReceive('createSubscriptionCheckout')
                 ->once()
                 ->withArgs(function (
@@ -182,10 +186,10 @@ class BarbershopPlatformSubscriptionTest extends TestCase
                     ?string $preapprovalPlanId = null,
                     ?float $amount = null,
                     ?string $currencyId = null,
-                ) use ($plan) {
-                    return $preapprovalPlanId === null
-                        && $amount === (float) $plan->monthly_amount
-                        && $currencyId === $plan->currency_id;
+                ) {
+                    return $preapprovalPlanId === 'mp-plan-pix'
+                        && $amount === null
+                        && $currencyId === null;
                 })
                 ->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
@@ -206,14 +210,23 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             'status' => BarbershopPlatformSubscription::STATUS_PENDING,
         ]);
 
+        $plan = BarbershopPlatformPlan::current();
+        $plan->update([
+            'mercadopago_preapproval_plan_id' => 'mp-plan-1',
+        ]);
+
         $preapproval = new PreApproval;
         $preapproval->id = 'mp-platform-1';
         $preapproval->status = 'pending';
         $preapproval->init_point = 'https://mercadopago.test/platform-checkout';
 
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
+        $mpPlan = new PreApprovalPlan;
+        $mpPlan->id = 'mp-plan-1';
+
+        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval, $mpPlan) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
             $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
+            $mock->shouldReceive('updatePreApprovalPlan')->once()->andReturn($mpPlan);
             $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
             $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/platform-checkout');
@@ -239,14 +252,22 @@ class BarbershopPlatformSubscriptionTest extends TestCase
             'status' => BarbershopPlatformSubscription::STATUS_PENDING,
         ]);
 
+        BarbershopPlatformPlan::current()->update([
+            'mercadopago_preapproval_plan_id' => 'mp-plan-inertia',
+        ]);
+
         $preapproval = new PreApproval;
         $preapproval->id = 'mp-platform-inertia';
         $preapproval->status = 'pending';
         $preapproval->init_point = 'https://mercadopago.test/platform-checkout';
 
-        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval) {
+        $mpPlan = new PreApprovalPlan;
+        $mpPlan->id = 'mp-plan-inertia';
+
+        $this->mock(MercadoPagoService::class, function ($mock) use ($preapproval, $mpPlan) {
             $mock->shouldReceive('isConfigured')->andReturn(true);
             $mock->shouldReceive('assertSandboxCheckoutUsers')->andReturnNull();
+            $mock->shouldReceive('updatePreApprovalPlan')->once()->andReturn($mpPlan);
             $mock->shouldReceive('createSubscriptionCheckout')->once()->andReturn($preapproval);
             $mock->shouldReceive('mapPreApprovalStatus')->andReturn('pending');
             $mock->shouldReceive('checkoutUrl')->andReturn('https://mercadopago.test/platform-checkout');

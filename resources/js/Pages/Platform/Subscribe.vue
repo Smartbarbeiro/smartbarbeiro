@@ -111,6 +111,11 @@ const startCheckout = () => {
                 disponível.
             </p>
 
+            <p v-if="paymentsConfigured" class="small text-secondary mb-4">
+                No Mercado Pago, use cartão, Pix ou boleto conforme habilitado no
+                plano. Entre na sua conta Mercado Pago para ver todas as opções.
+            </p>
+
             <InputError class="mb-3" :message="subscribeError" />
 
             <form @submit.prevent="startCheckout">

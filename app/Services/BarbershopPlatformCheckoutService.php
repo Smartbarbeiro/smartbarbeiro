@@ -12,6 +12,7 @@ class BarbershopPlatformCheckoutService
 {
     public function __construct(
         private MercadoPagoService $mercadoPago,
+        private BarbershopPlatformPlanService $planService,
     ) {}
 
     /**
@@ -55,19 +56,44 @@ class BarbershopPlatformCheckoutService
             throw new \InvalidArgumentException(__('messages.mercadopago_https_back_url_required'));
         }
 
-        // Hosted plan init_point breaks the card-entry checkout UX for this
-        // account. Pending auto_recurring preapproval restores add-card flow.
-        // Pix is not offered on this redirect model in BR subscriptions.
-        $payerEmail = app(PaymentEmailService::class)->preferredPayerEmail($barbershop);
+        // Pix / boleto toggles in the Mercado Pago plan panel only apply when
+        // the pending subscription is linked to that preapproval_plan_id.
+        // Use the subscription init_point (not the plan-hosted URL) so card
+        // entry keeps working.
+        $this->planService->ensureSynced($plan);
+        $plan->refresh();
 
-        $preapproval = $this->mercadoPago->createSubscriptionCheckout(
-            reason: $plan->title,
-            payerEmail: $payerEmail,
-            externalReference: $subscription->external_reference,
-            backUrl: $backUrl,
-            amount: (float) $plan->monthly_amount,
-            currencyId: $plan->currency_id,
-        );
+        $payerEmail = app(PaymentEmailService::class)->preferredPayerEmail($barbershop);
+        $planId = filled($plan->mercadopago_preapproval_plan_id)
+            ? (string) $plan->mercadopago_preapproval_plan_id
+            : null;
+
+        try {
+            $preapproval = $this->mercadoPago->createSubscriptionCheckout(
+                reason: $plan->title,
+                payerEmail: $payerEmail,
+                externalReference: $subscription->external_reference,
+                backUrl: $backUrl,
+                preapprovalPlanId: $planId,
+                amount: $planId ? null : (float) $plan->monthly_amount,
+                currencyId: $planId ? null : $plan->currency_id,
+            );
+        } catch (MPApiException $exception) {
+            // Some accounts reject pending+plan without a card token; fall back
+            // to standalone auto_recurring so checkout still works (cards).
+            if (! $planId) {
+                throw $exception;
+            }
+
+            $preapproval = $this->mercadoPago->createSubscriptionCheckout(
+                reason: $plan->title,
+                payerEmail: $payerEmail,
+                externalReference: $subscription->external_reference,
+                backUrl: $backUrl,
+                amount: (float) $plan->monthly_amount,
+                currencyId: $plan->currency_id,
+            );
+        }
 
         $subscription->update([
             'mercadopago_preapproval_id' => $preapproval->id,
