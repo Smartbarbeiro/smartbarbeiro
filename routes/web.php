@@ -172,7 +172,8 @@ Route::middleware(['auth', 'not_frozen', 'barbershop_subscribed'])->group(functi
         ->where('postalCode', '[0-9\-]+')
         ->name('cep.lookup');
 
-    Route::get('/subscriptions', [ProfileSubscriptionController::class, 'index'])
+    Route::redirect('/subscriptions', '/assinantes');
+    Route::get('/assinantes', [ProfileSubscriptionController::class, 'index'])
         ->name('subscriptions.index');
     Route::get('/funcionarios', [BarbershopEmployeeController::class, 'index'])
         ->name('employees.index');

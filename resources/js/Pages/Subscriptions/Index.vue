@@ -203,7 +203,7 @@ const paymentHref = (subscription) => {
                                 <th scope="col">E-mail</th>
                                 <th scope="col">Valor/mês</th>
                                 <th scope="col">Status</th>
-                                <th scope="col">Próximo pagamento</th>
+                                <th scope="col">Próx. Pagamento</th>
                                 <th scope="col" class="text-end">Ações</th>
                             </tr>
                         </thead>
