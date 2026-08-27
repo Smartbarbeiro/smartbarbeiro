@@ -2,7 +2,7 @@
 
 /**
  * Minimal Mercado Pago connectivity check.
- * URL: https://www.smartbarbeiro.com.br/mp-ping.php
+ * URL: https://www.tesora.com.br/mp-ping.php
  */
 
 declare(strict_types=1);

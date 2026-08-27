@@ -8,10 +8,10 @@ Olá, **{{ $recipientName }}**!
 {{ $messageBody }}
 
 <x-mail::button :url="$inboxUrl">
-Ver no Smart Barbeiro
+Ver no Tesora
 </x-mail::button>
 
-Você também pode ler esta mensagem na sua caixa de entrada do Smart Barbeiro.
+Você também pode ler esta mensagem na sua caixa de entrada do Tesora.
 
 Obrigado,<br>
 {{ config('app.name') }}

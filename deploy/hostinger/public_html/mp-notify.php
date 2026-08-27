@@ -3,7 +3,7 @@
 /**
  * Mercado Pago webhook entrypoint (avoids /webhooks/ path WAF false positives).
  * Configure in MP panel:
- *   https://www.smartbarbeiro.com.br/mp-notify.php
+ *   https://www.tesora.com.br/mp-notify.php
  */
 
 declare(strict_types=1);

@@ -27,7 +27,7 @@ const formatDate = (value) => {
         v-if="messages.length > 0"
         class="platform-message-stack"
         aria-live="polite"
-        aria-label="Mensagens do Smart Barbeiro"
+        aria-label="Mensagens do Tesora"
     >
         <article
             v-for="message in messages"
@@ -44,7 +44,7 @@ const formatDate = (value) => {
             </button>
 
             <p class="platform-message-kicker">
-                Smart Barbeiro
+                Tesora
             </p>
             <h2 class="platform-message-title">
                 {{ message.subject }}

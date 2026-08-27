@@ -2,7 +2,7 @@
 
 return [
 
-    'name' => env('MOBILE_APP_NAME', 'Smart Barbeiro'),
+    'name' => env('MOBILE_APP_NAME', 'Tesora'),
 
     'play_store_url' => env(
         'MOBILE_APP_PLAY_STORE_URL',

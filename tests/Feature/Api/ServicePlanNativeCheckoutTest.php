@@ -115,13 +115,13 @@ class ServicePlanNativeCheckoutTest extends TestCase
         config([
             'stripe.secret' => 'sk_test_fake',
             'stripe.key' => 'pk_test_fake',
-            'stripe.merchant_display_name' => 'Smart Barbeiro',
+            'stripe.merchant_display_name' => 'Tesora',
         ]);
 
         $this->getJson('/api/v1/barbearias/'.$barbershop->username)
             ->assertOk()
             ->assertJsonPath('stripe_configured', true)
             ->assertJsonPath('payment_config.publishable_key', 'pk_test_fake')
-            ->assertJsonPath('payment_config.merchant_display_name', 'Smart Barbeiro');
+            ->assertJsonPath('payment_config.merchant_display_name', 'Tesora');
     }
 }

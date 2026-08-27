@@ -2,12 +2,12 @@
 
 /**
  * Temporary Hostinger diagnostics — DELETE after fixing.
- * Visit: /diagnose.php?key=smartbarbeiro-setup-2026
+ * Visit: /diagnose.php?key=tesora-setup-2026
  */
 
 declare(strict_types=1);
 
-$secret = 'smartbarbeiro-setup-2026';
+$secret = 'tesora-setup-2026';
 
 if (! isset($_GET['key']) || ! hash_equals($secret, (string) $_GET['key'])) {
     http_response_code(403);
@@ -16,7 +16,7 @@ if (! isset($_GET['key']) || ! hash_equals($secret, (string) $_GET['key'])) {
 
 header('Content-Type: text/plain; charset=utf-8');
 
-echo "=== Smart Barbeiro deploy diagnostics ===\n\n";
+echo "=== Tesora deploy diagnostics ===\n\n";
 
 echo 'PHP version: '.PHP_VERSION."\n";
 echo 'PHP >= 8.3 required: '.(version_compare(PHP_VERSION, '8.3.0', '>=') ? 'YES' : 'NO — upgrade in hPanel PHP Configuration')."\n";

@@ -91,7 +91,7 @@ const props = defineProps({
     mobileApp: {
         type: Object,
         default: () => ({
-            name: 'Smart Barbeiro',
+            name: 'Tesora',
             play_store_url: null,
             app_store_url: null,
         }),

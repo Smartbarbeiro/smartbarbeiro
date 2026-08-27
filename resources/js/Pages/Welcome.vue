@@ -14,11 +14,11 @@ defineProps({
 
 <template>
     <MarketingLayout>
-        <Head title="SmartBarbeiro - Fidelize seus Clientes!">
+        <Head title="Tesora - Fidelize seus Clientes!">
             <meta
                 head-key="description"
                 name="description"
-                content="SmartBarbeiro - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular."
+                content="Tesora - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular."
             />
         </Head>
 
@@ -86,7 +86,7 @@ defineProps({
                     >
                         <img
                             src="/images/celular-mock.png"
-                            alt="Aplicativo SmartBarbeiro no celular"
+                            alt="Aplicativo Tesora no celular"
                             class="marketing-hero-3-image"
                         >
                         <h2 class="marketing-hero-3-title">

@@ -107,6 +107,8 @@ class PaymentEmailMismatchTest extends TestCase
                 ->component('Profile/SubscribeReturn')
                 ->where('paymentEmailMismatch.account_email', 'signup@example.com')
                 ->where('paymentEmailMismatch.payer_email', 'payer@mercadopago.com'));
+    }
+
     public function test_public_profile_shows_payment_email_mismatch_for_subscriber(): void
     {
         $creator = User::factory()->create();

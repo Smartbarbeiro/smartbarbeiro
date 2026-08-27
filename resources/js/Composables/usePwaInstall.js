@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 
-const DISMISS_KEY = 'smartbarbeiro.pwa.install.dismissed';
+const DISMISS_KEY = 'tesora.pwa.install.dismissed';
 
 const deferredPrompt = ref(null);
 const isInstalled = ref(false);

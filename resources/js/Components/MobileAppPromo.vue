@@ -14,7 +14,7 @@ const props = defineProps({
     },
 });
 
-const STORAGE_KEY = 'smartbarbeiro.plan-builder.mobile-app-promo.dismissed';
+const STORAGE_KEY = 'tesora.plan-builder.mobile-app-promo.dismissed';
 
 const dismissed = ref(false);
 const showModal = ref(false);
@@ -38,7 +38,7 @@ const storeLabel = computed(() =>
     platform.value === 'ios' ? 'App Store' : 'Google Play',
 );
 
-const appName = computed(() => props.mobileApp.name || 'Smart Barbeiro');
+const appName = computed(() => props.mobileApp.name || 'Tesora');
 
 const isVisible = computed(
     () => isPhone.value && !dismissed.value && Boolean(storeUrl.value),

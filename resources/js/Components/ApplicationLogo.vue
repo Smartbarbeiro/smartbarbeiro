@@ -13,7 +13,7 @@ const logoUrl = '/images/logo.png';
 <template>
     <img
         :src="logoUrl"
-        alt="Smart Barbeiro"
+        alt="Tesora"
         class="app-logo"
         :class="`app-logo-${size}`"
     />

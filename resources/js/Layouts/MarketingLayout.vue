@@ -177,7 +177,7 @@ const sectionHref = (id) => `${route('home')}#${id}`;
                 <hr>
                 <div class="text-center text-muted">
                     <p class="mb-0">
-                        &copy; {{ new Date().getFullYear() }} SmartBarbeiro. Todos os direitos reservados.
+                        &copy; {{ new Date().getFullYear() }} Tesora. Todos os direitos reservados.
                     </p>
                 </div>
             </div>

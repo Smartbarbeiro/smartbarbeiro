@@ -22,7 +22,7 @@ return new class extends Migration
 
         DB::table('barbershop_platform_plans')->insert([
             'title' => 'Plano Único',
-            'description' => 'Assinatura mensal da plataforma Smart Barbeiro para barbearias.',
+            'description' => 'Assinatura mensal da plataforma Tesora para barbearias.',
             'monthly_amount' => 49.90,
             'currency_id' => 'BRL',
             'is_active' => true,

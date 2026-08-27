@@ -17,7 +17,7 @@ class SocialAuthController extends Controller
 {
     use RedirectsAfterAuth;
 
-    public const MOBILE_OAUTH_SCHEME = 'smartbarbeiro://oauth/callback';
+    public const MOBILE_OAUTH_SCHEME = 'tesora://oauth/callback';
 
     public function redirect(Request $request, string $provider, SocialAuthService $socialAuth): RedirectResponse
     {
@@ -29,7 +29,7 @@ class SocialAuthController extends Controller
         $request->session()->put('oauth.is_customer', $request->boolean('customer'));
         $request->session()->put('oauth.mobile', $request->boolean('mobile'));
 
-        return Socialite::driver($provider)->redirect();
+        return $this->socialiteDriver($provider)->redirect();
     }
 
     public function callback(
@@ -44,7 +44,7 @@ class SocialAuthController extends Controller
         $isMobile = (bool) $request->session()->get('oauth.mobile', false);
 
         try {
-            $socialUser = Socialite::driver($provider)->user();
+            $socialUser = $this->socialiteDriver($provider)->user();
         } catch (\Throwable $exception) {
             Log::warning('OAuth callback failed', [
                 'provider' => $provider,
@@ -92,7 +92,7 @@ class SocialAuthController extends Controller
             }
 
             if ($isMobile) {
-                $token = $user->createToken('smartbarbeiro-mobile')->plainTextToken;
+                $token = $user->createToken('tesora-mobile')->plainTextToken;
 
                 return $this->mobileRedirect([
                     'status' => 'authenticated',
@@ -187,5 +187,24 @@ class SocialAuthController extends Controller
     private function mobileRedirect(array $params): RedirectResponse
     {
         return redirect()->away(self::MOBILE_OAUTH_SCHEME.'?'.http_build_query($params));
+    }
+
+    /**
+     * HostGator ModSecurity returns HTTP 406 when Google's GET callback query
+     * contains "userinfo.profile" (false-positive LFI). Avoid that by:
+     * - requesting openid+email only (reduces profile in new grants)
+     * - using response_mode=form_post to a bridge that strips scope and
+     *   302s into Laravel with a clean same-site GET (keeps session/state).
+     */
+    private function socialiteDriver(string $provider): \Laravel\Socialite\Contracts\Provider
+    {
+        $driver = Socialite::driver($provider);
+
+        if ($provider === 'google') {
+            $driver->setScopes(['openid', 'email']);
+            $driver->with(['response_mode' => 'form_post']);
+        }
+
+        return $driver;
     }
 }

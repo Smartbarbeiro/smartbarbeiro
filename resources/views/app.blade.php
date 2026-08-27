@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#000000">
-        <meta name="description" content="SmartBarbeiro - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular.">
+        <meta name="description" content="Tesora - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular.">
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
@@ -14,12 +14,31 @@
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="SmartBarbeiro" />
+        <meta name="apple-mobile-web-app-title" content="Tesora" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
         @auth
             <link rel="manifest" href="/site.webmanifest" />
         @endauth
+
+        {{-- Inter early (parallel with JS). Avoid CSS @import — that delays fonts until after the Vite CSS bundle. --}}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        >
+
+        {{-- Local heading font: discover ASAP --}}
+        @if (file_exists(public_path('fonts/kadwa-latin-400-normal.woff2')))
+            <link
+                rel="preload"
+                href="{{ asset('fonts/kadwa-latin-400-normal.woff2') }}"
+                as="font"
+                type="font/woff2"
+                crossorigin
+            >
+        @endif
 
         <!-- Scripts -->
         @routes

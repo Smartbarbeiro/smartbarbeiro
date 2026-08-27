@@ -16,6 +16,7 @@ const props = defineProps({
 
 const page = usePage();
 const selectedSlotTime = ref(null);
+const selectedSlotAssignees = ref(null);
 const scheduleModalOpen = ref(false);
 
 const statusMessage = computed(() => {
@@ -78,14 +79,19 @@ const onDatePick = (event) => {
     }
 };
 
-const openScheduleModal = (time) => {
-    selectedSlotTime.value = time;
+const openScheduleModal = (slot) => {
+    selectedSlotTime.value = typeof slot === 'string' ? slot : slot.time;
+    selectedSlotAssignees.value =
+        typeof slot === 'string'
+            ? null
+            : (slot.available_assignee_ids ?? null);
     scheduleModalOpen.value = true;
 };
 
 const closeScheduleModal = () => {
     scheduleModalOpen.value = false;
     selectedSlotTime.value = null;
+    selectedSlotAssignees.value = null;
 };
 
 const hexToRgba = (hex, alpha) => {
@@ -122,8 +128,12 @@ const slotStyle = (slot) => {
 
 const slotClasses = (slot) => ({
     'barbershop-agenda-slot--past': slot.is_past,
-    'barbershop-agenda-slot--free': slot.is_available,
-    'barbershop-agenda-slot--clickable': slot.is_available,
+    'barbershop-agenda-slot--free':
+        slot.is_available && slot.appointments.length === 0,
+    'barbershop-agenda-slot--partial':
+        slot.can_add_more && slot.appointments.length > 0,
+    'barbershop-agenda-slot--clickable':
+        slot.is_available && slot.appointments.length === 0,
     'barbershop-agenda-slot--assigned': !!slotEmployeeColor(slot),
     'barbershop-agenda-slot--booked': slot.appointments.length > 0,
 });
@@ -301,7 +311,11 @@ const slotClasses = (slot) => ({
                         class="barbershop-agenda-slot"
                         :class="slotClasses(slot)"
                         :style="slotStyle(slot)"
-                        @click="slot.is_available ? openScheduleModal(slot.time) : null"
+                        @click="
+                            slot.is_available && slot.appointments.length === 0
+                                ? openScheduleModal(slot)
+                                : null
+                        "
                     >
                         <div class="barbershop-agenda-slot__time">
                             <span class="barbershop-agenda-slot__time-label">{{
@@ -333,6 +347,12 @@ const slotClasses = (slot) => ({
                                         </p>
                                         <p class="barbershop-agenda-appointment__service mb-0">
                                             {{ appointment.service_label }}
+                                            <span
+                                                v-if="appointment.performer_name"
+                                                class="barbershop-agenda-appointment__performer"
+                                            >
+                                                · {{ appointment.performer_name }}
+                                            </span>
                                         </p>
                                     </div>
                                     <span
@@ -390,6 +410,17 @@ const slotClasses = (slot) => ({
                                 </div>
                             </div>
                         </div>
+
+                        <button
+                            v-if="slot.can_add_more && slot.appointments.length > 0"
+                            type="button"
+                            class="barbershop-agenda-slot__add"
+                            title="Agendar outro barbeiro neste horário"
+                            aria-label="Agendar outro barbeiro neste horário"
+                            @click.stop="openScheduleModal(slot)"
+                        >
+                            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                        </button>
                     </article>
                 </div>
             </DashboardContentCard>
@@ -401,6 +432,7 @@ const slotClasses = (slot) => ({
             :time="selectedSlotTime"
             :owner="agenda.owner"
             :employees="agenda.employees"
+            :available-assignee-ids="selectedSlotAssignees"
             :services="agenda.services"
             :clients="agenda.clients"
             @close="closeScheduleModal"

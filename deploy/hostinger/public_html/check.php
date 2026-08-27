@@ -1,8 +1,8 @@
 <?php
 // Upload to public_html/check.php — no Laravel needed.
-// Open: /check.php?key=smartbarbeiro-setup-2026
+// Open: /check.php?key=tesora-setup-2026
 header('Content-Type: text/plain; charset=utf-8');
-if (($_GET['key'] ?? '') !== 'smartbarbeiro-setup-2026') {
+if (($_GET['key'] ?? '') !== 'tesora-setup-2026') {
     http_response_code(403);
     exit('Forbidden');
 }

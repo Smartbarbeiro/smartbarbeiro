@@ -32,7 +32,7 @@ return [
     */
     'back_url' => env('MERCADOPAGO_BACK_URL', env('APP_URL')),
 
-    'merchant_name' => env('MERCADOPAGO_MERCHANT_NAME', env('APP_NAME', 'Smart Barbeiro')),
+    'merchant_name' => env('MERCADOPAGO_MERCHANT_NAME', env('APP_NAME', 'Tesora')),
 
     /*
     | Native wallet payments (mobile app via @capgo/capacitor-pay).

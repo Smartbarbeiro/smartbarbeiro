@@ -27,7 +27,7 @@ class BarbershopPlatformPlan extends Model
     {
         return static::query()->orderBy('id')->firstOrCreate([], [
             'title' => 'Plano Único',
-            'description' => 'Assinatura mensal da plataforma Smart Barbeiro para barbearias.',
+            'description' => 'Assinatura mensal da plataforma Tesora para barbearias.',
             'monthly_amount' => 49.90,
             'currency_id' => config('mercadopago.currency_id', 'BRL'),
             'is_active' => true,

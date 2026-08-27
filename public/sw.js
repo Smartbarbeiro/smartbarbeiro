@@ -1,5 +1,5 @@
-/* Smart Barbeiro service worker — enables installability and a light offline fallback. */
-const CACHE_NAME = 'smartbarbeiro-v2';
+/* Tesora service worker — enables installability and a light offline fallback. */
+const CACHE_NAME = 'tesora-v1';
 const PRECACHE_URLS = [
     '/site.webmanifest',
     '/offline.html',

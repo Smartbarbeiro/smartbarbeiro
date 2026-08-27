@@ -43,7 +43,7 @@ defineProps({
                 class="text-success mb-3"
             >
                 Sua assinatura da plataforma está ativa. Agora você pode usar
-                todos os recursos da Smart Barbeiro.
+                todos os recursos da Tesora.
             </p>
             <p v-else class="text-warning mb-3">
                 Estamos confirmando seu pagamento com o Mercado Pago. Se você

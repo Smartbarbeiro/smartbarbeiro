@@ -5,7 +5,7 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-$debug = isset($_GET['debug']) && $_GET['debug'] === 'smartbarbeiro-setup-2026';
+$debug = isset($_GET['debug']) && $_GET['debug'] === 'tesora-setup-2026';
 
 if ($debug) {
     ini_set('display_errors', '1');
@@ -45,5 +45,5 @@ try {
         exit;
     }
 
-    echo 'Server error. For details upload check.php or open /?debug=smartbarbeiro-setup-2026';
+    echo 'Server error. For details upload check.php or open /?debug=tesora-setup-2026';
 }

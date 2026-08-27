@@ -6,10 +6,17 @@
 $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path $PSScriptRoot -Parent
 $HelpersDir = Join-Path $ProjectRoot "deploy\hostinger\public_html"
-$RemoteBase = "domains/smartbarbeiro.com.br"
+$RemoteBase = if ($env:HOSTINGER_FTP_REMOTE_BASE) { $env:HOSTINGER_FTP_REMOTE_BASE } else { "" }
 
-$FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } else { "smartbarbeiro.com.br" }
-$FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } else { "u379350398" }
+function Join-RemotePath([string[]]$Parts) {
+    $all = @()
+    if ($RemoteBase) { $all += $RemoteBase.Trim('/') }
+    $all += $Parts | ForEach-Object { $_.Trim('/') }
+    return ($all -join '/')
+}
+
+$FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } else { "ftp.fulviolopescatto1787174444000.0970020.meusitehostgator.com.br" }
+$FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } else { "fulvio@fulviolopescatto1787174444000.0970020.meusitehostgator.com.br" }
 $FtpPass = $env:HOSTINGER_FTP_PASSWORD
 if (-not $FtpPass) {
     throw "Set HOSTINGER_FTP_PASSWORD before running this script."
@@ -35,19 +42,19 @@ function Send-FtpFile([string]$LocalPath, [string]$RemotePath) {
 $files = @(
     @{
         Local = Join-Path $ProjectRoot "app\Http\Controllers\Auth\SocialAuthController.php"
-        Remote = "$RemoteBase/laravel/app/Http/Controllers/Auth/SocialAuthController.php"
+        Remote = Join-RemotePath @('laravel', 'app/Http/Controllers/Auth/SocialAuthController.php')
     },
     @{
         Local = Join-Path $ProjectRoot "app\Http\Controllers\Api\V1\AuthController.php"
-        Remote = "$RemoteBase/laravel/app/Http/Controllers/Api/V1/AuthController.php"
+        Remote = Join-RemotePath @('laravel', 'app/Http/Controllers/Api/V1/AuthController.php')
     },
     @{
-        Local = Join-Path $HelpersDir "patch-mobile-oauth-smartbarbeiro.php"
-        Remote = "$RemoteBase/public_html/patch-mobile-oauth-smartbarbeiro.php"
+        Local = Join-Path $HelpersDir "patch-mobile-oauth-tesora.php"
+        Remote = Join-RemotePath @('public_html', 'patch-mobile-oauth-tesora.php')
     },
     @{
-        Local = Join-Path $HelpersDir "clear-cache-smartbarbeiro.php"
-        Remote = "$RemoteBase/public_html/clear-cache-smartbarbeiro.php"
+        Local = Join-Path $HelpersDir "clear-cache-tesora.php"
+        Remote = Join-RemotePath @('public_html', 'clear-cache-tesora.php')
     }
 )
 
@@ -58,8 +65,8 @@ foreach ($file in $files) {
 }
 
 $steps = @(
-    "https://www.smartbarbeiro.com.br/patch-mobile-oauth-smartbarbeiro.php",
-    "https://www.smartbarbeiro.com.br/clear-cache-smartbarbeiro.php"
+    "https://www.tesora.com.br/patch-mobile-oauth-tesora.php",
+    "https://www.tesora.com.br/clear-cache-tesora.php"
 )
 
 Write-Host ""

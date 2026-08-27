@@ -3,13 +3,13 @@
 /**
  * One-time Laravel setup for Hostinger (no SSH).
  * 1. Upload to public_html/
- * 2. Visit https://www.smartbarbeiro.com.br/setup-once.php?key=YOUR_SECRET
+ * 2. Visit https://www.tesora.com.br/setup-once.php?key=YOUR_SECRET
  * 3. Delete this file immediately after success.
  */
 
 declare(strict_types=1);
 
-$secret = 'smartbarbeiro-setup-2026';
+$secret = 'tesora-setup-2026';
 
 if (! isset($_GET['key']) || ! hash_equals($secret, (string) $_GET['key'])) {
     http_response_code(403);

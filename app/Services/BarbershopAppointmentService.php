@@ -83,8 +83,6 @@ class BarbershopAppointmentService
     {
         $scheduledAt = Carbon::parse($data['scheduled_at'])->seconds(0);
 
-        $this->assertSlotIsBookable($barbershop, $scheduledAt, allowCurrentHour: true);
-
         $employeeId = $data['barbershop_employee_id'] ?? null;
 
         if ($employeeId !== null) {
@@ -92,6 +90,13 @@ class BarbershopAppointmentService
             abort_unless($employee->barbershop_user_id === $barbershop->id, 422);
             abort_unless($employee->is_active, 422);
         }
+
+        $this->assertSlotIsBookable(
+            $barbershop,
+            $scheduledAt,
+            employeeId: $employeeId,
+            requireAssigneeFree: true,
+        );
 
         return BarbershopAppointment::query()->create([
             'barbershop_user_id' => $barbershop->id,
@@ -156,22 +161,23 @@ class BarbershopAppointmentService
             return [];
         }
 
+        $capacity = $this->slotCapacity($barbershop);
         $appointments = $this->appointmentsForDate($barbershop, $date);
-        $takenTimes = $appointments
+        $activeCountsByTime = $appointments
             ->filter(fn (BarbershopAppointment $appointment) => $appointment->isActive())
-            ->map(fn (BarbershopAppointment $appointment) => $appointment->scheduled_at->format('H:i'))
-            ->all();
+            ->groupBy(fn (BarbershopAppointment $appointment) => $appointment->scheduled_at->format('H:i'))
+            ->map(fn (Collection $group) => $group->count());
 
         return collect($this->slotTimes())
-            ->map(function (string $time) use ($date, $takenTimes) {
+            ->map(function (string $time) use ($date, $activeCountsByTime, $capacity) {
                 $slotMoment = $date->copy()->setTimeFromTimeString($time.':00');
-                $isPast = $slotMoment->isPast();
-                $isTaken = in_array($time, $takenTimes, true);
+                $isPast = $this->isSlotClosedForBooking($slotMoment);
+                $bookedCount = (int) ($activeCountsByTime[$time] ?? 0);
 
                 return [
                     'time' => $time,
                     'label' => $time,
-                    'is_available' => ! $isPast && ! $isTaken,
+                    'is_available' => ! $isPast && $bookedCount < $capacity,
                 ];
             })
             ->values()
@@ -243,7 +249,12 @@ class BarbershopAppointmentService
     {
         $scheduledAt = Carbon::parse($data['scheduled_at'])->seconds(0);
 
-        $this->assertSlotIsBookable($barbershop, $scheduledAt);
+        // Client bookings do not pick an assignee yet; only enforce total capacity.
+        $this->assertSlotIsBookable(
+            $barbershop,
+            $scheduledAt,
+            requireAssigneeFree: false,
+        );
 
         return BarbershopAppointment::query()->create([
             'barbershop_user_id' => $barbershop->id,
@@ -268,6 +279,16 @@ class BarbershopAppointmentService
             abort_unless($employee->is_active, 422);
         }
 
+        $barbershop = $appointment->barbershop
+            ?? User::query()->findOrFail($appointment->barbershop_user_id);
+
+        $this->assertAssigneeIsFreeAt(
+            $barbershop,
+            $appointment->scheduled_at,
+            $employee?->id,
+            excludeAppointmentId: $appointment->id,
+        );
+
         $appointment->update([
             'status' => BarbershopAppointment::STATUS_CONFIRMED,
             'barbershop_employee_id' => $employee?->id,
@@ -284,6 +305,16 @@ class BarbershopAppointmentService
             abort_unless($employee->barbershop_user_id === $appointment->barbershop_user_id, 422);
             abort_unless($employee->is_active, 422);
         }
+
+        $barbershop = $appointment->barbershop
+            ?? User::query()->findOrFail($appointment->barbershop_user_id);
+
+        $this->assertAssigneeIsFreeAt(
+            $barbershop,
+            $appointment->scheduled_at,
+            $employee?->id,
+            excludeAppointmentId: $appointment->id,
+        );
 
         $appointment->update([
             'barbershop_employee_id' => $employee?->id,
@@ -499,12 +530,15 @@ class BarbershopAppointmentService
      */
     private function slotsPayload(User $barbershop, Carbon $date, Collection $appointments): array
     {
+        $capacity = $this->slotCapacity($barbershop);
+        $activeEmployeeIds = $this->activeEmployeeIds($barbershop);
+
         $appointmentsByTime = $appointments->groupBy(
             fn (BarbershopAppointment $appointment) => $appointment->scheduled_at->format('H:i'),
         );
 
         return collect($this->slotTimes())
-            ->map(function (string $time) use ($date, $appointmentsByTime, $barbershop) {
+            ->map(function (string $time) use ($date, $appointmentsByTime, $capacity, $activeEmployeeIds) {
                 $timeAppointments = $appointmentsByTime[$time] ?? collect();
 
                 $slotAppointments = $timeAppointments
@@ -513,16 +547,48 @@ class BarbershopAppointmentService
                     ->values()
                     ->all();
 
+                $activeAppointments = $timeAppointments
+                    ->filter(fn (BarbershopAppointment $appointment) => $appointment->isActive())
+                    ->values();
+
+                $bookedCount = $activeAppointments->count();
                 $slotMoment = $date->copy()->setTimeFromTimeString($time.':00');
-                $hasActiveBooking = $timeAppointments
-                    ->contains(fn (BarbershopAppointment $appointment) => $appointment->isActive());
-                $isPast = $this->isSlotHourPast($slotMoment);
+                $isPast = $this->isSlotClosedForBooking($slotMoment);
+                $canAddMore = ! $isPast && $bookedCount < $capacity;
+
+                $bookedEmployeeIds = $activeAppointments
+                    ->pluck('barbershop_employee_id')
+                    ->filter(fn ($id) => $id !== null)
+                    ->map(fn ($id) => (int) $id)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $ownerBooked = $activeAppointments->contains(
+                    fn (BarbershopAppointment $appointment) => $appointment->barbershop_employee_id === null,
+                );
+
+                $availableAssigneeIds = [];
+
+                if (! $ownerBooked) {
+                    $availableAssigneeIds[] = 'owner';
+                }
+
+                foreach ($activeEmployeeIds as $employeeId) {
+                    if (! in_array($employeeId, $bookedEmployeeIds, true)) {
+                        $availableAssigneeIds[] = $employeeId;
+                    }
+                }
 
                 return [
                     'time' => $time,
                     'label' => $time,
                     'is_past' => $isPast,
-                    'is_available' => ! $hasActiveBooking && ! $isPast,
+                    'capacity' => $capacity,
+                    'booked_count' => $bookedCount,
+                    'can_add_more' => $canAddMore,
+                    'is_available' => $canAddMore,
+                    'available_assignee_ids' => $availableAssigneeIds,
                     'appointments' => $slotAppointments,
                 ];
             })
@@ -560,21 +626,21 @@ class BarbershopAppointmentService
             ->all();
     }
 
-    private function assertSlotIsBookable(User $barbershop, Carbon $scheduledAt, bool $allowCurrentHour = false): void
-    {
+    private function assertSlotIsBookable(
+        User $barbershop,
+        Carbon $scheduledAt,
+        ?int $employeeId = null,
+        bool $requireAssigneeFree = true,
+    ): void {
         if ($scheduledAt->copy()->startOfDay()->lt($this->minBookingDate())) {
             throw ValidationException::withMessages([
                 'scheduled_at' => 'Escolha uma data a partir de hoje.',
             ]);
         }
 
-        $isPast = $allowCurrentHour
-            ? $this->isSlotHourPast($scheduledAt)
-            : $scheduledAt->isPast();
-
-        if ($isPast) {
+        if ($this->isSlotClosedForBooking($scheduledAt)) {
             throw ValidationException::withMessages([
-                'scheduled_at' => 'Escolha um horário no futuro.',
+                'scheduled_at' => 'Escolha um horário com pelo menos 30 minutos de antecedência.',
             ]);
         }
 
@@ -596,29 +662,90 @@ class BarbershopAppointmentService
             ]);
         }
 
-        $exists = BarbershopAppointment::query()
+        $activeCount = $this->activeAppointmentsAt($barbershop, $scheduledAt)->count();
+
+        if ($activeCount >= $this->slotCapacity($barbershop)) {
+            throw ValidationException::withMessages([
+                'scheduled_at' => 'Este horário já está reservado.',
+            ]);
+        }
+
+        if ($requireAssigneeFree) {
+            $this->assertAssigneeIsFreeAt($barbershop, $scheduledAt, $employeeId);
+        }
+    }
+
+    private function slotCapacity(User $barbershop): int
+    {
+        return 1 + count($this->activeEmployeeIds($barbershop));
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function activeEmployeeIds(User $barbershop): array
+    {
+        return BarbershopEmployee::query()
+            ->where('barbershop_user_id', $barbershop->id)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    private function activeAppointmentsAt(User $barbershop, Carbon $scheduledAt): Collection
+    {
+        return BarbershopAppointment::query()
             ->where('barbershop_user_id', $barbershop->id)
             ->where('scheduled_at', $scheduledAt)
             ->whereIn('status', [
                 BarbershopAppointment::STATUS_PENDING,
                 BarbershopAppointment::STATUS_CONFIRMED,
             ])
-            ->exists();
+            ->get();
+    }
 
-        if ($exists) {
+    private function assertAssigneeIsFreeAt(
+        User $barbershop,
+        Carbon $scheduledAt,
+        ?int $employeeId,
+        ?int $excludeAppointmentId = null,
+    ): void {
+        $query = BarbershopAppointment::query()
+            ->where('barbershop_user_id', $barbershop->id)
+            ->where('scheduled_at', $scheduledAt)
+            ->whereIn('status', [
+                BarbershopAppointment::STATUS_PENDING,
+                BarbershopAppointment::STATUS_CONFIRMED,
+            ]);
+
+        if ($employeeId === null) {
+            $query->whereNull('barbershop_employee_id');
+        } else {
+            $query->where('barbershop_employee_id', $employeeId);
+        }
+
+        if ($excludeAppointmentId !== null) {
+            $query->where('id', '!=', $excludeAppointmentId);
+        }
+
+        if ($query->exists()) {
             throw ValidationException::withMessages([
-                'scheduled_at' => 'Este horário já está reservado.',
+                'barbershop_employee_id' => 'Este barbeiro já está ocupado neste horário.',
             ]);
         }
     }
 
     /**
-     * For barbershop agenda/owner booking: a same-day slot stays free until its hour ends.
-     * Example: at 14:20, both 14:00 and 14:30 remain available.
+     * A slot stays bookable until less than 30 minutes remain before it starts.
+     * Example: at 14:20, 14:00 and 14:30 are closed; 15:00 and later today stay open.
      */
-    private function isSlotHourPast(Carbon $slotMoment): bool
+    private function isSlotClosedForBooking(Carbon $slotMoment): bool
     {
-        return now()->gte($slotMoment->copy()->startOfHour()->addHour());
+        return now()->copy()->addMinutes(self::SLOT_MINUTES)->gt($slotMoment);
     }
 
     private function minBookingDate(): Carbon

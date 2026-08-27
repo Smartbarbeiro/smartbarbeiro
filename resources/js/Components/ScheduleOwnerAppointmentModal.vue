@@ -28,6 +28,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    availableAssigneeIds: {
+        type: Array,
+        default: null,
+    },
     services: {
         type: Array,
         default: () => [],
@@ -56,8 +60,39 @@ const selectedService = computed(() =>
     props.services.find((service) => service.key === form.service_key) ?? null,
 );
 
+const ownerIsAvailable = computed(() => {
+    if (! Array.isArray(props.availableAssigneeIds)) {
+        return true;
+    }
+
+    return props.availableAssigneeIds.includes('owner');
+});
+
+const availableEmployees = computed(() => {
+    const active = props.employees.filter((item) => item.is_active);
+
+    if (! Array.isArray(props.availableAssigneeIds)) {
+        return active;
+    }
+
+    return active.filter((employee) =>
+        props.availableAssigneeIds.includes(employee.id)
+        || props.availableAssigneeIds.includes(String(employee.id)),
+    );
+});
+
+const defaultAssignee = computed(() => {
+    if (ownerIsAvailable.value) {
+        return 'owner';
+    }
+
+    return availableEmployees.value[0]
+        ? String(availableEmployees.value[0].id)
+        : 'owner';
+});
+
 watch(
-    () => [props.show, props.date, props.time],
+    () => [props.show, props.date, props.time, props.availableAssigneeIds],
     ([show, date, time]) => {
         if (!show || !date || !time) {
             return;
@@ -66,7 +101,7 @@ watch(
         form.clearErrors();
         form.scheduled_at = `${date}T${time}:00`;
         form.service_key = props.services[0]?.key ?? '';
-        form.assignee = 'owner';
+        form.assignee = defaultAssignee.value;
         form.client_user_id = '';
         form.guest_name = '';
         form.guest_phone = '';
@@ -177,15 +212,21 @@ const submit = () => {
                         class="form-select book-appointment-modal__select mt-1"
                         required
                     >
-                        <option value="owner">{{ owner.name }} (proprietário)</option>
+                        <option v-if="ownerIsAvailable" value="owner">
+                            {{ owner.name }} (proprietário)
+                        </option>
                         <option
-                            v-for="employee in employees.filter((item) => item.is_active)"
+                            v-for="employee in availableEmployees"
                             :key="employee.id"
                             :value="String(employee.id)"
                         >
                             {{ employee.name }}
                         </option>
                     </select>
+                    <InputError
+                        class="mt-1"
+                        :message="form.errors.barbershop_employee_id"
+                    />
                 </div>
 
                 <div>

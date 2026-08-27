@@ -317,7 +317,7 @@ const mobileNavItems = computed(() => {
             <Link
                 :href="homeHref"
                 class="sidebar-logo"
-                title="Smart Barbeiro"
+                title="Tesora"
             >
                 <ApplicationLogo size="md" />
             </Link>
@@ -369,7 +369,7 @@ const mobileNavItems = computed(() => {
                         <Link
                             :href="homeHref"
                             class="app-topbar-logo d-lg-none"
-                            title="Smart Barbeiro"
+                            title="Tesora"
                         >
                             <ApplicationLogo size="md" />
                         </Link>

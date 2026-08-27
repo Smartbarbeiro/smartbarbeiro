@@ -53,7 +53,7 @@ class BarbershopPlatformPlanService
     private function syncMercadoPagoPlan(BarbershopPlatformPlan $plan): void
     {
         $backUrl = $this->subscriptionBackUrl('/assinatura/plataforma/retorno');
-        $reason = $plan->title.' — Smart Barbeiro';
+        $reason = $plan->title.' — Tesora';
 
         try {
             if ($plan->mercadopago_preapproval_plan_id) {

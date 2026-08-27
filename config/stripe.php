@@ -21,7 +21,7 @@ return [
 
     'currency' => env('STRIPE_CURRENCY', 'brl'),
 
-    'merchant_display_name' => env('STRIPE_MERCHANT_DISPLAY_NAME', env('APP_NAME', 'Smart Barbeiro')),
+    'merchant_display_name' => env('STRIPE_MERCHANT_DISPLAY_NAME', env('APP_NAME', 'Tesora')),
 
     'apple_pay_merchant_id' => env('STRIPE_APPLE_PAY_MERCHANT_ID'),
 

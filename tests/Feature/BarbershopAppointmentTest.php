@@ -121,10 +121,11 @@ class BarbershopAppointmentTest extends TestCase
             'status' => BarbershopAppointment::STATUS_CONFIRMED,
         ]);
 
-        $response = $this->getJson(route('barbershop.appointments.availability', [
-            'username' => $barbershop->username,
-            'date' => $tomorrow,
-        ]));
+        $response = $this->actingAs($client)
+            ->getJson(route('barbershop.appointments.availability', [
+                'username' => $barbershop->username,
+                'date' => $tomorrow,
+            ]));
 
         $response->assertOk()
             ->assertJsonPath('date', $tomorrow);
@@ -176,7 +177,7 @@ class BarbershopAppointmentTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_barbershop_agenda_keeps_same_day_slots_free_until_hour_ends(): void
+    public function test_barbershop_agenda_blocks_only_slots_within_thirty_minutes(): void
     {
         Carbon::setTestNow('2026-07-07 14:20:00');
 
@@ -191,15 +192,18 @@ class BarbershopAppointmentTest extends TestCase
                 ->where('agenda.slots.10.is_past', true)
                 ->where('agenda.slots.10.is_available', false)
                 ->where('agenda.slots.12.time', '14:00')
-                ->where('agenda.slots.12.is_past', false)
-                ->where('agenda.slots.12.is_available', true)
+                ->where('agenda.slots.12.is_past', true)
+                ->where('agenda.slots.12.is_available', false)
                 ->where('agenda.slots.13.time', '14:30')
-                ->where('agenda.slots.13.is_past', false)
-                ->where('agenda.slots.13.is_available', true));
+                ->where('agenda.slots.13.is_past', true)
+                ->where('agenda.slots.13.is_available', false)
+                ->where('agenda.slots.14.time', '15:00')
+                ->where('agenda.slots.14.is_past', false)
+                ->where('agenda.slots.14.is_available', true));
 
         $this->actingAs($barbershop)
             ->post(route('agenda.store'), [
-                'scheduled_at' => now()->setTime(14, 0)->seconds(0)->toDateTimeString(),
+                'scheduled_at' => now()->setTime(15, 0)->seconds(0)->toDateTimeString(),
                 'service_label' => 'Corte Cabelo',
                 'package_type' => 'cut',
                 'guest_name' => 'Cliente da Tarde',
@@ -318,6 +322,8 @@ class BarbershopAppointmentTest extends TestCase
             ])
             ->assertRedirect(route('client.appointments.index'))
             ->assertSessionHas('status', 'appointment-requested');
+
+        Mail::assertSent(BarbershopAppointmentRequestedMail::class, function ($mail) use ($barbershop) {
             return $mail->hasTo($barbershop->email);
         });
 
@@ -412,5 +418,251 @@ class BarbershopAppointmentTest extends TestCase
         $this->actingAs($client)
             ->patch(route('client.appointments.cancel', $appointment))
             ->assertForbidden();
+    }
+
+    public function test_owner_can_book_same_slot_for_different_employees(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+
+        $employeeA = BarbershopEmployee::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'name' => 'Ana',
+            'commission_percent' => 40,
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+
+        $employeeB = BarbershopEmployee::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'name' => 'Bruno',
+            'commission_percent' => 40,
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        $scheduledAt = now()->setTime(10, 0)->seconds(0);
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Corte Cabelo',
+                'package_type' => 'cut',
+                'barbershop_employee_id' => $employeeA->id,
+                'guest_name' => 'Cliente A',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Barba',
+                'package_type' => 'beard',
+                'barbershop_employee_id' => $employeeB->id,
+                'guest_name' => 'Cliente B',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        $this->assertDatabaseHas('barbershop_appointments', [
+            'barbershop_user_id' => $barbershop->id,
+            'barbershop_employee_id' => $employeeA->id,
+            'guest_name' => 'Cliente A',
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+        ]);
+
+        $this->assertDatabaseHas('barbershop_appointments', [
+            'barbershop_user_id' => $barbershop->id,
+            'barbershop_employee_id' => $employeeB->id,
+            'guest_name' => 'Cliente B',
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_owner_cannot_double_book_same_employee_on_slot(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+
+        $employee = BarbershopEmployee::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'name' => 'Ana',
+            'commission_percent' => 40,
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+
+        $scheduledAt = now()->setTime(10, 0)->seconds(0);
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Corte Cabelo',
+                'package_type' => 'cut',
+                'barbershop_employee_id' => $employee->id,
+                'guest_name' => 'Cliente A',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        $this->actingAs($barbershop)
+            ->from(route('agenda.index', ['date' => '2026-07-07']))
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Barba',
+                'package_type' => 'beard',
+                'barbershop_employee_id' => $employee->id,
+                'guest_name' => 'Cliente B',
+            ])
+            ->assertRedirect(route('agenda.index', ['date' => '2026-07-07']))
+            ->assertSessionHasErrors('barbershop_employee_id');
+
+        $this->assertSame(1, BarbershopAppointment::query()
+            ->where('barbershop_user_id', $barbershop->id)
+            ->where('scheduled_at', $scheduledAt)
+            ->count());
+
+        Carbon::setTestNow();
+    }
+
+    public function test_owner_cannot_book_when_slot_capacity_is_full(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+
+        $employee = BarbershopEmployee::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'name' => 'Ana',
+            'commission_percent' => 40,
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+
+        $scheduledAt = now()->setTime(10, 0)->seconds(0);
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Corte Cabelo',
+                'package_type' => 'cut',
+                'guest_name' => 'Cliente Owner',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        $this->actingAs($barbershop)
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Barba',
+                'package_type' => 'beard',
+                'barbershop_employee_id' => $employee->id,
+                'guest_name' => 'Cliente Ana',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('status', 'appointment-created');
+
+        $this->actingAs($barbershop)
+            ->from(route('agenda.index', ['date' => '2026-07-07']))
+            ->post(route('agenda.store'), [
+                'scheduled_at' => $scheduledAt->toDateTimeString(),
+                'service_label' => 'Corte Cabelo',
+                'package_type' => 'cut',
+                'guest_name' => 'Cliente Extra',
+            ])
+            ->assertRedirect(route('agenda.index', ['date' => '2026-07-07']))
+            ->assertSessionHasErrors('scheduled_at');
+
+        $this->assertSame(2, BarbershopAppointment::query()
+            ->where('barbershop_user_id', $barbershop->id)
+            ->where('scheduled_at', $scheduledAt)
+            ->count());
+
+        Carbon::setTestNow();
+    }
+
+    public function test_agenda_payload_exposes_capacity_and_can_add_more(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+
+        $employee = BarbershopEmployee::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'name' => 'Ana',
+            'commission_percent' => 40,
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+
+        BarbershopAppointment::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => null,
+            'guest_name' => 'Walk-in',
+            'scheduled_at' => now()->setTime(11, 0),
+            'duration_minutes' => 30,
+            'service_label' => 'Corte Cabelo',
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+            'barbershop_employee_id' => $employee->id,
+        ]);
+
+        $this->actingAs($barbershop)
+            ->get(route('agenda.index', ['date' => '2026-07-07']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Appointments/Index')
+                ->where('agenda.slots.6.time', '11:00')
+                ->where('agenda.slots.6.capacity', 2)
+                ->where('agenda.slots.6.booked_count', 1)
+                ->where('agenda.slots.6.can_add_more', true)
+                ->where('agenda.slots.6.is_available', true)
+                ->where('agenda.slots.6.available_assignee_ids', ['owner']));
+
+        Carbon::setTestNow();
+    }
+
+    public function test_availability_endpoint_keeps_partial_slot_available_with_employees(): void
+    {
+        Carbon::setTestNow('2026-07-07 09:00:00');
+
+        $barbershop = User::factory()->create();
+        $client = User::factory()->customer()->create();
+        $tomorrow = now()->addDay()->toDateString();
+
+        BarbershopEmployee::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'name' => 'Ana',
+            'commission_percent' => 40,
+            'is_active' => true,
+            'sort_order' => 0,
+        ]);
+
+        BarbershopAppointment::query()->create([
+            'barbershop_user_id' => $barbershop->id,
+            'client_user_id' => $client->id,
+            'scheduled_at' => now()->addDay()->setTime(10, 0),
+            'duration_minutes' => 30,
+            'service_label' => 'Corte Cabelo',
+            'status' => BarbershopAppointment::STATUS_CONFIRMED,
+        ]);
+
+        $response = $this->actingAs($client)
+            ->getJson(route('barbershop.appointments.availability', [
+                'username' => $barbershop->username,
+                'date' => $tomorrow,
+            ]));
+
+        $response->assertOk();
+
+        $tenAm = collect($response->json('slots'))->firstWhere('time', '10:00');
+
+        $this->assertTrue($tenAm['is_available']);
+
+        Carbon::setTestNow();
     }
 }

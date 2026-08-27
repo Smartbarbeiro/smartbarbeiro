@@ -32,7 +32,7 @@ Seu plano na **{{ $barbershopName }}** foi confirmado com sucesso. Você já pod
 Ver barbearia
 </x-mail::button>
 
-Acompanhe sua assinatura e preferências no painel do Smart Barbeiro.
+Acompanhe sua assinatura e preferências no painel do Tesora.
 
 <x-mail::button :url="$dashboardUrl">
 Ir para o painel

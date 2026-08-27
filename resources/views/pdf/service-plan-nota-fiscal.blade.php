@@ -147,7 +147,7 @@
         </div>
 
         <p class="footer">
-            Documento emitido eletronicamente pela plataforma Smart Barbeiro para fins de
+            Documento emitido eletronicamente pela plataforma Tesora para fins de
             comprovação de pagamento. Este documento não substitui a NF-e oficial quando
             exigida por lei, salvo se emitida pela barbearia em sistema fiscal próprio.
         </p>

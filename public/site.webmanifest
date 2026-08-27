@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Smart Barbeiro",
-  "short_name": "SmartBarbeiro",
-  "description": "SmartBarbeiro - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular.",
+  "name": "Tesora",
+  "short_name": "Tesora",
+  "description": "Tesora - A fidelização de clientes mais fácil para barbearias! Crie planos de assinatura, compartilhe seu QR code e gerencie clientes e agenda pelo celular.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "/dashboard",

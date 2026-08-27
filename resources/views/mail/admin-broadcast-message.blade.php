@@ -3,15 +3,15 @@
 
 Olá, **{{ $recipientName }}**!
 
-A equipe **Smart Barbeiro** enviou a seguinte mensagem:
+A equipe **Tesora** enviou a seguinte mensagem:
 
 {{ $messageBody }}
 
 <x-mail::button :url="$appUrl">
-Abrir Smart Barbeiro
+Abrir Tesora
 </x-mail::button>
 
-Você também verá esta mensagem como aviso ao entrar no Smart Barbeiro.
+Você também verá esta mensagem como aviso ao entrar no Tesora.
 
 Obrigado,<br>
 {{ config('app.name') }}

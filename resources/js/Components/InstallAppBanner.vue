@@ -28,7 +28,7 @@ const install = async () => {
 
             <div class="install-app-banner__text">
                 <p class="install-app-banner__title mb-0">
-                    Instale o Smart Barbeiro
+                    Instale o Tesora
                 </p>
                 <p class="install-app-banner__subtitle mb-0">
                     <template v-if="canShowIosHint">

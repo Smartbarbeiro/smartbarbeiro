@@ -7,15 +7,6 @@ $HelpersDir = Join-Path $ProjectRoot "deploy\hostinger\public_html"
 $OutputDir = Join-Path $ProjectRoot "deploy\hostinger\output\hotfix"
 $EnvFile = Join-Path $ProjectRoot ".env"
 
-$FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } else { "smartbarbeiro.com.br" }
-$FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } else { "u379350398" }
-$FtpPass = $env:HOSTINGER_FTP_PASSWORD
-if (-not $FtpPass) { $FtpPass = Get-EnvValue 'HOSTINGER_FTP_PASSWORD' }
-if (-not $FtpPass) {
-    throw "Set HOSTINGER_FTP_PASSWORD in .env or your shell before running this script."
-}
-$RemoteBase = "domains/smartbarbeiro.com.br"
-
 function Get-EnvValue([string]$Key) {
     if (-not (Test-Path $EnvFile)) { return $null }
     foreach ($line in Get-Content $EnvFile) {
@@ -24,6 +15,22 @@ function Get-EnvValue([string]$Key) {
         }
     }
     return $null
+}
+
+$FtpHost = if ($env:HOSTINGER_FTP_HOST) { $env:HOSTINGER_FTP_HOST } elseif (Get-EnvValue 'HOSTINGER_FTP_HOST') { Get-EnvValue 'HOSTINGER_FTP_HOST' } else { "ftp.fulviolopescatto1787174444000.0970020.meusitehostgator.com.br" }
+$FtpUser = if ($env:HOSTINGER_FTP_USER) { $env:HOSTINGER_FTP_USER } elseif (Get-EnvValue 'HOSTINGER_FTP_USER') { Get-EnvValue 'HOSTINGER_FTP_USER' } else { "fulvio@fulviolopescatto1787174444000.0970020.meusitehostgator.com.br" }
+$FtpPass = $env:HOSTINGER_FTP_PASSWORD
+if (-not $FtpPass) { $FtpPass = Get-EnvValue 'HOSTINGER_FTP_PASSWORD' }
+if (-not $FtpPass) {
+    throw "Set HOSTINGER_FTP_PASSWORD in .env or your shell before running this script."
+}
+$RemoteBase = if ($env:HOSTINGER_FTP_REMOTE_BASE) { $env:HOSTINGER_FTP_REMOTE_BASE } elseif (Get-EnvValue 'HOSTINGER_FTP_REMOTE_BASE') { Get-EnvValue 'HOSTINGER_FTP_REMOTE_BASE' } else { "" }
+
+function Join-RemotePath([string[]]$Parts) {
+    $all = @()
+    if ($RemoteBase) { $all += $RemoteBase.Trim('/') }
+    $all += $Parts | ForEach-Object { $_.Trim('/') }
+    return ($all -join '/')
 }
 
 function Send-FtpFile([string]$LocalPath, [string]$RemotePath) {
@@ -67,7 +74,7 @@ $secretsPhp = @"
 
 /**
  * Patches MERCADOPAGO_* secrets in laravel/.env from local deploy.
- * Visit once: https://www.smartbarbeiro.com.br/patch-mp-secrets-smartbarbeiro.php
+ * Visit once: https://www.tesora.com.br/patch-mp-secrets-tesora.php
  * DELETE immediately after.
  */
 
@@ -113,11 +120,11 @@ if (file_put_contents(`$envPath, `$content) === false) {
 }
 
 echo "\nMercado Pago secrets patched.\n";
-echo "Next: clear-cache-smartbarbeiro.php\n";
-echo "DELETE patch-mp-secrets-smartbarbeiro.php when done.\n";
+echo "Next: clear-cache-tesora.php\n";
+echo "DELETE patch-mp-secrets-tesora.php when done.\n";
 "@
 
-$secretsPath = Join-Path $OutputDir "patch-mp-secrets-smartbarbeiro.php"
+$secretsPath = Join-Path $OutputDir "patch-mp-secrets-tesora.php"
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText($secretsPath, $secretsPhp, $utf8NoBom)
 
@@ -131,39 +138,39 @@ $laravelFiles = @(
 )
 
 $helperFiles = @(
-    "mp-status-smartbarbeiro.php",
-    "sync-platform-plan-smartbarbeiro.php",
-    "patch-mp-production-smartbarbeiro.php",
-    "clear-cache-smartbarbeiro.php",
-    "extract-deploy-smartbarbeiro.php",
-    "patch-mp-secrets-smartbarbeiro.php"
+    "mp-status-tesora.php",
+    "sync-platform-plan-tesora.php",
+    "patch-mp-production-tesora.php",
+    "clear-cache-tesora.php",
+    "extract-deploy-tesora.php",
+    "patch-mp-secrets-tesora.php"
 )
 
 Write-Host "==> Uploading Laravel hotfix files..."
 foreach ($rel in $laravelFiles) {
     $local = Join-Path $ProjectRoot $rel
     if (-not (Test-Path $local)) { throw "Missing $local" }
-    $remote = "$RemoteBase/laravel/$($rel -replace '\\','/')"
+    $remote = Join-RemotePath @('laravel', ($rel -replace '\\','/'))
     Send-FtpFile $local $remote
 }
 
 Write-Host "==> Uploading public_html helpers..."
 foreach ($name in $helperFiles) {
-    $local = if ($name -eq "patch-mp-secrets-smartbarbeiro.php") {
+    $local = if ($name -eq "patch-mp-secrets-tesora.php") {
         $secretsPath
     } else {
         Join-Path $HelpersDir $name
     }
     if (-not (Test-Path $local)) { throw "Missing $local" }
-    Send-FtpFile $local "$RemoteBase/public_html/$name"
+    Send-FtpFile $local (Join-RemotePath @('public_html', $name))
 }
 
 $steps = @(
-    "https://www.smartbarbeiro.com.br/patch-mp-production-smartbarbeiro.php",
-    "https://www.smartbarbeiro.com.br/patch-mp-secrets-smartbarbeiro.php",
-    "https://www.smartbarbeiro.com.br/clear-cache-smartbarbeiro.php",
-    "https://www.smartbarbeiro.com.br/sync-platform-plan-smartbarbeiro.php",
-    "https://www.smartbarbeiro.com.br/mp-status-smartbarbeiro.php"
+    "https://www.tesora.com.br/patch-mp-production-tesora.php",
+    "https://www.tesora.com.br/patch-mp-secrets-tesora.php",
+    "https://www.tesora.com.br/clear-cache-tesora.php",
+    "https://www.tesora.com.br/sync-platform-plan-tesora.php",
+    "https://www.tesora.com.br/mp-status-tesora.php"
 )
 
 Write-Host ""
@@ -184,4 +191,4 @@ foreach ($url in $steps) {
 }
 
 Write-Host ""
-Write-Host "Done. Test checkout: https://www.smartbarbeiro.com.br/assinatura/plataforma"
+Write-Host "Done. Test checkout: https://www.tesora.com.br/assinatura/plataforma"
